@@ -163,8 +163,11 @@ front-matter (description, model, tools)
 | Producers (design, generate code, research) | `claude-opus-4-8` |
 | Reviewers (eval, QA, code review) | `claude-sonnet-4-6` |
 | Fast read-only tasks (inspect, parse) | `claude-haiku-4-5-20251001` |
+| Pure orchestration (routing/dispatch only) | `claude-fable-5` |
 
 Reviewers must be **separate agents** invoked via `Agent()` — not inline skill calls within the producer. This is the Swiss Cheese independence guarantee.
+
+**Fable 5 is reserved for orchestration only** — command files (`~/.claude/commands/*.md`) and any agent whose entire job is parsing input and delegating to other agents/skills, with no independent content generation, analysis, or code review. This keeps token spend proportional to the work actually being reasoned about. Never assign `claude-fable-5` to a producer, code generator, or reviewer — those steps need full reasoning/generation capability and downgrading them would silently degrade output quality, not just cost.
 
 ### Swiss Cheese EDD — mandatory before delivery
 
