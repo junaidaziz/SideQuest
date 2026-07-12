@@ -13,10 +13,16 @@ Established on screen 1 (onboarding). Apply to all subsequent screens without re
 | `--primary-dark` | `#4A2ED6` | Button hover / pressed state |
 | `--primary-light` | `#EBE7FD` | Tinted backgrounds, chips unselected |
 | `--accent` | `#FFB800` | XP, streaks, rewards, completion moments only |
+| `--accent-light` | `#FFF8E1` | Tinted accent background for XP/reward badges |
+| `--accent-dark` | `#B45309` | Darkened accent for accent-on-light text (WCAG contrast) |
 | `--text-secondary` | `#6B6880` | Subtitles, hints, secondary labels |
 | `--border` | `#E8E5F4` | Card borders, dividers, disabled states |
 | `--error` | `#E53935` | Error states, destructive actions |
 | `--success` | `#2E7D32` | Completion confirmations |
+| `--success-light` | `#E8F5E9` | Tinted success background for the "saved" affordance |
+| `--teal` | `#0F766E` | Third category accent ("discover" quests) |
+| `--teal-light` | `#F0FDFA` | Tinted teal background for "discover" badges |
+| `--scrim` | `rgba(14, 14, 26, 0.55)` | Dim backdrop behind modals and bottom sheets |
 
 ## Typography
 

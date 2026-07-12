@@ -15,14 +15,26 @@ export const Colors = {
   primaryDark: '#4A2ED6',
   primaryLight: '#EBE7FD',
   accent: '#FFB800',
+  /** Tinted accent background for XP/reward badges. */
+  accentLight: '#FFF8E1',
+  /** Darkened accent for accent-on-light text (WCAG contrast). */
+  accentDark: '#B45309',
   textSecondary: '#6B6880',
   border: '#E8E5F4',
   error: '#E53935',
   success: '#2E7D32',
+  /** Tinted success background for the "saved" affordance. */
+  successLight: '#E8F5E9',
+  /** Third category accent ("discover" quests). */
+  teal: '#0F766E',
+  /** Tinted teal background for "discover" badges. */
+  tealLight: '#F0FDFA',
   white: '#FFFFFF',
   /** Translucent white for elements sitting on a `primary`-filled surface. */
   onPrimaryBorder: 'rgba(255, 255, 255, 0.4)',
   onPrimaryFill: 'rgba(255, 255, 255, 0.18)',
+  /** Dim backdrop behind modals and bottom sheets. */
+  scrim: 'rgba(14, 14, 26, 0.55)',
 } as const;
 
 /** Border radii by role. */
