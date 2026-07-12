@@ -36,9 +36,12 @@ npx expo install <package>  # Install Expo-compatible package version (preferred
 
 This is a new project. As it grows, document the structure here:
 
-- **Navigation**: Note the navigator used (e.g., Expo Router file-based routing, or React Navigation stack/tab)
-- **State management**: Note approach when decided (Context, Zustand, Redux, etc.)
-- **Data fetching**: Note pattern when decided (React Query, SWR, plain fetch, etc.)
+- **Navigation**: Expo Router (file-based), routes under `app/`
+- **State management**: Zustand — client/session state (e.g. `src/store/authStore.ts`)
+- **Data fetching**: TanStack Query, provisioned via `QueryClientProvider` in `app/_layout.tsx` — server state (missions, etc.). Auth bootstrap itself runs directly through `src/services/authApi.ts` rather than a query, since it must complete before other queries are meaningful.
+- **API client**: `src/services/apiClient.ts` — thin `fetch` wrapper with automatic 401 → refresh-token retry. Base URL from `EXPO_PUBLIC_API_BASE_URL`, defaulting per-platform (Android emulator needs `10.0.2.2`, not `localhost`).
+- **Token storage**: `src/services/tokenStorage.ts` via `expo-secure-store` — never AsyncStorage for tokens.
+- **Type contract with backend**: manually mirrored in `src/types/api.ts` against `sidequest-backend`'s DTOs — no codegen yet (tracked as a backlog item; revisit if drift becomes painful).
 
 ### Key Expo conventions
 
