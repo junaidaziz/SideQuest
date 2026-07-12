@@ -216,12 +216,12 @@ describe('MissionResultsScreen', () => {
       await waitFor(() => expect(screen.getByLabelText('Save for later')).toBeTruthy());
     });
 
-    it('accepts the quest and calls onAccept with the mission id after confirmation', async () => {
+    it('accepts the quest and calls onAccept with the full mission after confirmation', async () => {
       const { onAccept } = await renderScreen();
       await waitFor(() => expect(screen.getByText('Find the Oldest Thing')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText(/View quest: Find the Oldest Thing/));
       await fireEvent.press(screen.getByLabelText('Accept quest'));
-      await waitFor(() => expect(onAccept).toHaveBeenCalledWith('m-1'), { timeout: 2000 });
+      await waitFor(() => expect(onAccept).toHaveBeenCalledWith(MISSIONS[0]), { timeout: 2000 });
     });
 
     it('ignores repeated presses on an already-accepted quest', async () => {

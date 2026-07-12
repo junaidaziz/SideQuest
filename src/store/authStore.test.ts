@@ -11,7 +11,7 @@ const realUser = { id: 'u1', email: 'a@b.com', displayName: 'A', isGuest: false 
 describe('authStore', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useAuthStore.setState({ user: null, status: 'idle' });
+    useAuthStore.setState({ user: null, status: 'idle', isFirstLaunch: null });
   });
 
   describe('hydrate', () => {
@@ -23,6 +23,7 @@ describe('authStore', () => {
 
       expect(useAuthStore.getState().user).toEqual(realUser);
       expect(useAuthStore.getState().status).toBe('ready');
+      expect(useAuthStore.getState().isFirstLaunch).toBe(false);
       expect(bootstrapGuest).not.toHaveBeenCalled();
     });
 
@@ -39,6 +40,7 @@ describe('authStore', () => {
       expect(saveTokens).toHaveBeenCalledWith({ accessToken: 'g', refreshToken: 'gr' });
       expect(useAuthStore.getState().user).toEqual(guestUser);
       expect(useAuthStore.getState().status).toBe('ready');
+      expect(useAuthStore.getState().isFirstLaunch).toBe(true);
     });
 
     it('sets status to error when hydration fails', async () => {
@@ -47,6 +49,7 @@ describe('authStore', () => {
       await useAuthStore.getState().hydrate();
 
       expect(useAuthStore.getState().status).toBe('error');
+      expect(useAuthStore.getState().isFirstLaunch).toBeNull();
     });
   });
 
@@ -81,14 +84,15 @@ describe('authStore', () => {
   });
 
   describe('logout', () => {
-    it('clears tokens and resets state to idle', async () => {
-      useAuthStore.setState({ user: realUser, status: 'ready' });
+    it('clears tokens and resets state to idle, including isFirstLaunch', async () => {
+      useAuthStore.setState({ user: realUser, status: 'ready', isFirstLaunch: false });
 
       await useAuthStore.getState().logout();
 
       expect(clearTokens).toHaveBeenCalled();
       expect(useAuthStore.getState().user).toBeNull();
       expect(useAuthStore.getState().status).toBe('idle');
+      expect(useAuthStore.getState().isFirstLaunch).toBeNull();
     });
   });
 });

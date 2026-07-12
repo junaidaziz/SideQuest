@@ -34,29 +34,33 @@ interface MissionResultsScreenProps {
   filters: GenerateMissionsRequest;
   /** Invoked by the header back button. */
   onBack?: () => void;
-  /** Invoked after a quest is accepted (post-confirmation beat). */
-  onAccept?: (missionId: string) => void;
+  /** Invoked after a quest is accepted (post-confirmation beat), with the
+   * full accepted mission — the caller needs more than just the id (e.g.
+   * proofRequirement) to hand off to the next screen. */
+  onAccept?: (mission: Mission) => void;
 }
 
 /**
- * Per-category visual tokens: left stripe, badge fill, badge text.
- * `as const` keeps the keys narrow so `CATEGORY_STYLES[m.category]` type-checks.
+ * Per-category visual tokens: left stripe, badge fill, badge text. Maps to
+ * pre-declared StyleSheet entries (stripe-prefixed / badgeBg-prefixed /
+ * badgeText-prefixed keys below) rather than building inline color style
+ * objects per render.
  */
 const CATEGORY_STYLES = {
   explore: {
-    stripe: Colors.primary,
-    badgeBg: Colors.primaryLight,
-    badgeText: Colors.primary,
+    stripeStyleKey: 'stripeExplore',
+    bgStyleKey: 'badgeBgExplore',
+    textStyleKey: 'badgeTextExplore',
   },
   create: {
-    stripe: Colors.accent,
-    badgeBg: Colors.accentLight,
-    badgeText: Colors.accentDark,
+    stripeStyleKey: 'stripeCreate',
+    bgStyleKey: 'badgeBgCreate',
+    textStyleKey: 'badgeTextCreate',
   },
   discover: {
-    stripe: Colors.teal,
-    badgeBg: Colors.tealLight,
-    badgeText: Colors.teal,
+    stripeStyleKey: 'stripeDiscover',
+    bgStyleKey: 'badgeBgDiscover',
+    textStyleKey: 'badgeTextDiscover',
   },
 } as const;
 
@@ -152,11 +156,11 @@ function MissionCard({ mission, onPress }: MissionCardProps) {
       accessibilityLabel={`View quest: ${mission.title}. Difficulty ${mission.diff}, ${mission.time}, ${mission.xp}`}
       style={({ pressed }) => [styles.card, whenPressed(pressed, styles.cardPressed)]}
     >
-      <View style={[styles.cardStripe, { backgroundColor: cat.stripe }]} />
+      <View style={[styles.cardStripe, styles[cat.stripeStyleKey]]} />
       <View style={styles.cardBody}>
         <View style={styles.cardTop}>
-          <View style={[styles.badge, { backgroundColor: cat.badgeBg }]}>
-            <Text style={[styles.badgeText, { color: cat.badgeText }]}>
+          <View style={[styles.badge, styles[cat.bgStyleKey]]}>
+            <Text style={[styles.badgeText, styles[cat.textStyleKey]]}>
               {mission.category.toUpperCase()}
             </Text>
           </View>
@@ -314,13 +318,10 @@ export default function MissionResultsScreen({
 
   const handleAccept = useCallback(() => {
     if (accepted || !activeMission) return;
-    const missionId = activeMission.id;
+    const mission = activeMission;
     setAccepted(true);
     acceptTimer.current = setTimeout(() => {
-      // TODO: replace with navigation call once nav library is chosen
-      // Expo Router:       router.push({ pathname: '/mission-detail', params: { id } })
-      // React Navigation:  navigation.navigate('MissionDetail', { missionId })
-      onAccept?.(missionId);
+      onAccept?.(mission);
       closeSheet();
     }, ACCEPT_CONFIRM_MS);
   }, [accepted, activeMission, closeSheet, onAccept]);
@@ -352,9 +353,6 @@ export default function MissionResultsScreen({
   }, [activeMission, saved, saveMutation]);
 
   const handleBack = useCallback(() => {
-    // TODO: replace with navigation call once nav library is chosen
-    // Expo Router:       router.back()
-    // React Navigation:  navigation.goBack()
     onBack?.();
   }, [onBack]);
 
@@ -504,13 +502,13 @@ export default function MissionResultsScreen({
                   style={[
                     styles.badge,
                     styles.sheetBadge,
-                    { backgroundColor: CATEGORY_STYLES[activeMission.category].badgeBg },
+                    styles[CATEGORY_STYLES[activeMission.category].bgStyleKey],
                   ]}
                 >
                   <Text
                     style={[
                       styles.badgeText,
-                      { color: CATEGORY_STYLES[activeMission.category].badgeText },
+                      styles[CATEGORY_STYLES[activeMission.category].textStyleKey],
                     ]}
                   >
                     {activeMission.category.toUpperCase()}
@@ -700,6 +698,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.6,
   },
+  stripeExplore: { backgroundColor: Colors.primary },
+  stripeCreate: { backgroundColor: Colors.accent },
+  stripeDiscover: { backgroundColor: Colors.teal },
+  badgeBgExplore: { backgroundColor: Colors.primaryLight },
+  badgeBgCreate: { backgroundColor: Colors.accentLight },
+  badgeBgDiscover: { backgroundColor: Colors.tealLight },
+  badgeTextExplore: { color: Colors.primary },
+  badgeTextCreate: { color: Colors.accentDark },
+  badgeTextDiscover: { color: Colors.teal },
   difficulty: {
     flexDirection: 'row',
     alignItems: 'center',
