@@ -11,6 +11,7 @@ import { submitPhotoProof, submitTextProof } from '../services/proofApi';
 import { ApiError } from '../services/apiClient';
 import { GUEST_COMPLETION_LIMIT_REACHED } from '../types/api';
 import type { ProofSubmissionResponse } from '../types/api';
+import { Colors } from '../constants/design';
 
 jest.mock('expo-image-picker');
 jest.mock('../services/proofApi');
@@ -172,14 +173,14 @@ describe('ProofSubmissionScreen', () => {
         expect(mockRequestCamera).toHaveBeenCalled(),
       );
       expect(mockLaunchCamera).toHaveBeenCalled();
-      await waitFor(() => expect(screen.getByText('Photo captured!')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Photo captured!', { includeHiddenElements: true })).toBeTruthy());
     });
 
     it('captures a photo via the library path and shows the preview', async () => {
       await renderScreen();
       await captureVia(1);
       await waitFor(() => expect(mockLaunchLibrary).toHaveBeenCalled());
-      await waitFor(() => expect(screen.getByText('Photo captured!')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Photo captured!', { includeHiddenElements: true })).toBeTruthy());
     });
 
     it('enables submit once a photo is captured', async () => {
@@ -284,7 +285,7 @@ describe('ProofSubmissionScreen', () => {
       const flat = Array.isArray(counter.props.style)
         ? Object.assign({}, ...counter.props.style.filter(Boolean))
         : counter.props.style;
-      expect(flat.color).toBe('#E53935');
+      expect(flat.color).toBe(Colors.error);
     });
   });
 
@@ -292,7 +293,7 @@ describe('ProofSubmissionScreen', () => {
     it('submits a photo proof and calls onSubmitSuccess with the result', async () => {
       const { onSubmitSuccess } = await renderScreen();
       await captureVia(0);
-      await waitFor(() => expect(screen.getByText('Photo captured!')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Photo captured!', { includeHiddenElements: true })).toBeTruthy());
       await fireEvent.press(
         screen.getByLabelText('Submit your proof and complete the mission'),
       );
@@ -499,7 +500,7 @@ describe('ProofSubmissionScreen', () => {
       });
       await fireEvent.press(screen.getByLabelText('Back to mission detail'));
       await captureVia(0);
-      await waitFor(() => expect(screen.getByText('Photo captured!')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Photo captured!', { includeHiddenElements: true })).toBeTruthy());
       expect(() =>
         fireEvent.press(
           screen.getByLabelText('Submit your proof and complete the mission'),
@@ -545,6 +546,19 @@ describe('ProofSubmissionScreen', () => {
       );
       await fireEvent.press(screen.getByLabelText('Photo proof'));
       expect(screen.queryByText('Network request failed')).toBeNull();
+    });
+
+    it('clears a stale picker (permission-denied) error when switching to the text tab', async () => {
+      mockRequestCamera.mockResolvedValue(denied());
+      await renderScreen();
+      await captureVia(0);
+      await waitFor(() =>
+        expect(screen.getByText(/Camera access is off/)).toBeTruthy(),
+      );
+
+      await fireEvent.press(screen.getByLabelText('Text proof'));
+
+      expect(screen.queryByText(/Camera access is off/)).toBeNull();
     });
   });
 

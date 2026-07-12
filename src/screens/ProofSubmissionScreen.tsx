@@ -126,6 +126,9 @@ export default function ProofSubmissionScreen({
   const selectTab = useCallback((tab: ProofTab) => {
     setActiveTab(tab);
     setSubmitError(null);
+    // A camera/library permission error belongs to the photo tab — without
+    // this it survives a switch to the text tab and shows under the wrong panel.
+    setPickerError(null);
   }, []);
 
   const applyPickerResult = useCallback(
@@ -239,6 +242,7 @@ export default function ProofSubmissionScreen({
 
       <View
         style={styles.banner}
+        accessible
         accessibilityRole="text"
         accessibilityLabel={`What counts as proof: ${proofRequirement}`}
       >
@@ -315,7 +319,13 @@ export default function ProofSubmissionScreen({
                     >
                       <Text style={styles.previewCheckGlyph}>{'✓'}</Text>
                     </View>
-                    <Text style={styles.previewLabel}>Photo captured!</Text>
+                    <Text
+                      style={styles.previewLabel}
+                      importantForAccessibility="no"
+                      accessibilityElementsHidden
+                    >
+                      Photo captured!
+                    </Text>
                   </View>
                 </View>
               ) : (
@@ -358,11 +368,7 @@ export default function ProofSubmissionScreen({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Text
-              accessibilityRole="text"
-              nativeID="caption-label"
-              style={styles.textLabel}
-            >
+            <Text accessibilityRole="text" style={styles.textLabel}>
               Caption / description
             </Text>
             <TextInput
@@ -375,7 +381,6 @@ export default function ProofSubmissionScreen({
               placeholderTextColor={Colors.textSecondary}
               style={styles.textArea}
               accessibilityLabel="Caption or description"
-              accessibilityLabelledBy="caption-label"
             />
             <Text
               style={[styles.charCount, isCaptionWarn && styles.charCountWarn]}
