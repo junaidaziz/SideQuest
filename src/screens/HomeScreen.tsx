@@ -39,11 +39,13 @@ interface HomeScreenProps {
 /**
  * Per-category visual tokens for the daily mission badge, mirroring the same
  * mapping MissionResultsScreen uses so the two screens read consistently.
+ * Maps to pre-declared StyleSheet entries (badgeBg-prefixed / badgeText-prefixed
+ * keys) rather than building an inline `{ backgroundColor }` object per render.
  */
 const CATEGORY_STYLES = {
-  explore: { badgeBg: Colors.primaryLight, badgeText: Colors.primary },
-  create: { badgeBg: Colors.accentLight, badgeText: Colors.accentDark },
-  discover: { badgeBg: Colors.tealLight, badgeText: Colors.teal },
+  explore: { bgStyleKey: 'badgeBgExplore', textStyleKey: 'badgeTextExplore' },
+  create: { bgStyleKey: 'badgeBgCreate', textStyleKey: 'badgeTextCreate' },
+  discover: { bgStyleKey: 'badgeBgDiscover', textStyleKey: 'badgeTextDiscover' },
 } as const;
 
 /**
@@ -115,7 +117,12 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
 /** Dashed-border empty state matching MissionResultsScreen's visual language. */
 function EmptyCard({ icon, title, sub }: { icon: string; title: string; sub: string }) {
   return (
-    <View style={styles.emptyState} accessibilityRole="text" accessibilityLabel={`${title}. ${sub}`}>
+    <View
+      style={styles.emptyState}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={`${title}. ${sub}`}
+    >
       <Text style={styles.emptyIcon} importantForAccessibility="no" accessibilityElementsHidden>
         {icon}
       </Text>
@@ -143,8 +150,8 @@ function DailyMissionCard({ mission, onPress }: DailyMissionCardProps) {
       <View style={styles.dailyStripe} />
       <View style={styles.dailyBody}>
         <View style={styles.dailyTopRow}>
-          <View style={[styles.badge, { backgroundColor: cat.badgeBg }]}>
-            <Text style={[styles.badgeText, { color: cat.badgeText }]}>
+          <View style={[styles.badge, styles[cat.bgStyleKey]]}>
+            <Text style={[styles.badgeText, styles[cat.textStyleKey]]}>
               {mission.category.toUpperCase()}
             </Text>
           </View>
@@ -181,7 +188,11 @@ function PackCard({ pack, onPress }: PackCardProps) {
       accessibilityLabel={`${pack.name} pack, ${packCountLabel(pack.missionCount)}`}
       style={({ pressed }) => [styles.packCard, whenPressed(pressed, styles.packCardPressed)]}
     >
-      <View style={styles.packThumb} importantForAccessibility="no" accessibilityElementsHidden>
+      <View
+        style={styles.packThumb}
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+      >
         <Text style={styles.packThumbGlyph}>{'\u{1F9ED}'}</Text>
       </View>
       <View style={styles.packInfo}>
@@ -288,6 +299,7 @@ export default function HomeScreen({
               </View>
               <View
                 style={styles.xpBadge}
+                accessible
                 accessibilityRole="text"
                 accessibilityLabel={`${data.level.totalXp} XP total`}
               >
@@ -302,9 +314,12 @@ export default function HomeScreen({
                 min: 0,
                 max: 100,
                 now: Math.round(computeXpProgress(data.level)),
+                text: `${data.level.xpIntoLevel} XP earned, ${data.level.xpToNextLevel} to go`,
               }}
               accessibilityLabel={`${data.level.xpToNextLevel} XP to level ${data.level.level + 1}`}
             >
+              {/* Width is an unavoidable runtime-computed percentage — no static
+                  StyleSheet alternative exists (matches ModeSelectScreen's cardStyle). */}
               <View style={[styles.xpFill, { width: `${computeXpProgress(data.level)}%` }]} />
             </View>
             <Text style={styles.xpProgressLabel}>
@@ -315,6 +330,7 @@ export default function HomeScreen({
           {/* Streak card */}
           <View
             style={styles.streakCard}
+            accessible
             accessibilityRole="text"
             accessibilityLabel={`${formatStreakLabel(data.streak.currentStreak)}. Complete a quest today to keep it going`}
           >
@@ -342,6 +358,7 @@ export default function HomeScreen({
           {/* Pending challenges — always empty in v1 (no challenge backend yet). */}
           <View>
             <Text style={styles.sectionLabel}>Pending challenges</Text>
+            {/* TODO: replace hardcoded empty state with data.pendingChallenges when challenge backend ships */}
             <EmptyCard
               icon={'\u{1F3AF}'}
               title="No challenges yet"
@@ -560,6 +577,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.4,
   },
+  badgeBgExplore: { backgroundColor: Colors.primaryLight },
+  badgeBgCreate: { backgroundColor: Colors.accentLight },
+  badgeBgDiscover: { backgroundColor: Colors.tealLight },
+  badgeTextExplore: { color: Colors.primary },
+  badgeTextCreate: { color: Colors.accentDark },
+  badgeTextDiscover: { color: Colors.teal },
   dailyXp: {
     backgroundColor: Colors.accent,
     paddingVertical: 3,

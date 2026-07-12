@@ -12,7 +12,7 @@ import type { HomeResponse, Mission } from '../types/api';
 
 jest.mock('../services/homeApi');
 
-const mockGetHome = getHome as jest.Mock;
+const mockGetHome = getHome as jest.MockedFunction<typeof getHome>;
 
 const DAILY_MISSION: Mission = {
   id: 'daily-1',
@@ -100,7 +100,12 @@ describe('HomeScreen', () => {
       await renderScreen();
       // 620 / (620 + 380) = 62%
       const bar = await screen.findByLabelText('380 XP to level 5');
-      expect(bar.props.accessibilityValue).toEqual({ min: 0, max: 100, now: 62 });
+      expect(bar.props.accessibilityValue).toEqual({
+        min: 0,
+        max: 100,
+        now: 62,
+        text: '620 XP earned, 380 to go',
+      });
     });
 
     it('renders the streak value and prompt', async () => {
@@ -243,6 +248,12 @@ describe('HomeScreen', () => {
       expect(
         computeXpProgress({ level: 2, xpIntoLevel: 100, xpToNextLevel: 0, totalXp: 200 }),
       ).toBe(100);
+    });
+
+    it('returns 0 immediately after leveling up', () => {
+      expect(
+        computeXpProgress({ level: 3, xpIntoLevel: 0, xpToNextLevel: 100, totalXp: 200 }),
+      ).toBe(0);
     });
   });
 
