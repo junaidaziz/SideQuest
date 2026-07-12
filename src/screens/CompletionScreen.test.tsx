@@ -5,6 +5,7 @@ import CompletionScreen, {
   buildChallengeMessage,
   buildShareMessage,
   formatStreak,
+  hasActiveStreak,
   whenPressed,
 } from './CompletionScreen';
 import type { ProofSubmissionResponse, SignupRequest } from '../types/api';
@@ -101,6 +102,14 @@ describe('CompletionScreen', () => {
       expect(screen.getByText('1-day streak!')).toBeTruthy();
     });
 
+    it('hides the streak section entirely for a 0-day streak', async () => {
+      await renderScreen({ result: { ...RESULT, currentStreak: 0 } });
+      expect(screen.queryByText('0-day streak!')).toBeNull();
+      expect(
+        screen.queryByText('Complete a quest tomorrow to keep it going'),
+      ).toBeNull();
+    });
+
     it('renders the challenge section heading and prompt', async () => {
       await renderScreen();
       expect(screen.getByText('Challenge a friend')).toBeTruthy();
@@ -127,16 +136,26 @@ describe('CompletionScreen', () => {
       );
     });
 
-    it('swallows a rejected share sheet without crashing', async () => {
-      shareSpy.mockRejectedValueOnce(new Error('dismissed'));
+    it('does not crash when the share sheet is dismissed without picking a target', async () => {
+      // Share.share() resolves — it does not reject — when the user cancels
+      // the native sheet without sharing.
+      shareSpy.mockResolvedValueOnce({ action: Share.dismissedAction });
       await renderScreen();
       await fireEvent.press(screen.getByLabelText('Share this achievement'));
       await waitFor(() => expect(shareSpy).toHaveBeenCalledTimes(1));
-      // The screen is still mounted and interactive.
       expect(screen.getByText('You did it!')).toBeTruthy();
     });
 
-    it('shares challenge copy and reports it sent for a signed-in user', async () => {
+    it('swallows a genuine share-sheet system error without crashing', async () => {
+      shareSpy.mockRejectedValueOnce(new Error('platform failure'));
+      await renderScreen();
+      await fireEvent.press(screen.getByLabelText('Share this achievement'));
+      await waitFor(() => expect(shareSpy).toHaveBeenCalledTimes(1));
+      expect(screen.getByText('You did it!')).toBeTruthy();
+    });
+
+    it('shares challenge copy and reports it sent when the share actually completes', async () => {
+      shareSpy.mockResolvedValueOnce({ action: Share.sharedAction });
       const { onChallengeSent } = await renderScreen({ isGuest: false });
       await fireEvent.press(screen.getByLabelText('Challenge a friend to this quest'));
       await waitFor(() =>
@@ -148,8 +167,19 @@ describe('CompletionScreen', () => {
       await waitFor(() => expect(onChallengeSent).toHaveBeenCalledTimes(1));
     });
 
-    it('does not report the challenge sent when the signed-in share is dismissed', async () => {
-      shareSpy.mockRejectedValueOnce(new Error('dismissed'));
+    it('does not report the challenge sent when the share sheet is dismissed without picking a target', async () => {
+      // The real regression this guards: Share.share() resolves (not rejects)
+      // on cancellation, so onChallengeSent must check the resolved action,
+      // not just "the promise didn't throw".
+      shareSpy.mockResolvedValueOnce({ action: Share.dismissedAction });
+      const { onChallengeSent } = await renderScreen({ isGuest: false });
+      await fireEvent.press(screen.getByLabelText('Challenge a friend to this quest'));
+      await waitFor(() => expect(shareSpy).toHaveBeenCalledTimes(1));
+      expect(onChallengeSent).not.toHaveBeenCalled();
+    });
+
+    it('does not report the challenge sent on a genuine share-sheet system error', async () => {
+      shareSpy.mockRejectedValueOnce(new Error('platform failure'));
       const { onChallengeSent } = await renderScreen({ isGuest: false });
       await fireEvent.press(screen.getByLabelText('Challenge a friend to this quest'));
       await waitFor(() => expect(shareSpy).toHaveBeenCalledTimes(1));
@@ -239,12 +269,6 @@ describe('CompletionScreen', () => {
   });
 
   describe('edge cases', () => {
-    it('renders correctly for a zero-day (fresh) streak', async () => {
-      await renderScreen({ result: { ...RESULT, currentStreak: 0 } });
-      expect(screen.getByText('0-day streak!')).toBeTruthy();
-      expect(screen.getByLabelText('0-day streak active')).toBeTruthy();
-    });
-
     it('whenPressed returns the style only while pressed', () => {
       // RTL's press helpers never flip Pressable's internal `pressed` flag, so
       // the pressed-state style branch is unreachable through fired events
@@ -271,6 +295,12 @@ describe('CompletionScreen', () => {
     it('formats streaks in compound-adjective form', async () => {
       expect(formatStreak(1)).toBe('1-day streak');
       expect(formatStreak(3)).toBe('3-day streak');
+    });
+
+    it('treats only a positive streak as active', async () => {
+      expect(hasActiveStreak(0)).toBe(false);
+      expect(hasActiveStreak(1)).toBe(true);
+      expect(hasActiveStreak(3)).toBe(true);
     });
   });
 });

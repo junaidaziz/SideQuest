@@ -79,6 +79,13 @@ export function formatStreak(days: number): string {
   return `${days}-day streak`;
 }
 
+/** Whether the streak section's "keep it going" framing makes sense — a
+ * streak of 0 has nothing to continue, so it's hidden rather than shown with
+ * misleading fire-emoji continuation copy. */
+export function hasActiveStreak(days: number): boolean {
+  return days > 0;
+}
+
 export default function CompletionScreen({
   result,
   isGuest,
@@ -91,9 +98,13 @@ export default function CompletionScreen({
 
   const handleShare = useCallback(async () => {
     try {
+      // Share.share() resolves (never throws) when the user simply dismisses
+      // the sheet without picking a target — there is nothing to recover from
+      // either way here, so the result isn't inspected. The catch only
+      // handles a genuine platform-level failure.
       await Share.share({ message: buildShareMessage(result) });
     } catch {
-      // The native share sheet was dismissed or failed — nothing to recover.
+      // Genuine system error invoking the share sheet — nothing to recover.
     }
   }, [result]);
 
@@ -105,10 +116,16 @@ export default function CompletionScreen({
       return;
     }
     try {
-      await Share.share({ message: buildChallengeMessage(result) });
-      onChallengeSent?.();
+      // Share.share() resolves with { action: 'dismissedAction' } — not a
+      // rejection — when the user cancels without picking a share target.
+      // onChallengeSent must only fire on an actual share, or cancelling the
+      // sheet would falsely report the challenge as sent.
+      const shareResult = await Share.share({ message: buildChallengeMessage(result) });
+      if (shareResult.action === Share.sharedAction) {
+        onChallengeSent?.();
+      }
     } catch {
-      // Share sheet dismissed or failed — the challenge intent is unfulfilled.
+      // Genuine system error invoking the share sheet — challenge unfulfilled.
     }
   }, [isGuest, onChallengeSent, result]);
 
@@ -205,26 +222,29 @@ export default function CompletionScreen({
           </View>
         </View>
 
-        {/* Streak indicator */}
-        <View
-          style={styles.streakRow}
-          accessibilityRole="text"
-          accessibilityLabel={`${streakLabel} active`}
-        >
-          <Text
-            style={styles.streakIcon}
-            importantForAccessibility="no"
-            accessibilityElementsHidden
+        {/* Streak indicator — hidden at 0 rather than showing misleading
+            "keep it going" copy for a streak that doesn't exist yet. */}
+        {hasActiveStreak(result.currentStreak) ? (
+          <View
+            style={styles.streakRow}
+            accessibilityRole="text"
+            accessibilityLabel={`${streakLabel} active`}
           >
-            {'\u{1F525}'}
-          </Text>
-          <View style={styles.streakInfo}>
-            <Text style={styles.streakValue}>{`${streakLabel}!`}</Text>
-            <Text style={styles.streakLabel}>
-              Complete a quest tomorrow to keep it going
+            <Text
+              style={styles.streakIcon}
+              importantForAccessibility="no"
+              accessibilityElementsHidden
+            >
+              {'\u{1F525}'}
             </Text>
+            <View style={styles.streakInfo}>
+              <Text style={styles.streakValue}>{`${streakLabel}!`}</Text>
+              <Text style={styles.streakLabel}>
+                Complete a quest tomorrow to keep it going
+              </Text>
+            </View>
           </View>
-        </View>
+        ) : null}
 
         {/* Challenge a friend */}
         <Text accessibilityRole="header" style={styles.sectionHeading}>
@@ -263,7 +283,15 @@ export default function CompletionScreen({
       </View>
 
       {/* Guest auth-gate — the shared SignupPromptScreen, mounted only when a
-          guest taps "Challenge a Friend". */}
+          guest taps "Challenge a Friend".
+          Known tradeoff: SignupPromptScreen's own sheet also carries
+          accessibilityViewIsModal (correct for its standalone usage), so
+          nested here it over-restricts VoiceOver to the sheet subtree and the
+          outer backdrop's dismiss becomes unreachable by swipe — the in-sheet
+          "Continue as guest" button remains the AT-accessible dismiss path.
+          Similarly SignupPromptScreen's BackHandler consumes the Android back
+          event first, so this Modal's onRequestClose is effectively a no-op
+          fallback rather than the primary dismiss path on Android. */}
       <Modal
         visible={gateOpen}
         transparent
@@ -310,7 +338,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bodySemiBold,
     fontSize: 11,
     letterSpacing: 1,
-    color: Colors.onPrimaryBorder,
+    // Colors.onPrimaryBorder (40% white) fails WCAG AA contrast on this
+    // background — full white at this weight/size stays legible on Colors.primary.
+    color: Colors.white,
     marginBottom: Spacing.xs,
   },
   heroTitle: {
@@ -324,7 +354,7 @@ const styles = StyleSheet.create({
   heroSub: {
     fontFamily: Fonts.bodyRegular,
     fontSize: FontSize.body,
-    color: Colors.onPrimaryBorder,
+    color: Colors.white,
     textAlign: 'center',
   },
   xpRow: {
@@ -342,7 +372,7 @@ const styles = StyleSheet.create({
   xpLabel: {
     fontFamily: Fonts.bodySemiBold,
     fontSize: FontSize.caption,
-    color: Colors.onPrimaryBorder,
+    color: Colors.white,
   },
   xpValue: {
     fontFamily: Fonts.displayExtraBold,
