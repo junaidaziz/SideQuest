@@ -31,9 +31,11 @@
         "expo-image-picker",
         {
           "photosPermission": "SideQuest needs access to your photos to submit mission proof.",
-          "cameraPermission": "SideQuest needs access to your camera to capture mission proof."
+          "cameraPermission": "SideQuest needs access to your camera to capture mission proof.",
+          "microphonePermission": false
         }
-      ]
+      ],
+      "@sentry/react-native"
     ]
   }
 }
