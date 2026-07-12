@@ -39,6 +39,24 @@ describe('apiClient', () => {
       expect(requestInit.headers.Authorization).toBe('Bearer access-1');
     });
 
+    it('sends a FormData body as-is without JSON.stringify or a manual Content-Type', async () => {
+      (tokenStorage.getTokens as jest.Mock).mockResolvedValue({
+        accessToken: 'access-1',
+        refreshToken: 'refresh-1',
+      });
+      (globalThis.fetch as jest.Mock).mockResolvedValue(jsonResponse(200, {}));
+      const form = new FormData();
+      form.append('caption', 'hello');
+
+      await apiRequest('/missions/m1/proof', { method: 'POST', body: form });
+
+      const [, requestInit] = (globalThis.fetch as jest.Mock).mock.calls[0];
+      expect(requestInit.body).toBe(form);
+      expect(requestInit.headers['Content-Type']).toBeUndefined();
+      // Auth header must still be attached for authenticated multipart requests.
+      expect(requestInit.headers.Authorization).toBe('Bearer access-1');
+    });
+
     it('does not attach Authorization when auth is false', async () => {
       (globalThis.fetch as jest.Mock).mockResolvedValue(jsonResponse(200, {}));
 

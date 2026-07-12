@@ -52,7 +52,12 @@ interface RequestOptions {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, auth = true } = options;
 
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  // FormData (multipart uploads) must not be JSON-stringified, and fetch/RN
+  // sets the correct multipart boundary itself only when Content-Type is
+  // left unset — assigning it manually here would drop the boundary param.
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
+  const headers: Record<string, string> = isFormData ? {} : { 'Content-Type': 'application/json' };
   if (auth) {
     const tokens = await getTokens();
     if (tokens) headers.Authorization = `Bearer ${tokens.accessToken}`;
@@ -62,7 +67,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     fetch(`${API_BASE_URL}${path}`, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
     });
 
   let response = await doFetch();
