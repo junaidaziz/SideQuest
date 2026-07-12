@@ -23,7 +23,7 @@ import {
   Radius,
   Spacing,
 } from '../constants/design';
-import { generateMissions } from '../services/missionsApi';
+import { generateMissions, saveMission, unsaveMission } from '../services/missionsApi';
 import type { GenerateMissionsRequest, Mission } from '../types/api';
 
 export type { Mission, MissionCategory } from '../types/api';
@@ -325,9 +325,31 @@ export default function MissionResultsScreen({
     }, ACCEPT_CONFIRM_MS);
   }, [accepted, activeMission, closeSheet, onAccept]);
 
+  const saveMutation = useMutation({
+    mutationFn: (params: { missionId: string; save: boolean }) =>
+      params.save ? saveMission(params.missionId) : unsaveMission(params.missionId),
+  });
+
+  // Optimistic toggle, reverted on failure. Note: the sheet always opens with
+  // `saved` reset to false (see openSheet) regardless of prior state, because
+  // /missions/generate doesn't return per-mission saved status for the
+  // current user — re-opening a previously-saved mission won't reflect that
+  // until the generate response is extended to include it (tracked, not a
+  // bug in this pass, which only wires the button to actually persist).
   const handleSave = useCallback(() => {
-    setSaved((prev) => !prev);
-  }, []);
+    if (!activeMission) return;
+    const missionId = activeMission.id;
+    const nextSaved = !saved;
+    setSaved(nextSaved);
+    saveMutation.mutate(
+      { missionId, save: nextSaved },
+      {
+        onError: () => {
+          setSaved(!nextSaved);
+        },
+      },
+    );
+  }, [activeMission, saved, saveMutation]);
 
   const handleBack = useCallback(() => {
     // TODO: replace with navigation call once nav library is chosen
