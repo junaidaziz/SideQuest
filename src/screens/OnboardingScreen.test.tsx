@@ -174,6 +174,23 @@ describe('OnboardingScreen', () => {
         screen.getByLabelText('Finding your missions').props.accessibilityLiveRegion,
       ).toBe('polite');
     });
+
+    it('hides the last step from accessibility once loading starts (Android TalkBack parity)', async () => {
+      // accessibilityViewIsModal traps VoiceOver to the overlay on iOS, but has
+      // no effect on Android — the step behind it must be explicitly hidden too,
+      // or TalkBack could still swipe-navigate to and activate its CTA button.
+      await render(<OnboardingScreen />);
+      await advance('Solo', STEP_CTA[0]);
+      await advance('30 minutes', STEP_CTA[1]);
+      await advance('City', STEP_CTA[2]);
+      await advance('Free only', STEP_CTA[3]);
+
+      expect(screen.getByLabelText('Finding your missions')).toBeTruthy();
+      expect(screen.queryByLabelText(STEP_CTA[3])).toBeNull();
+      expect(
+        screen.getByLabelText(STEP_CTA[3], { includeHiddenElements: true }),
+      ).toBeTruthy();
+    });
   });
 
   describe('edge cases', () => {

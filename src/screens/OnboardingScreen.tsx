@@ -185,8 +185,8 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
               key={step.key}
               style={[styles.step, { width }]}
               pointerEvents={isActive ? 'auto' : 'none'}
-              accessibilityElementsHidden={!isActive}
-              importantForAccessibility={isActive ? 'auto' : 'no-hide-descendants'}
+              accessibilityElementsHidden={!isActive || isLoading}
+              importantForAccessibility={isActive && !isLoading ? 'auto' : 'no-hide-descendants'}
             >
               <ProgressBar activeIndex={stepIndex} total={STEPS.length} />
 
