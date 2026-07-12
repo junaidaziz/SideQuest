@@ -13,6 +13,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMutation } from '@tanstack/react-query';
 import {
   Colors,
   Duration,
@@ -22,35 +23,19 @@ import {
   Radius,
   Spacing,
 } from '../constants/design';
+import { generateMissions } from '../services/missionsApi';
+import type { GenerateMissionsRequest, Mission } from '../types/api';
 
-/** Quest category — drives stripe colour and badge styling. */
-export type MissionCategory = 'explore' | 'create' | 'discover';
-
-/** A single quest returned for the user's active filters. */
-export interface Mission {
-  id: number;
-  category: MissionCategory;
-  title: string;
-  /** Short teaser shown on the card (2-line clamp in the mockup). */
-  desc: string;
-  /** Full brief shown inside the detail sheet. */
-  full: string;
-  /** What the user must submit as proof of completion. */
-  proof: string;
-  time: string;
-  xp: string;
-  diff: string;
-  /** Filled difficulty dots, 1–3. */
-  dots: number;
-}
+export type { Mission, MissionCategory } from '../types/api';
 
 interface MissionResultsScreenProps {
-  /** Active filter chips from onboarding. Defaults to the mockup's set. */
-  filters?: string[];
+  /** Structured context filters from onboarding — drives both the API
+   * request and the display chips below the header. */
+  filters: GenerateMissionsRequest;
   /** Invoked by the header back button. */
   onBack?: () => void;
   /** Invoked after a quest is accepted (post-confirmation beat). */
-  onAccept?: (missionId: number) => void;
+  onAccept?: (missionId: string) => void;
 }
 
 /**
@@ -75,123 +60,51 @@ const CATEGORY_STYLES = {
   },
 } as const;
 
-// TODO: replace with API data — three shuffleable sets from mockup 02.
-const SETS: Mission[][] = [
-  [
-    {
-      id: 1,
-      category: 'explore',
-      title: 'Find the Oldest Thing',
-      desc: "Locate the oldest object visible from where you're standing. Age wins. Document it.",
-      full: "Look around you right now. What's the oldest thing you can see? It could be a building, a tree, a piece of infrastructure, or something someone left behind. The goal is to find it, learn what you can about its age, and document it.",
-      proof: 'Photograph the object and add a one-line caption with your best guess at its age.',
-      time: '20 min',
-      xp: '+40 XP',
-      diff: 'Easy',
-      dots: 1,
-    },
-    {
-      id: 2,
-      category: 'create',
-      title: 'The Balancing Act',
-      desc: 'Stack 5 natural objects you find into a tower. Photograph it before gravity wins.',
-      full: 'Source 5 natural objects — rocks, sticks, leaves, pinecones — from within a 2-minute walk. Stack them into the most stable tower you can manage. No glue. No cheating. Photograph it standing freely.',
-      proof: 'Photo of your tower with at least 5 distinct layers clearly visible.',
-      time: '15 min',
-      xp: '+35 XP',
-      diff: 'Easy',
-      dots: 1,
-    },
-    {
-      id: 3,
-      category: 'discover',
-      title: 'Neighborhood Newbie',
-      desc: "Walk one block in a direction you've never gone. Find something you've never noticed before.",
-      full: "Pick a direction you almost never walk in — even if you've lived here for years. Walk at least one full block. Your mission is to find one thing you genuinely haven't noticed before and document it.",
-      proof: 'Photograph your discovery. Caption: what made it surprising.',
-      time: '30 min',
-      xp: '+50 XP',
-      diff: 'Medium',
-      dots: 2,
-    },
-  ],
-  [
-    {
-      id: 4,
-      category: 'explore',
-      title: 'Window Worlds',
-      desc: 'Find a window with an interesting reflection. Capture it from an unusual angle.',
-      full: 'Reflections in glass create layered worlds most people walk past. Your mission: find a window that shows something interesting — a doubled scene, an unexpected juxtaposition, or a distorted view — and photograph it from an unconventional angle.',
-      proof: 'One photo. The more unexpected the composition, the better.',
-      time: '15 min',
-      xp: '+45 XP',
-      diff: 'Easy',
-      dots: 1,
-    },
-    {
-      id: 5,
-      category: 'create',
-      title: "Nature's Palette",
-      desc: 'Collect 5 objects that form a colour gradient from light to dark. Arrange and photograph.',
-      full: 'An eye test and a design challenge in one. Find 5 natural objects — petals, stones, bark, leaves, seeds — that form a smooth gradient from your lightest to darkest find. Arrange them in order.',
-      proof: 'One flat-lay photo showing all 5 items in clear light-to-dark order.',
-      time: '20 min',
-      xp: '+40 XP',
-      diff: 'Medium',
-      dots: 2,
-    },
-    {
-      id: 6,
-      category: 'discover',
-      title: 'Sound Map',
-      desc: 'Stand still for 2 minutes. Log every distinct sound you hear. Screenshot your list.',
-      full: "Find a spot outdoors — anywhere will do. Stand still for exactly 2 minutes. With your eyes closed, catalogue every distinct sound: distance, character, source. Then open your phone's notes app and write your list.",
-      proof: 'Screenshot of your notes list with at least 6 distinct sounds identified.',
-      time: '10 min',
-      xp: '+30 XP',
-      diff: 'Easy',
-      dots: 1,
-    },
-  ],
-  [
-    {
-      id: 7,
-      category: 'explore',
-      title: 'Sky Framing',
-      desc: "Use a natural or man-made frame to photograph the sky in a way you've never tried.",
-      full: "The sky is always there — it's the frame that makes it interesting. Find an opening: a gap in leaves, an alley between buildings, a tunnel entrance. Use it to frame a sky shot that feels deliberate.",
-      proof: 'One photo showing the frame clearly as part of the composition.',
-      time: '10 min',
-      xp: '+35 XP',
-      diff: 'Easy',
-      dots: 1,
-    },
-    {
-      id: 8,
-      category: 'create',
-      title: 'Street Typography',
-      desc: 'Find 5 different letterforms in your environment. Collect them into one photo.',
-      full: 'Letters are everywhere outdoors — on signs, painted roads, etched walls, grates. Find 5 unique letterforms and collect them into a single composite photo. Photograph them on the same surface or collage in your photo editor.',
-      proof: 'Composite photo showing 5 distinct environmental letterforms.',
-      time: '25 min',
-      xp: '+45 XP',
-      diff: 'Medium',
-      dots: 2,
-    },
-    {
-      id: 9,
-      category: 'discover',
-      title: 'The Invisible Path',
-      desc: 'Follow a route that only turns left. Where do you end up? Document the journey.',
-      full: 'Starting from exactly where you are: walk forward, but only ever turn left when you need to change direction. No right turns. No doubling back. Do this for at least 10 minutes. The constraint creates the adventure.',
-      proof: 'A screenshot of your maps route AND a photo of where you ended up.',
-      time: '30 min',
-      xp: '+55 XP',
-      diff: 'Hard',
-      dots: 3,
-    },
-  ],
-];
+/** Same emoji set OnboardingScreen uses for these exact option values, so the
+ * filter chips here read consistently with the screen the user just left. */
+const FILTER_EMOJI: {
+  crew: Record<string, string>;
+  time: Record<string, string>;
+  setting: Record<string, string>;
+  budget: Record<string, string>;
+} = {
+  crew: {
+    Solo: '\u{1F9CD}',
+    Partner: '\u{1F491}',
+    Friends: '\u{1F465}',
+    Family: '\u{1F468}‍\u{1F469}‍\u{1F467}',
+    'Kids Mode': '\u{1F9F8}',
+  },
+  time: {
+    '15 min': '⚡',
+    '30 min': '\u{1F550}',
+    '1 hour': '\u{1F551}',
+    '2+ hours': '\u{1F305}',
+  },
+  setting: {
+    Indoors: '\u{1F6CB}️',
+    Outdoors: '\u{1F33F}',
+    City: '\u{1F3D9}️',
+    Nature: '\u{1F332}',
+    Anywhere: '\u{1F30D}',
+  },
+  budget: {
+    Free: '\u{1F193}',
+    'Under $10': '☕',
+    'Under $30': '\u{1F39F}️',
+    'No limit': '\u{1F680}',
+  },
+};
+
+/** Turns structured filters into the emoji chip strings shown under the header. */
+export function buildFilterChips(filters: GenerateMissionsRequest): string[] {
+  return [
+    `${FILTER_EMOJI.crew[filters.crew] ?? ''} ${filters.crew}`.trim(),
+    `${FILTER_EMOJI.time[filters.time] ?? ''} ${filters.time}`.trim(),
+    `${FILTER_EMOJI.setting[filters.setting] ?? ''} ${filters.setting}`.trim(),
+    `${FILTER_EMOJI.budget[filters.budget] ?? ''} ${filters.budget}`.trim(),
+  ];
+}
 
 /**
  * Returns `style` only while a Pressable is pressed, else `null`. Extracted so
@@ -206,8 +119,7 @@ export function whenPressed(
   return pressed ? style : null;
 }
 
-const DEFAULT_FILTERS = ['🧍 Solo', '⏱ 30 min', '🌿 Outdoors', '🆓 Free'];
-const SHUFFLE_MS = 700;
+const SPIN_MS = Duration.screen;
 const ACCEPT_CONFIRM_MS = 900;
 
 /** Three difficulty dots, filled up to `dots`. Purely decorative. */
@@ -274,7 +186,7 @@ function MissionCard({ mission, onPress }: MissionCardProps) {
   );
 }
 
-/** Shimmer-free skeleton placeholder shown while a shuffle is in flight. */
+/** Shimmer-free skeleton placeholder shown while a generate/shuffle request is in flight. */
 function SkeletonList() {
   return (
     <View
@@ -297,47 +209,83 @@ function SkeletonList() {
   );
 }
 
+/** Shown when the request succeeded but no mission matched the filters. */
+function EmptyState() {
+  return (
+    <View style={styles.stateWrap} accessibilityLabel="No quests matched your filters">
+      <Text style={styles.stateHeading}>No quests found</Text>
+      <Text style={styles.stateBody}>
+        Nothing matched that combination yet. Try loosening a filter or shuffle again.
+      </Text>
+    </View>
+  );
+}
+
+/** Shown when the generate request itself failed. */
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <View style={styles.stateWrap} accessibilityLabel="Couldn't load quests">
+      <Text style={styles.stateHeading}>{"Couldn't load quests"}</Text>
+      <Text style={styles.stateBody}>Check your connection and try again.</Text>
+      <Pressable
+        onPress={onRetry}
+        accessibilityRole="button"
+        accessibilityLabel="Try again"
+        style={({ pressed }) => [styles.retryBtn, whenPressed(pressed, styles.retryBtnPressed)]}
+      >
+        <Text style={styles.retryBtnText}>Try again</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 export default function MissionResultsScreen({
-  filters = DEFAULT_FILTERS,
+  filters,
   onBack,
   onAccept,
 }: MissionResultsScreenProps) {
-  const [currentSet, setCurrentSet] = useState(0);
-  const [isShuffling, setIsShuffling] = useState(false);
   const [activeMission, setActiveMission] = useState<Mission | null>(null);
   const [accepted, setAccepted] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const spinAnim = useRef(new Animated.Value(0)).current;
   const sheetAnim = useRef(new Animated.Value(1)).current; // 1 = off-screen, 0 = shown
-  const shuffleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const acceptTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const missionsMutation = useMutation({
+    mutationFn: generateMissions,
+  });
+  const { mutate } = missionsMutation;
+
+  // Fetch once on mount, and again whenever the caller passes new filters
+  // (e.g. the user redoes onboarding with a different combination).
+  useEffect(() => {
+    mutate(filters);
+  }, [filters, mutate]);
 
   useEffect(() => {
     return () => {
-      if (shuffleTimer.current) clearTimeout(shuffleTimer.current);
       if (acceptTimer.current) clearTimeout(acceptTimer.current);
     };
   }, []);
 
-  const missions = SETS[currentSet];
+  const missions = missionsMutation.data?.missions ?? [];
+  const isLoading = missionsMutation.isPending;
+  const isError = missionsMutation.isError && !isLoading;
+  const isEmpty = !isLoading && !isError && missions.length === 0;
 
   const handleShuffle = useCallback(() => {
-    if (isShuffling) return;
-    setIsShuffling(true);
+    if (isLoading) return;
 
     spinAnim.setValue(0);
     Animated.timing(spinAnim, {
       toValue: 1,
-      duration: Duration.screen,
+      duration: SPIN_MS,
       useNativeDriver: true,
     }).start();
 
-    shuffleTimer.current = setTimeout(() => {
-      setCurrentSet((prev) => (prev + 1) % SETS.length);
-      setIsShuffling(false);
-    }, SHUFFLE_MS);
-  }, [isShuffling, spinAnim]);
+    mutate(filters);
+  }, [filters, isLoading, mutate, spinAnim]);
 
   const openSheet = useCallback(
     (mission: Mission) => {
@@ -388,6 +336,10 @@ export default function MissionResultsScreen({
     onBack?.();
   }, [onBack]);
 
+  const handleRetry = useCallback(() => {
+    mutate(filters);
+  }, [filters, mutate]);
+
   const renderCard = useCallback(
     ({ item }: ListRenderItemInfo<Mission>) => (
       <MissionCard mission={item} onPress={openSheet} />
@@ -400,6 +352,7 @@ export default function MissionResultsScreen({
     outputRange: ['0deg', '180deg'],
   });
   const countLabel = `${missions.length} quest${missions.length === 1 ? '' : 's'}`;
+  const chips = buildFilterChips(filters);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -419,10 +372,10 @@ export default function MissionResultsScreen({
 
         <Pressable
           onPress={handleShuffle}
-          disabled={isShuffling}
+          disabled={isLoading}
           accessibilityRole="button"
           accessibilityLabel="Shuffle quests"
-          accessibilityState={{ disabled: isShuffling, busy: isShuffling }}
+          accessibilityState={{ disabled: isLoading, busy: isLoading }}
           style={({ pressed }) => [styles.iconBtn, whenPressed(pressed, styles.iconBtnPressed)]}
         >
           <Animated.Text style={[styles.iconGlyph, { transform: [{ rotate: spin }] }]}>
@@ -438,29 +391,39 @@ export default function MissionResultsScreen({
         contentContainerStyle={styles.filterContent}
         accessibilityLabel="Active filters"
       >
-        {filters.map((filter) => (
-          <View key={filter} style={styles.chip}>
-            <Text style={styles.chipText}>{filter}</Text>
+        {chips.map((chip) => (
+          <View key={chip} style={styles.chip}>
+            <Text style={styles.chipText}>{chip}</Text>
           </View>
         ))}
       </ScrollView>
 
-      <Text
-        style={styles.count}
-        accessibilityLiveRegion="polite"
-        accessibilityLabel={`${countLabel} matched your filters`}
-      >
-        <Text style={styles.countStrong}>{countLabel}</Text> matched your filters
-      </Text>
+      {!isLoading && !isError ? (
+        <Text
+          style={styles.count}
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={`${countLabel} matched your filters`}
+        >
+          <Text style={styles.countStrong}>{countLabel}</Text> matched your filters
+        </Text>
+      ) : null}
 
-      {isShuffling ? (
+      {isLoading ? (
         <View style={styles.listArea}>
           <SkeletonList />
+        </View>
+      ) : isError ? (
+        <View style={styles.listArea}>
+          <ErrorState onRetry={handleRetry} />
+        </View>
+      ) : isEmpty ? (
+        <View style={styles.listArea}>
+          <EmptyState />
         </View>
       ) : (
         <FlatList
           data={missions}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item) => item.id}
           renderItem={renderCard}
           style={styles.listArea}
           contentContainerStyle={styles.listContent}
@@ -803,6 +766,42 @@ const styles = StyleSheet.create({
   skelMd: { height: 18, width: '80%' },
   skelLg: { height: 13, width: '100%' },
   skelLg2: { height: 13, width: '70%' },
+  stateWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xxl,
+    gap: Spacing.sm,
+  },
+  stateHeading: {
+    fontFamily: Fonts.displayBold,
+    fontSize: FontSize.cardLabel,
+    color: Colors.ink,
+    textAlign: 'center',
+  },
+  stateBody: {
+    fontFamily: Fonts.bodyRegular,
+    fontSize: FontSize.caption,
+    lineHeight: LineHeight.caption,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  retryBtn: {
+    marginTop: Spacing.sm,
+    borderRadius: Radius.btn,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+  },
+  retryBtnPressed: {
+    backgroundColor: Colors.primaryLight,
+  },
+  retryBtnText: {
+    fontFamily: Fonts.bodySemiBold,
+    fontSize: FontSize.body,
+    color: Colors.primary,
+  },
   modalRoot: {
     flex: 1,
     justifyContent: 'flex-end',
