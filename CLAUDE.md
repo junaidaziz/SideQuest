@@ -180,6 +180,6 @@ Every producer agent must invoke an independent reviewer agent after output is p
 
 Grant the minimum tools required:
 - Reviewers: `Read, Grep, Glob` only — never Write or Edit
-- Designers/implementers: `Read, Write, Edit, Glob, Grep, Bash`
+- Designers/implementers: `Read, Write, Edit, Glob, Grep, Bash, Agent` — the Swiss Cheese review step requires `Agent()`, so producers need the `Agent` tool even though they aren't full orchestrators
 - Research skills: add `WebFetch`
 - Orchestrators: add `Agent`
