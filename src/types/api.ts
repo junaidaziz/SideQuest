@@ -84,3 +84,22 @@ export interface GenerateMissionsRequest {
 export interface GenerateMissionsResponse {
   missions: Mission[];
 }
+
+/**
+ * Mirrors sidequest-backend `src/proof/dto/*`. Request is multipart/form-data
+ * (see proofApi.ts) so there's no request type here — only the response.
+ */
+export interface ProofSubmissionResponse {
+  completionId: string;
+  missionTitle: string;
+  xpAwarded: number;
+  totalXp: number;
+  currentStreak: number;
+  longestStreak: number;
+  /** Presigned download URL, present only for photo proofs. */
+  proofUrl: string | null;
+}
+
+/** Thrown reason string the backend returns when a guest has already used
+ * their one free completion — the client keys off this to show the signup gate. */
+export const GUEST_COMPLETION_LIMIT_REACHED = 'GUEST_COMPLETION_LIMIT_REACHED';
