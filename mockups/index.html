@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SideQuest — Prototype Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:       #5B3DE8;
+      --primary-light: #EBE7FD;
+      --accent:        #FFB800;
+      --ink:           #0E0E1A;
+      --surface:       #FFFFFF;
+      --muted:         #F5F3FF;
+      --secondary:     #6B6880;
+      --border:        #E8E5F4;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #12082A;
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      padding: 48px 24px 80px;
+      color: var(--ink);
+    }
+
+    /* ── Header ── */
+    .hub-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .hub-wordmark {
+      font-family: 'Syne', system-ui, sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .hub-wordmark .dot {
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+    .hub-subtitle {
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* ── Flow map ── */
+    .flow-label {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .flow-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 56px;
+      flex-wrap: wrap;
+      row-gap: 8px;
+    }
+
+    .flow-node {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .flow-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(91,61,232,0.25);
+      border: 1px solid rgba(91,61,232,0.4);
+      border-radius: 20px;
+      color: rgba(255,255,255,0.8);
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .flow-chip:hover { background: rgba(91,61,232,0.45); border-color: rgba(91,61,232,0.7); color: #fff; }
+    .flow-arrow {
+      color: rgba(255,255,255,0.25);
+      font-size: 16px;
+      padding: 0 4px;
+    }
+    .flow-chip.branch {
+      background: rgba(255,184,0,0.15);
+      border-color: rgba(255,184,0,0.3);
+      color: rgba(255,184,0,0.85);
+    }
+    .flow-chip.branch:hover { background: rgba(255,184,0,0.25); border-color: rgba(255,184,0,0.5); }
+
+    /* ── Screen grid ── */
+    .screens-label {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .screen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .screen-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .screen-card:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(91,61,232,0.5);
+      transform: translateY(-2px);
+    }
+    .screen-card:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .screen-num {
+      font-family: 'Syne', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+
+    .screen-name {
+      font-family: 'Syne', system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .screen-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.5;
+    }
+
+    .screen-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+    .tag-main    { background: rgba(91,61,232,0.25); color: #B5AAFC; }
+    .tag-alt     { background: rgba(255,184,0,0.2);  color: #FFD166; }
+    .tag-gate    { background: rgba(46,125,50,0.25); color: #81C784; }
+
+    .screen-arrow {
+      margin-top: 4px;
+      font-size: 13px;
+      color: rgba(91,61,232,0.6);
+      font-weight: 600;
+    }
+
+    /* ── Start CTA ── */
+    .start-wrap {
+      text-align: center;
+      margin-top: 48px;
+    }
+
+    .btn-start {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 32px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-start:hover  { background: #4A2ED6; }
+    .btn-start:active { transform: scale(0.98); }
+    .btn-start:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+    .start-note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="hub-header">
+    <div class="hub-wordmark">
+      <span>SideQuest</span>
+      <div class="dot"></div>
+    </div>
+    <p class="hub-subtitle">Interactive prototype · 8 screens · Click through to explore</p>
+  </header>
+
+  <!-- Flow map -->
+  <p class="flow-label">Primary user flow</p>
+  <nav class="flow-strip" aria-label="Screen flow">
+    <div class="flow-node">
+      <a href="01-onboarding.html" class="flow-chip">01 Onboarding</a>
+      <span class="flow-arrow" aria-hidden="true">→</span>
+    </div>
+    <div class="flow-node">
+      <a href="02-mission-results.html" class="flow-chip">02 Results</a>
+      <span class="flow-arrow" aria-hidden="true">→</span>
+    </div>
+    <div class="flow-node">
+      <a href="03-mission-detail.html" class="flow-chip">03 Detail</a>
+      <span class="flow-arrow" aria-hidden="true">→</span>
+    </div>
+    <div class="flow-node">
+      <a href="04-proof-submission.html" class="flow-chip">04 Submit Proof</a>
+      <span class="flow-arrow" aria-hidden="true">→</span>
+    </div>
+    <div class="flow-node">
+      <a href="05-completion.html" class="flow-chip">05 Completion</a>
+      <span class="flow-arrow" aria-hidden="true">→</span>
+    </div>
+    <div class="flow-node">
+      <a href="08-signup-prompt.html" class="flow-chip branch">08 Sign Up</a>
+      <span class="flow-arrow" aria-hidden="true">→</span>
+    </div>
+    <div class="flow-node">
+      <a href="06-home.html" class="flow-chip branch">06 Home</a>
+    </div>
+  </nav>
+
+  <!-- Screen grid -->
+  <p class="screens-label">All screens</p>
+  <main class="screen-grid">
+
+    <a href="01-onboarding.html" class="screen-card">
+      <span class="screen-num">01</span>
+      <span class="screen-name">Onboarding</span>
+      <span class="screen-desc">Context wizard — Who, Time, Setting, Budget. 4-step carousel with loading reveal.</span>
+      <span class="screen-tag tag-main">Entry point</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
+    <a href="02-mission-results.html" class="screen-card">
+      <span class="screen-num">02</span>
+      <span class="screen-name">Mission Results</span>
+      <span class="screen-desc">3 matched quest cards with shuffle. Tap a card to preview in bottom sheet.</span>
+      <span class="screen-tag tag-main">Core flow</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
+    <a href="03-mission-detail.html" class="screen-card">
+      <span class="screen-num">03</span>
+      <span class="screen-name">Mission Detail</span>
+      <span class="screen-desc">Full description, proof requirement, difficulty, and XP. Accept to begin.</span>
+      <span class="screen-tag tag-main">Core flow</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
+    <a href="04-proof-submission.html" class="screen-card">
+      <span class="screen-num">04</span>
+      <span class="screen-name">Proof Submission</span>
+      <span class="screen-desc">Photo or text capture. Tab switcher, camera viewfinder, character-counted text.</span>
+      <span class="screen-tag tag-main">Core flow</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
+    <a href="05-completion.html" class="screen-card">
+      <span class="screen-num">05</span>
+      <span class="screen-name">Completion</span>
+      <span class="screen-desc">XP earned, streak, shareable card, challenge prompt. Auth gate triggers on save/challenge.</span>
+      <span class="screen-tag tag-gate">Auth gate</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
+    <a href="06-home.html" class="screen-card">
+      <span class="screen-num">06</span>
+      <span class="screen-name">Home</span>
+      <span class="screen-desc">Returning user dashboard — daily mission, streak, XP level, challenges, saved packs.</span>
+      <span class="screen-tag tag-alt">Returning user</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
+    <a href="07-mode-select.html" class="screen-card">
+      <span class="screen-num">07</span>
+      <span class="screen-name">Mode Select</span>
+      <span class="screen-desc">8 quest modes (Solo, Couple, Friends…) each with unique visual identity.</span>
+      <span class="screen-tag tag-alt">Entry variant</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
+    <a href="08-signup-prompt.html" class="screen-card">
+      <span class="screen-num">08</span>
+      <span class="screen-name">Sign Up Prompt</span>
+      <span class="screen-desc">Contextual auth sheet — never shown upfront. Benefits-led, guest option always visible.</span>
+      <span class="screen-tag tag-gate">Auth gate</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
+  </main>
+
+  <!-- Start CTA -->
+  <div class="start-wrap">
+    <a href="01-onboarding.html" class="btn-start">
+      <span>▶</span> Start from the beginning
+    </a>
+    <p class="start-note">Opens screen 01 — follow the flow through all 8 screens</p>
+  </div>
+
+</body>
+</html>

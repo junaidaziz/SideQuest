@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SideQuest — Mission Results</title>
+  <!-- Google Fonts: prototype identity only, replace with bundled assets in production -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:            #0E0E1A;
+      --surface:        #FFFFFF;
+      --surface-muted:  #F5F3FF;
+      --primary:        #5B3DE8;
+      --primary-dark:   #4A2ED6;
+      --primary-light:  #EBE7FD;
+      --accent:         #FFB800;
+      --accent-dark:    #B45309;
+      --accent-light:   #FFF8E1;
+      --text-secondary: #6B6880;
+      --border:         #E8E5F4;
+      --error:          #E53935;
+      --success:        #2E7D32;
+      --success-light:  #E8F5E9;
+      --teal:           #0F766E;
+      --teal-light:     #F0FDFA;
+
+      --font-display: 'Syne', system-ui, sans-serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+
+      --radius-card:   16px;
+      --radius-btn:    14px;
+      --radius-chip:   8px;
+      --radius-sheet:  24px;
+
+      --ease:            cubic-bezier(0.4, 0, 0.2, 1);
+      --duration-quick:  150ms;
+      --duration-screen: 350ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: #12082A;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    /* ── Skip link ── */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 16px;
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 200;
+      text-decoration: none;
+    }
+    .skip-link:focus { top: 16px; }
+
+    /* ── Phone frame ── */
+    .phone {
+      width: 390px;
+      min-height: 844px;
+      background: #1C1532;
+      border-radius: 50px;
+      padding: 12px 12px 0;
+      position: relative;
+      box-shadow:
+        0 40px 80px rgba(0, 0, 0, 0.6),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    .island {
+      width: 120px;
+      height: 34px;
+      background: #12082A;
+      border-radius: 20px;
+      margin: 0 auto 8px;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px 8px;
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-icons {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    /* ── Screen ── */
+    .screen {
+      background: var(--surface);
+      border-radius: 38px 38px 0 0;
+      overflow: hidden;
+      height: 768px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ── Header ── */
+    .screen-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 20px 12px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink);
+      transition:
+        background var(--duration-quick) var(--ease),
+        border-color var(--duration-quick) var(--ease),
+        transform var(--duration-quick) var(--ease);
+      flex-shrink: 0;
+    }
+    .btn-icon:hover         { background: var(--surface-muted); border-color: var(--primary); }
+    .btn-icon:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-icon:active        { transform: scale(0.92); }
+
+    @keyframes spin-icon {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(180deg); }
+    }
+    .btn-shuffle.spinning svg { animation: spin-icon 0.35s var(--ease); }
+
+    .screen-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.3px;
+    }
+
+    /* ── Filter chips ── */
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      padding: 0 20px 14px;
+      flex-shrink: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 12px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 20px;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Count label ── */
+    .results-count {
+      padding: 0 20px 12px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .results-count strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* ── Mission list ── */
+    .missions {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    /* ── Mission card ── */
+    .mission-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-card);
+      background: var(--surface);
+      overflow: hidden;
+      position: relative;
+      transition:
+        border-color var(--duration-quick) var(--ease),
+        box-shadow var(--duration-quick) var(--ease);
+    }
+
+    /* Left category stripe */
+    .mission-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+    }
+    .mission-card.explore::before  { background: var(--primary); }
+    .mission-card.create::before   { background: var(--accent); }
+    .mission-card.discover::before { background: var(--teal); }
+
+    .mission-card:hover      { border-color: var(--primary); box-shadow: 0 4px 20px rgba(91,61,232,0.10); }
+    .mission-card:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .card-btn {
+      width: 100%;
+      padding: 16px 16px 16px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform var(--duration-quick) var(--ease);
+    }
+    .card-btn:active        { transform: scale(0.98); }
+    .card-btn:focus-visible { outline: none; } /* focus handled by parent focus-within */
+
+    /* Card top row */
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    /* Category badge */
+    .cat-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+    .cat-badge.explore  { background: var(--primary-light); color: var(--primary); }
+    .cat-badge.create   { background: var(--accent-light);  color: var(--accent-dark); }
+    .cat-badge.discover { background: var(--teal-light);    color: var(--teal); }
+
+    /* Difficulty dots */
+    .difficulty {
+      display: flex;
+      gap: 3px;
+      align-items: center;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .dot.filled { background: var(--text-secondary); }
+
+    .mission-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.2;
+      letter-spacing: -0.2px;
+      width: 100%;
+    }
+
+    .mission-desc {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    /* Card meta row */
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    .meta-time {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .meta-xp {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      background: var(--accent);
+      color: var(--ink);
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .meta-arrow {
+      margin-left: auto;
+      width: 26px;
+      height: 26px;
+      background: var(--primary-light);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    /* ── Skeleton cards (shuffle transition) ── */
+    .skeleton-wrap {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .skeleton-wrap.visible { display: flex; }
+
+    .skeleton-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 16px 16px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: -300px 0; }
+      100% { background-position: 300px 0; }
+    }
+
+    .skel {
+      background: linear-gradient(
+        90deg,
+        var(--border) 25%,
+        var(--surface-muted) 50%,
+        var(--border) 75%
+      );
+      background-size: 600px 100%;
+      animation: shimmer 1.2s infinite linear;
+      border-radius: 6px;
+    }
+    .skel-sm  { height: 14px; width: 60px; }
+    .skel-md  { height: 18px; width: 80%; }
+    .skel-lg  { height: 13px; width: 100%; }
+    .skel-lg2 { height: 13px; width: 70%; }
+    .skel-xs  { height: 12px; width: 50px; }
+
+    /* ── Sheet overlay ── */
+    .sheet-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(14, 14, 26, 0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--duration-screen) var(--ease);
+      border-radius: 38px 38px 0 0;
+      z-index: 10;
+    }
+    .sheet-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ── Bottom sheet ── */
+    .bottom-sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+      padding: 0 24px 32px;
+      transform: translateY(100%);
+      transition: transform var(--duration-screen) var(--ease);
+      z-index: 20;
+      max-height: 87%;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .bottom-sheet.open { transform: translateY(0); }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 12px auto 16px;
+    }
+
+    .sheet-close-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 16px;
+    }
+
+    .sheet-cat-wrap {
+      margin-bottom: 10px;
+    }
+
+    .sheet-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.15;
+      margin-bottom: 12px;
+      letter-spacing: -0.4px;
+    }
+
+    .sheet-body {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 18px;
+    }
+
+    .proof-box {
+      background: var(--surface-muted);
+      border-radius: var(--radius-chip);
+      padding: 14px;
+      margin-bottom: 20px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .proof-label {
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 5px;
+    }
+
+    .proof-text {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--ink);
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .sheet-meta-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .sheet-meta-item {
+      flex: 1;
+      background: var(--surface-muted);
+      border-radius: var(--radius-chip);
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .sheet-meta-label {
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .sheet-meta-value {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .sheet-meta-value.xp { color: var(--accent-dark); }
+
+    .btn-accept {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition:
+        background var(--duration-quick) var(--ease),
+        transform var(--duration-quick) var(--ease);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-accept:hover         { background: var(--primary-dark); }
+    .btn-accept:active        { transform: scale(0.98); }
+    .btn-accept:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-accept:disabled      { background: var(--border); color: var(--text-secondary); cursor: default; transform: none; }
+
+    .btn-accept.accepted {
+      background: var(--success);
+    }
+
+    .btn-save {
+      width: 100%;
+      padding: 14px;
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-btn);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      transition:
+        border-color var(--duration-quick) var(--ease),
+        background var(--duration-quick) var(--ease),
+        color var(--duration-quick) var(--ease);
+    }
+    .btn-save:hover         { border-color: var(--primary); background: var(--primary-light); }
+    .btn-save:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-save.saved         { border-color: var(--success); color: var(--success); background: var(--success-light); }
+
+    /* ── Home bar ── */
+    .home-bar {
+      width: 134px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 3px;
+      margin: 8px auto 10px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 420px) {
+      .phone  { width: 100%; min-width: 320px; border-radius: 0; padding: 12px 0 0; }
+      .screen { border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to quests</a>
+
+  <div class="phone" role="presentation">
+    <!-- Dynamic island -->
+    <div class="island" aria-hidden="true"></div>
+
+    <!-- Status bar -->
+    <div class="status-bar" aria-hidden="true">
+      <span>9:41</span>
+      <div class="status-icons">
+        <!-- Signal -->
+        <svg width="15" height="11" viewBox="0 0 15 11" fill="white">
+          <rect x="0" y="8"   width="3" height="3"  rx="0.5"/>
+          <rect x="4" y="5.5" width="3" height="5.5" rx="0.5"/>
+          <rect x="8" y="3"   width="3" height="8"  rx="0.5"/>
+          <rect x="12" y="0"  width="3" height="11" rx="0.5" opacity="0.35"/>
+        </svg>
+        <!-- Wi-Fi -->
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="white">
+          <path d="M8 10.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" fill="white" stroke="none"/>
+          <path d="M5 7.5a4.5 4.5 0 0 1 6 0"   stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M2.5 5a8 8 0 0 1 11 0"       stroke-width="1.3" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+        <!-- Battery -->
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="white">
+          <rect x="0.5" y="0.5" width="21" height="11" rx="3" stroke="white" stroke-opacity="0.4" fill="none"/>
+          <rect x="22"  y="4"   width="2.5" height="4" rx="1" fill="white" opacity="0.4"/>
+          <rect x="2"   y="2"   width="16"  height="8" rx="1.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ── Screen ── -->
+    <main class="screen" id="main-content">
+
+      <!-- Header -->
+      <header class="screen-header">
+        <button class="btn-icon" id="btn-back" aria-label="Back to filters">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="M11 14L6 9l5-5" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <h1 class="screen-title">Your Quests</h1>
+
+        <button class="btn-icon btn-shuffle" id="btn-shuffle" aria-label="Shuffle quests">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="M2 5h2.5A4 4 0 0 1 7.7 6.6L9 8" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 5h-2.5A4 4 0 0 0 10.3 6.6L9 8" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 3l2 2-2 2" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 10l1.3 1.6A4 4 0 0 0 13.5 13H16" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 11l2 2-2 2" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 13h2.5A4 4 0 0 0 7.7 11.4" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- Active filters -->
+      <div class="filter-row" role="list" aria-label="Active filters">
+        <span class="filter-chip" role="listitem">🧍 Solo</span>
+        <span class="filter-chip" role="listitem">⏱ 30 min</span>
+        <span class="filter-chip" role="listitem">🌿 Outdoors</span>
+        <span class="filter-chip" role="listitem">🆓 Free</span>
+      </div>
+
+      <!-- Result count -->
+      <p class="results-count" aria-live="polite" aria-atomic="true">
+        <strong id="count-number">3 quests</strong> matched your filters
+      </p>
+
+      <!-- Mission cards (populated by JS) -->
+      <div class="missions" id="mission-list" role="list" aria-label="Available quests">
+
+        <!-- Skeleton placeholder (shown during shuffle) -->
+        <div class="skeleton-wrap" id="skeleton-wrap" aria-hidden="true">
+          <div class="skeleton-card">
+            <div style="display:flex;justify-content:space-between;">
+              <div class="skel skel-sm"></div>
+              <div class="skel skel-xs"></div>
+            </div>
+            <div class="skel skel-md"></div>
+            <div class="skel skel-lg"></div>
+            <div class="skel skel-lg2"></div>
+            <div class="skel skel-xs"></div>
+          </div>
+          <div class="skeleton-card">
+            <div style="display:flex;justify-content:space-between;">
+              <div class="skel skel-sm"></div>
+              <div class="skel skel-xs"></div>
+            </div>
+            <div class="skel skel-md"></div>
+            <div class="skel skel-lg"></div>
+            <div class="skel skel-lg2"></div>
+            <div class="skel skel-xs"></div>
+          </div>
+          <div class="skeleton-card">
+            <div style="display:flex;justify-content:space-between;">
+              <div class="skel skel-sm"></div>
+              <div class="skel skel-xs"></div>
+            </div>
+            <div class="skel skel-md"></div>
+            <div class="skel skel-lg"></div>
+            <div class="skel skel-lg2"></div>
+            <div class="skel skel-xs"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sheet overlay (closes sheet on click) -->
+      <div class="sheet-overlay" id="overlay" aria-hidden="true"></div>
+
+      <!-- ── Bottom sheet: Mission detail ── -->
+      <section class="bottom-sheet" id="sheet"
+               role="dialog" aria-modal="true"
+               aria-labelledby="sheet-title" aria-hidden="true">
+
+        <div class="sheet-handle" aria-hidden="true"></div>
+
+        <div class="sheet-close-row">
+          <button class="btn-icon" id="btn-close-sheet" aria-label="Close mission detail">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M12 4L4 12M4 4l8 8" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="sheet-cat-wrap">
+          <span class="cat-badge" id="sheet-cat"></span>
+        </div>
+
+        <h2 class="sheet-title" id="sheet-title"></h2>
+        <p class="sheet-body" id="sheet-body"></p>
+
+        <div class="proof-box">
+          <div class="proof-label">Proof required</div>
+          <p class="proof-text" id="sheet-proof"></p>
+        </div>
+
+        <div class="sheet-meta-row">
+          <div class="sheet-meta-item">
+            <div class="sheet-meta-label">Time</div>
+            <div class="sheet-meta-value" id="sheet-time"></div>
+          </div>
+          <div class="sheet-meta-item">
+            <div class="sheet-meta-label">XP Reward</div>
+            <div class="sheet-meta-value xp" id="sheet-xp"></div>
+          </div>
+          <div class="sheet-meta-item">
+            <div class="sheet-meta-label">Difficulty</div>
+            <div class="sheet-meta-value" id="sheet-diff"></div>
+          </div>
+        </div>
+
+        <button class="btn-accept" id="btn-accept">Accept Quest</button>
+        <button class="btn-save"   id="btn-save">Save for later</button>
+
+      </section>
+
+    </main>
+
+    <div class="home-bar" aria-hidden="true"></div>
+  </div>
+
+  <script>
+    /* ── Mission data: 3 shuffleable sets ── */
+    const SETS = [
+      [
+        {
+          id: 1, cat: 'explore',
+          title: 'Find the Oldest Thing',
+          desc:  "Locate the oldest object visible from where you're standing. Age wins. Document it.",
+          full:  "Look around you right now. What's the oldest thing you can see? It could be a building, a tree, a piece of infrastructure, or something someone left behind. The goal is to find it, learn what you can about its age, and document it.",
+          proof: 'Photograph the object and add a one-line caption with your best guess at its age.',
+          time:  '20 min', xp: '+40 XP', diff: 'Easy', dots: 1
+        },
+        {
+          id: 2, cat: 'create',
+          title: 'The Balancing Act',
+          desc:  'Stack 5 natural objects you find into a tower. Photograph it before gravity wins.',
+          full:  'Source 5 natural objects — rocks, sticks, leaves, pinecones — from within a 2-minute walk. Stack them into the most stable tower you can manage. No glue. No cheating. Photograph it standing freely.',
+          proof: 'Photo of your tower with at least 5 distinct layers clearly visible.',
+          time:  '15 min', xp: '+35 XP', diff: 'Easy', dots: 1
+        },
+        {
+          id: 3, cat: 'discover',
+          title: 'Neighborhood Newbie',
+          desc:  "Walk one block in a direction you've never gone. Find something you've never noticed before.",
+          full:  "Pick a direction you almost never walk in — even if you've lived here for years. Walk at least one full block. Your mission is to find one thing you genuinely haven't noticed before and document it.",
+          proof: 'Photograph your discovery. Caption: what made it surprising.',
+          time:  '30 min', xp: '+50 XP', diff: 'Medium', dots: 2
+        }
+      ],
+      [
+        {
+          id: 4, cat: 'explore',
+          title: 'Window Worlds',
+          desc:  'Find a window with an interesting reflection. Capture it from an unusual angle.',
+          full:  "Reflections in glass create layered worlds most people walk past. Your mission: find a window that shows something interesting — a doubled scene, an unexpected juxtaposition, or a distorted view — and photograph it from an unconventional angle.",
+          proof: 'One photo. The more unexpected the composition, the better.',
+          time:  '15 min', xp: '+45 XP', diff: 'Easy', dots: 1
+        },
+        {
+          id: 5, cat: 'create',
+          title: "Nature's Palette",
+          desc:  'Collect 5 objects that form a colour gradient from light to dark. Arrange and photograph.',
+          full:  "An eye test and a design challenge in one. Find 5 natural objects — petals, stones, bark, leaves, seeds — that form a smooth gradient from your lightest to darkest find. Arrange them in order.",
+          proof: 'One flat-lay photo showing all 5 items in clear light-to-dark order.',
+          time:  '20 min', xp: '+40 XP', diff: 'Medium', dots: 2
+        },
+        {
+          id: 6, cat: 'discover',
+          title: 'Sound Map',
+          desc:  'Stand still for 2 minutes. Log every distinct sound you hear. Screenshot your list.',
+          full:  "Find a spot outdoors — anywhere will do. Stand still for exactly 2 minutes. With your eyes closed, catalogue every distinct sound: distance, character, source. Then open your phone's notes app and write your list.",
+          proof: 'Screenshot of your notes list with at least 6 distinct sounds identified.',
+          time:  '10 min', xp: '+30 XP', diff: 'Easy', dots: 1
+        }
+      ],
+      [
+        {
+          id: 7, cat: 'explore',
+          title: 'Sky Framing',
+          desc:  "Use a natural or man-made frame to photograph the sky in a way you've never tried.",
+          full:  "The sky is always there — it's the frame that makes it interesting. Find an opening: a gap in leaves, an alley between buildings, a tunnel entrance. Use it to frame a sky shot that feels deliberate.",
+          proof: 'One photo showing the frame clearly as part of the composition.',
+          time:  '10 min', xp: '+35 XP', diff: 'Easy', dots: 1
+        },
+        {
+          id: 8, cat: 'create',
+          title: 'Street Typography',
+          desc:  'Find 5 different letterforms in your environment. Collect them into one photo.',
+          full:  "Letters are everywhere outdoors — on signs, painted roads, etched walls, grates. Find 5 unique letterforms and collect them into a single composite photo. Photograph them on the same surface or collage in your photo editor.",
+          proof: 'Composite photo showing 5 distinct environmental letterforms.',
+          time:  '25 min', xp: '+45 XP', diff: 'Medium', dots: 2
+        },
+        {
+          id: 9, cat: 'discover',
+          title: 'The Invisible Path',
+          desc:  'Follow a route that only turns left. Where do you end up? Document the journey.',
+          full:  "Starting from exactly where you are: walk forward, but only ever turn left when you need to change direction. No right turns. No doubling back. Do this for at least 10 minutes. The constraint creates the adventure.",
+          proof: 'A screenshot of your maps route AND a photo of where you ended up.',
+          time:  '30 min', xp: '+55 XP', diff: 'Hard', dots: 3
+        }
+      ]
+    ];
+
+    let currentSet  = 0;
+    let activeId    = null;
+    let isShuffling = false;
+
+    /* ── Build & insert mission cards ── */
+    function renderMissions(setIdx, stagger) {
+      const list     = document.getElementById('mission-list');
+      const skeleton = document.getElementById('skeleton-wrap');
+      const missions = SETS[setIdx];
+
+      /* Remove old cards (keep skeleton) */
+      list.querySelectorAll('.mission-card').forEach(c => c.remove());
+
+      skeleton.classList.remove('visible');
+      skeleton.setAttribute('aria-hidden', 'true');
+
+      missions.forEach((m, i) => {
+        /* Article wrapper */
+        const article = document.createElement('article');
+        article.className = `mission-card ${m.cat}`;
+        article.setAttribute('role', 'listitem');
+
+        /* Button */
+        const btn = document.createElement('button');
+        btn.className = 'card-btn';
+        btn.setAttribute('aria-label', `View quest: ${m.title}`);
+
+        /* card-top */
+        const top = document.createElement('div');
+        top.className = 'card-top';
+
+        const badge = document.createElement('span');
+        badge.className = `cat-badge ${m.cat}`;
+        badge.textContent = m.cat.toUpperCase();
+
+        const diffWrap = document.createElement('div');
+        diffWrap.className = 'difficulty';
+        diffWrap.setAttribute('aria-label', `Difficulty: ${m.diff}`);
+        [1, 2, 3].forEach(d => {
+          const dot = document.createElement('span');
+          dot.className = 'dot' + (d <= m.dots ? ' filled' : '');
+          dot.setAttribute('aria-hidden', 'true');
+          diffWrap.appendChild(dot);
+        });
+
+        top.appendChild(badge);
+        top.appendChild(diffWrap);
+
+        /* Title */
+        const title = document.createElement('h2');
+        title.className = 'mission-title';
+        title.textContent = m.title;
+
+        /* Desc */
+        const desc = document.createElement('p');
+        desc.className = 'mission-desc';
+        desc.textContent = m.desc;
+
+        /* Meta row */
+        const meta = document.createElement('div');
+        meta.className = 'card-meta';
+
+        const time = document.createElement('span');
+        time.className = 'meta-time';
+
+        /* clock icon */
+        const clockSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        clockSvg.setAttribute('width', '13');
+        clockSvg.setAttribute('height', '13');
+        clockSvg.setAttribute('viewBox', '0 0 13 13');
+        clockSvg.setAttribute('fill', 'none');
+        clockSvg.setAttribute('aria-hidden', 'true');
+        const clockCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        clockCircle.setAttribute('cx', '6.5');
+        clockCircle.setAttribute('cy', '6.5');
+        clockCircle.setAttribute('r', '5.5');
+        clockCircle.setAttribute('stroke', 'currentColor');
+        clockCircle.setAttribute('stroke-width', '1.2');
+        const clockHand = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        clockHand.setAttribute('d', 'M6.5 4v3l1.5 1.5');
+        clockHand.setAttribute('stroke', 'currentColor');
+        clockHand.setAttribute('stroke-width', '1.2');
+        clockHand.setAttribute('stroke-linecap', 'round');
+        clockSvg.appendChild(clockCircle);
+        clockSvg.appendChild(clockHand);
+
+        time.appendChild(clockSvg);
+        time.appendChild(document.createTextNode(' ' + m.time));
+
+        const xp = document.createElement('span');
+        xp.className = 'meta-xp';
+        xp.textContent = m.xp;
+
+        const arrow = document.createElement('span');
+        arrow.className = 'meta-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+        const arrowSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        arrowSvg.setAttribute('width', '12');
+        arrowSvg.setAttribute('height', '12');
+        arrowSvg.setAttribute('viewBox', '0 0 12 12');
+        arrowSvg.setAttribute('fill', 'none');
+        const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        arrowPath.setAttribute('d', 'M2 6h8M7 3l3 3-3 3');
+        arrowPath.setAttribute('stroke', 'currentColor');
+        arrowPath.setAttribute('stroke-width', '1.5');
+        arrowPath.setAttribute('stroke-linecap', 'round');
+        arrowPath.setAttribute('stroke-linejoin', 'round');
+        arrowSvg.appendChild(arrowPath);
+        arrow.appendChild(arrowSvg);
+
+        meta.appendChild(time);
+        meta.appendChild(xp);
+        meta.appendChild(arrow);
+
+        btn.appendChild(top);
+        btn.appendChild(title);
+        btn.appendChild(desc);
+        btn.appendChild(meta);
+
+        btn.addEventListener('click', () => openSheet(m));
+
+        article.appendChild(btn);
+        list.appendChild(article);
+
+        /* Staggered entrance */
+        if (stagger) {
+          article.style.opacity   = '0';
+          article.style.transform = 'translateY(14px)';
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              article.style.transition =
+                `opacity 0.28s ease ${i * 75}ms, transform 0.28s ease ${i * 75}ms`;
+              article.style.opacity   = '1';
+              article.style.transform = 'translateY(0)';
+            }, 20);
+          });
+        }
+      });
+
+      /* Update count */
+      document.getElementById('count-number').textContent =
+        missions.length + ' quest' + (missions.length === 1 ? '' : 's');
+    }
+
+    /* ── Shuffle ── */
+    function shuffle() {
+      if (isShuffling) return;
+      isShuffling = true;
+
+      const shuffleBtn = document.getElementById('btn-shuffle');
+      shuffleBtn.classList.add('spinning');
+      setTimeout(() => shuffleBtn.classList.remove('spinning'), 350);
+
+      const list  = document.getElementById('skeleton-wrap');
+      const cards = document.querySelectorAll('.mission-card');
+
+      /* Fade out cards */
+      cards.forEach(c => {
+        c.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+        c.style.opacity    = '0';
+        c.style.transform  = 'translateY(-10px)';
+      });
+
+      setTimeout(() => {
+        /* Show skeleton */
+        document.querySelectorAll('.mission-card').forEach(c => c.remove());
+        document.getElementById('skeleton-wrap').classList.add('visible');
+        document.getElementById('skeleton-wrap').removeAttribute('aria-hidden');
+      }, 180);
+
+      setTimeout(() => {
+        currentSet = (currentSet + 1) % SETS.length;
+        renderMissions(currentSet, true);
+        isShuffling = false;
+      }, 700);
+    }
+
+    /* ── Open bottom sheet ── */
+    function openSheet(m) {
+      activeId = m.id;
+
+      const sheet   = document.getElementById('sheet');
+      const overlay = document.getElementById('overlay');
+
+      /* Populate via textContent (no innerHTML injection) */
+      const catEl = document.getElementById('sheet-cat');
+      catEl.textContent = m.cat.toUpperCase();
+      catEl.className   = `cat-badge ${m.cat}`;
+
+      document.getElementById('sheet-title').textContent = m.title;
+      document.getElementById('sheet-body').textContent  = m.full;
+      document.getElementById('sheet-proof').textContent = m.proof;
+      document.getElementById('sheet-time').textContent  = m.time;
+      document.getElementById('sheet-xp').textContent    = m.xp;
+      document.getElementById('sheet-diff').textContent  = m.diff;
+
+      /* Reset action buttons */
+      const acceptBtn = document.getElementById('btn-accept');
+      acceptBtn.textContent = 'Accept Quest';
+      acceptBtn.disabled    = false;
+      acceptBtn.classList.remove('accepted');
+      document.getElementById('btn-save').textContent = 'Save for later';
+      document.getElementById('btn-save').classList.remove('saved');
+
+      overlay.classList.add('open');
+      overlay.removeAttribute('aria-hidden');
+      sheet.classList.add('open');
+      sheet.removeAttribute('aria-hidden');
+
+      /* Lock list scroll, apply focus trap */
+      document.getElementById('mission-list').style.overflow = 'hidden';
+      installFocusTrap(sheet);
+
+      /* Focus close button after transition */
+      setTimeout(() => {
+        document.getElementById('btn-close-sheet').focus();
+      }, 360);
+    }
+
+    /* ── Close bottom sheet ── */
+    function closeSheet() {
+      const sheet   = document.getElementById('sheet');
+      const overlay = document.getElementById('overlay');
+
+      sheet.classList.remove('open');
+      sheet.setAttribute('aria-hidden', 'true');
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+
+      document.getElementById('mission-list').style.overflow = '';
+      removeFocusTrap(sheet);
+
+      /* Return focus to triggering card */
+      if (activeId !== null) {
+        const missions = SETS[currentSet];
+        const idx      = missions.findIndex(m => m.id === activeId);
+        if (idx >= 0) {
+          const btns = document.querySelectorAll('.card-btn');
+          if (btns[idx]) btns[idx].focus();
+        }
+        activeId = null;
+      }
+    }
+
+    /* ── Accept quest ── */
+    function acceptQuest() {
+      const btn = document.getElementById('btn-accept');
+      btn.textContent = 'Quest Accepted ✓';
+      btn.classList.add('accepted');
+      btn.disabled = true;
+      setTimeout(() => { window.location.href = '03-mission-detail.html'; }, 900);
+    }
+
+    /* ── Save for later ── */
+    function saveForLater() {
+      const btn = document.getElementById('btn-save');
+      btn.textContent = 'Saved ✓';
+      btn.classList.add('saved');
+    }
+
+    /* ── Back navigation ── */
+    function goBack() {
+      window.location.href = '01-onboarding.html';
+    }
+
+    /* ── Focus trap helpers ── */
+    let trapHandler = null;
+
+    function installFocusTrap(el) {
+      removeFocusTrap(el);
+      trapHandler = (e) => {
+        if (e.key !== 'Tab') return;
+        const focusable = Array.from(
+          el.querySelectorAll('button:not([disabled]), [tabindex="0"]')
+        ).filter(n => !n.closest('[aria-hidden="true"]'));
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last  = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+        }
+      };
+      el.addEventListener('keydown', trapHandler);
+    }
+
+    function removeFocusTrap(el) {
+      if (trapHandler) { el.removeEventListener('keydown', trapHandler); trapHandler = null; }
+    }
+
+    /* ── Wire up static button listeners (no onclick attrs) ── */
+    document.getElementById('btn-back').addEventListener('click',         goBack);
+    document.getElementById('btn-shuffle').addEventListener('click',      shuffle);
+    document.getElementById('overlay').addEventListener('click',          closeSheet);
+    document.getElementById('btn-close-sheet').addEventListener('click',  closeSheet);
+    document.getElementById('btn-accept').addEventListener('click',       acceptQuest);
+    document.getElementById('btn-save').addEventListener('click',         saveForLater);
+
+    /* Escape closes sheet */
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('sheet').classList.contains('open')) {
+        e.preventDefault();
+        closeSheet();
+      }
+    });
+
+    /* ── Initial render ── */
+    renderMissions(0, true);
+  </script>
+</body>
+</html>

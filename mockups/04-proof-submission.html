@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SideQuest — Submit Proof</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:            #0E0E1A;
+      --surface:        #FFFFFF;
+      --surface-muted:  #F5F3FF;
+      --primary:        #5B3DE8;
+      --primary-dark:   #4A2ED6;
+      --primary-light:  #EBE7FD;
+      --accent:         #FFB800;
+      --accent-dark:    #B45309;
+      --text-secondary: #6B6880;
+      --border:         #E8E5F4;
+      --error:          #E53935;
+      --success:        #2E7D32;
+      --success-light:  #E8F5E9;
+
+      --font-display: 'Syne', system-ui, sans-serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+
+      --radius-card:   16px;
+      --radius-btn:    14px;
+      --radius-chip:   8px;
+      --radius-sheet:  24px;
+
+      --ease:            cubic-bezier(0.4, 0, 0.2, 1);
+      --duration-quick:  150ms;
+      --duration-screen: 350ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: #12082A;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    /* ── Skip link ── */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 16px;
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 200;
+      text-decoration: none;
+    }
+    .skip-link:focus { top: 16px; }
+
+    /* ── Phone frame ── */
+    .phone {
+      width: 390px;
+      min-height: 844px;
+      background: #1C1532;
+      border-radius: 50px;
+      padding: 12px 12px 0;
+      position: relative;
+      box-shadow:
+        0 40px 80px rgba(0, 0, 0, 0.6),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    .island {
+      width: 120px;
+      height: 34px;
+      background: #12082A;
+      border-radius: 20px;
+      margin: 0 auto 8px;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px 8px;
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-icons { display: flex; gap: 5px; align-items: center; }
+
+    /* ── Screen ── */
+    .screen {
+      background: var(--surface);
+      border-radius: 38px 38px 0 0;
+      overflow: hidden;
+      height: 768px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ── Header ── */
+    .screen-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 20px 14px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink);
+      transition:
+        background var(--duration-quick) var(--ease),
+        border-color var(--duration-quick) var(--ease),
+        transform var(--duration-quick) var(--ease);
+    }
+    .btn-icon:hover         { background: var(--surface-muted); border-color: var(--primary); }
+    .btn-icon:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-icon:active        { transform: scale(0.92); }
+
+    .screen-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.3px;
+    }
+
+    /* ── Proof requirement banner ── */
+    .proof-banner {
+      margin: 0 20px 16px;
+      background: var(--primary-light);
+      border-radius: var(--radius-chip);
+      padding: 14px;
+      border-left: 3px solid var(--primary);
+      flex-shrink: 0;
+    }
+
+    .proof-banner-label {
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 5px;
+    }
+
+    .proof-banner-text {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--ink);
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    /* ── Tab switcher ── */
+    .tab-row {
+      display: flex;
+      gap: 0;
+      margin: 0 20px 16px;
+      background: var(--surface-muted);
+      border-radius: 10px;
+      padding: 3px;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 9px 0;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: none;
+      color: var(--text-secondary);
+      transition:
+        background var(--duration-quick) var(--ease),
+        color var(--duration-quick) var(--ease),
+        box-shadow var(--duration-quick) var(--ease);
+    }
+    .tab-btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 1px 4px rgba(14,14,26,0.1);
+    }
+
+    /* ── Content panel ── */
+    .panel {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel.active {
+      display: flex;
+    }
+
+    /* ── Camera panel ── */
+    .camera-area {
+      flex: 1;
+      margin: 0 20px;
+      border-radius: var(--radius-card);
+      background: #0E0E1A;
+      border: 2px dashed rgba(255,255,255,0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--duration-quick) var(--ease);
+      min-height: 280px;
+    }
+    .camera-area:hover {
+      border-color: rgba(91,61,232,0.5);
+    }
+    .camera-area:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    .camera-area:active .camera-shutter {
+      transform: scale(0.9);
+    }
+
+    /* Simulated viewfinder corners */
+    .camera-corner {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-color: rgba(255,255,255,0.35);
+      border-style: solid;
+      border-width: 0;
+    }
+    .camera-corner.tl { top: 16px; left: 16px; border-top-width: 2px; border-left-width: 2px; border-radius: 3px 0 0 0; }
+    .camera-corner.tr { top: 16px; right: 16px; border-top-width: 2px; border-right-width: 2px; border-radius: 0 3px 0 0; }
+    .camera-corner.bl { bottom: 16px; left: 16px; border-bottom-width: 2px; border-left-width: 2px; border-radius: 0 0 0 3px; }
+    .camera-corner.br { bottom: 16px; right: 16px; border-bottom-width: 2px; border-right-width: 2px; border-radius: 0 0 3px 0; }
+
+    .camera-icon-wrap {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .camera-hint {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+    }
+
+    .camera-hint-sub {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      text-align: center;
+    }
+
+    /* Photo preview state */
+    .camera-preview {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #2D3436 0%, #636e72 100%);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .camera-preview.show { display: flex; }
+
+    .preview-check {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-label {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .btn-retake {
+      padding: 7px 16px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--duration-quick) var(--ease);
+    }
+    .btn-retake:hover { background: rgba(255,255,255,0.25); }
+    .btn-retake:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+    /* ── Text panel ── */
+    .text-panel-inner {
+      flex: 1;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .text-field-label {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .text-area {
+      width: 100%;
+      min-height: 160px;
+      padding: 14px;
+      border-radius: var(--radius-card);
+      border: 1.5px solid var(--border);
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--ink);
+      line-height: 1.6;
+      resize: none;
+      background: var(--surface);
+      transition: border-color var(--duration-quick) var(--ease);
+      outline: none;
+    }
+    .text-area:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .text-area::placeholder { color: var(--text-secondary); }
+
+    .char-count {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: right;
+      margin-top: -4px;
+    }
+    .char-count.warn { color: var(--error); }
+
+    /* ── Bottom CTA ── */
+    .cta-area {
+      padding: 14px 20px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition:
+        background var(--duration-quick) var(--ease),
+        transform var(--duration-quick) var(--ease),
+        box-shadow var(--duration-quick) var(--ease);
+    }
+    .btn-submit:hover:not(:disabled)  { background: var(--primary-dark); box-shadow: 0 6px 24px rgba(91,61,232,0.35); }
+    .btn-submit:active:not(:disabled) { transform: scale(0.98); box-shadow: none; }
+    .btn-submit:focus-visible         { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-submit:disabled              { background: var(--border); color: var(--text-secondary); cursor: default; }
+
+    /* ── Home bar ── */
+    .home-bar {
+      width: 134px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 3px;
+      margin: 8px auto 10px;
+    }
+
+    @media (max-width: 420px) {
+      .phone  { width: 100%; min-width: 320px; border-radius: 0; padding: 12px 0 0; }
+      .screen { border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to proof submission</a>
+
+  <div class="phone" role="presentation">
+    <div class="island" aria-hidden="true"></div>
+
+    <div class="status-bar" aria-hidden="true">
+      <span>9:41</span>
+      <div class="status-icons">
+        <svg width="15" height="11" viewBox="0 0 15 11" fill="white" aria-hidden="true">
+          <rect x="0" y="8"   width="3" height="3"  rx="0.5"/>
+          <rect x="4" y="5.5" width="3" height="5.5" rx="0.5"/>
+          <rect x="8" y="3"   width="3" height="8"  rx="0.5"/>
+          <rect x="12" y="0"  width="3" height="11" rx="0.5" opacity="0.35"/>
+        </svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+          <path d="M8 10.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" fill="white"/>
+          <path d="M5 7.5a4.5 4.5 0 0 1 6 0" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M2.5 5a8 8 0 0 1 11 0" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="white" aria-hidden="true">
+          <rect x="0.5" y="0.5" width="21" height="11" rx="3" stroke="white" stroke-opacity="0.4" fill="none"/>
+          <rect x="22"  y="4"   width="2.5" height="4" rx="1" fill="white" opacity="0.4"/>
+          <rect x="2"   y="2"   width="16"  height="8" rx="1.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <main class="screen" id="main-content">
+
+      <!-- Header -->
+      <header class="screen-header">
+        <button class="btn-icon" id="btn-back" aria-label="Back to mission detail">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="M11 14L6 9l5-5" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <h1 class="screen-title">Submit Proof</h1>
+        <div style="width:40px;" aria-hidden="true"></div>
+      </header>
+
+      <!-- Proof requirement banner -->
+      <div class="proof-banner" role="note" aria-label="What counts as proof">
+        <div class="proof-banner-label">What counts as proof</div>
+        <p class="proof-banner-text" id="proof-requirement">Photograph the object and add a one-line caption with your best guess at its age.</p>
+      </div>
+
+      <!-- Tab switcher -->
+      <div class="tab-row" role="tablist" aria-label="Submission method">
+        <button class="tab-btn active" id="tab-photo" role="tab" aria-selected="true" aria-controls="panel-photo">
+          📷 Photo
+        </button>
+        <button class="tab-btn" id="tab-text" role="tab" aria-selected="false" aria-controls="panel-text">
+          ✍️ Text
+        </button>
+      </div>
+
+      <!-- Photo panel -->
+      <div class="panel active" id="panel-photo" role="tabpanel" aria-labelledby="tab-photo">
+        <button class="camera-area" id="camera-tap" aria-label="Tap to take photo or choose from library">
+          <span class="camera-corner tl" aria-hidden="true"></span>
+          <span class="camera-corner tr" aria-hidden="true"></span>
+          <span class="camera-corner bl" aria-hidden="true"></span>
+          <span class="camera-corner br" aria-hidden="true"></span>
+
+          <div class="camera-icon-wrap" aria-hidden="true">
+            <svg width="30" height="26" viewBox="0 0 30 26" fill="none">
+              <path d="M11 3H19L21 6H27C28.1 6 29 6.9 29 8V22C29 23.1 28.1 24 27 24H3C1.9 24 1 23.1 1 22V8C1 6.9 1.9 6 3 6H9L11 3Z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="15" cy="15" r="5" stroke="white" stroke-width="1.8"/>
+            </svg>
+          </div>
+          <p class="camera-hint">Tap to capture</p>
+          <p class="camera-hint-sub">Photo will be used as your proof</p>
+
+          <!-- Preview overlay (shown after "capture") -->
+          <div class="camera-preview" id="camera-preview" aria-hidden="true">
+            <div class="preview-check" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12l5 5 9-9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <p class="preview-label">Photo captured!</p>
+            <button class="btn-retake" id="btn-retake" type="button">Retake</button>
+          </div>
+        </button>
+
+        <div style="height: 14px;" aria-hidden="true"></div>
+      </div>
+
+      <!-- Text panel -->
+      <div class="panel" id="panel-text" role="tabpanel" aria-labelledby="tab-text">
+        <div class="text-panel-inner">
+          <div>
+            <label class="text-field-label" for="caption-input">Caption / description</label>
+            <textarea
+              class="text-area"
+              id="caption-input"
+              name="caption"
+              placeholder="Describe what you found and your best guess at its age…"
+              maxlength="500"
+              aria-describedby="char-count-label"
+            ></textarea>
+            <p class="char-count" id="char-count-label" aria-live="polite">0 / 500</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <footer class="cta-area">
+        <button class="btn-submit" id="btn-submit" aria-label="Submit your proof and complete the mission">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="M3 9l5 5 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Submit Proof
+        </button>
+      </footer>
+
+    </main>
+
+    <div class="home-bar" aria-hidden="true"></div>
+  </div>
+
+  <script>
+    /* ── Tab switching ── */
+    const tabPhoto  = document.getElementById('tab-photo');
+    const tabText   = document.getElementById('tab-text');
+    const panelPhoto = document.getElementById('panel-photo');
+    const panelText  = document.getElementById('panel-text');
+
+    function activateTab(activeTab, activePanel, inactiveTab, inactivePanel) {
+      activeTab.classList.add('active');
+      activeTab.setAttribute('aria-selected', 'true');
+      activePanel.classList.add('active');
+
+      inactiveTab.classList.remove('active');
+      inactiveTab.setAttribute('aria-selected', 'false');
+      inactivePanel.classList.remove('active');
+
+      updateSubmitState();
+    }
+
+    tabPhoto.addEventListener('click', function () {
+      activateTab(tabPhoto, panelPhoto, tabText, panelText);
+    });
+
+    tabText.addEventListener('click', function () {
+      activateTab(tabText, panelText, tabPhoto, panelPhoto);
+    });
+
+    /* ── Keyboard navigation for tabs ── */
+    [tabPhoto, tabText].forEach(function (tab) {
+      tab.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          activateTab(tabText, panelText, tabPhoto, panelPhoto);
+          tabText.focus();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          activateTab(tabPhoto, panelPhoto, tabText, panelText);
+          tabPhoto.focus();
+        }
+      });
+    });
+
+    /* ── Camera tap (simulated capture) ── */
+    let photoTaken = false;
+
+    document.getElementById('camera-tap').addEventListener('click', function (e) {
+      if (e.target === document.getElementById('btn-retake') || e.target.closest('#btn-retake')) return;
+      if (!photoTaken) {
+        photoTaken = true;
+        const preview = document.getElementById('camera-preview');
+        preview.classList.add('show');
+        preview.removeAttribute('aria-hidden');
+        this.setAttribute('aria-label', 'Photo captured. Tap to retake or proceed.');
+        updateSubmitState();
+      }
+    });
+
+    document.getElementById('btn-retake').addEventListener('click', function (e) {
+      e.stopPropagation();
+      photoTaken = false;
+      const preview = document.getElementById('camera-preview');
+      preview.classList.remove('show');
+      preview.setAttribute('aria-hidden', 'true');
+      document.getElementById('camera-tap').setAttribute('aria-label', 'Tap to take photo or choose from library');
+      updateSubmitState();
+    });
+
+    /* ── Text character counter ── */
+    const captionInput = document.getElementById('caption-input');
+    const charCountEl  = document.getElementById('char-count-label');
+
+    captionInput.addEventListener('input', function () {
+      const len = this.value.length;
+      charCountEl.textContent = len + ' / 500';
+      if (len > 450) {
+        charCountEl.classList.add('warn');
+      } else {
+        charCountEl.classList.remove('warn');
+      }
+      updateSubmitState();
+    });
+
+    /* ── Submit button state ── */
+    function updateSubmitState() {
+      const submitBtn  = document.getElementById('btn-submit');
+      const photoActive = panelPhoto.classList.contains('active');
+      const textActive  = panelText.classList.contains('active');
+
+      let canSubmit = false;
+      if (photoActive && photoTaken) canSubmit = true;
+      if (textActive && captionInput.value.trim().length > 10) canSubmit = true;
+
+      submitBtn.disabled = !canSubmit;
+    }
+
+    /* ── Submit ── */
+    document.getElementById('btn-submit').addEventListener('click', function () {
+      if (this.disabled) return;
+      this.textContent = 'Submitting…';
+      this.disabled = true;
+      setTimeout(() => {
+        this.textContent = 'Proof Submitted ✓';
+        this.style.background = '#2E7D32';
+      }, 900);
+      setTimeout(() => { window.location.href = '05-completion.html'; }, 1800);
+    });
+
+    /* ── Back ── */
+    document.getElementById('btn-back').addEventListener('click', function () {
+      window.location.href = '03-mission-detail.html';
+    });
+
+    /* ── Initial state ── */
+    updateSubmitState();
+  </script>
+</body>
+</html>

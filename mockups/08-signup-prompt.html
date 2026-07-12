@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SideQuest — Save Your Progress</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:            #0E0E1A;
+      --surface:        #FFFFFF;
+      --surface-muted:  #F5F3FF;
+      --primary:        #5B3DE8;
+      --primary-dark:   #4A2ED6;
+      --primary-light:  #EBE7FD;
+      --accent:         #FFB800;
+      --accent-dark:    #B45309;
+      --accent-light:   #FFF8E1;
+      --text-secondary: #6B6880;
+      --border:         #E8E5F4;
+      --success:        #2E7D32;
+
+      --font-display: 'Syne', system-ui, sans-serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+
+      --radius-card:   16px;
+      --radius-btn:    14px;
+      --radius-chip:   8px;
+      --radius-sheet:  24px;
+
+      --ease:            cubic-bezier(0.4, 0, 0.2, 1);
+      --duration-quick:  150ms;
+      --duration-screen: 350ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: #12082A;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    /* ── Skip link ── */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 16px;
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 200;
+      text-decoration: none;
+    }
+    .skip-link:focus { top: 16px; }
+
+    /* ── Phone frame ── */
+    .phone {
+      width: 390px;
+      min-height: 844px;
+      background: #1C1532;
+      border-radius: 50px;
+      padding: 12px 12px 0;
+      position: relative;
+      box-shadow:
+        0 40px 80px rgba(0, 0, 0, 0.6),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    .island {
+      width: 120px;
+      height: 34px;
+      background: #12082A;
+      border-radius: 20px;
+      margin: 0 auto 8px;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px 8px;
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-icons { display: flex; gap: 5px; align-items: center; }
+
+    /* ── Screen ── */
+    .screen {
+      background: var(--surface);
+      border-radius: 38px 38px 0 0;
+      overflow: hidden;
+      height: 768px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ── Completion screen underneath (blurred context) ── */
+    .bg-completion {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(160deg, #1A0A5E 0%, var(--primary) 50%, #8B5CF6 100%);
+      padding: 32px 24px 0;
+    }
+
+    .bg-trophy {
+      width: 72px;
+      height: 72px;
+      border-radius: 22px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+
+    .bg-complete-label {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .bg-complete-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .bg-complete-sub {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+    }
+
+    /* ── Overlay (dimmer) ── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(14, 14, 26, 0.5);
+      border-radius: 38px 38px 0 0;
+      z-index: 10;
+    }
+
+    /* ── Signup sheet ── */
+    .signup-sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+      padding: 0 24px 32px;
+      z-index: 20;
+      transform: translateY(0);
+    }
+
+    /* Sheet handle */
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 12px auto 22px;
+    }
+
+    /* Icon */
+    .sheet-icon-wrap {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--accent-light);
+      border: 1.5px solid rgba(255,184,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 28px;
+    }
+
+    /* Title */
+    .sheet-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.15;
+      margin-bottom: 10px;
+      letter-spacing: -0.4px;
+    }
+
+    /* Body */
+    .sheet-body {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 22px;
+    }
+
+    .sheet-body strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* Benefits list */
+    .benefits {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .benefit-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .benefit-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* XP highlight pill */
+    .xp-highlight {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      background: var(--accent);
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 20px;
+    }
+
+    /* Primary button */
+    .btn-signup {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition:
+        background var(--duration-quick) var(--ease),
+        transform var(--duration-quick) var(--ease),
+        box-shadow var(--duration-quick) var(--ease);
+    }
+    .btn-signup:hover         { background: var(--primary-dark); box-shadow: 0 6px 24px rgba(91,61,232,0.35); }
+    .btn-signup:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-signup:active        { transform: scale(0.98); box-shadow: none; }
+
+    /* Secondary: continue as guest */
+    .btn-guest {
+      width: 100%;
+      padding: 13px;
+      background: none;
+      border: none;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: color var(--duration-quick) var(--ease);
+    }
+    .btn-guest:hover         { color: var(--ink); }
+    .btn-guest:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+
+    /* ── Home bar ── */
+    .home-bar {
+      width: 134px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 3px;
+      margin: 8px auto 10px;
+    }
+
+    /* ── Dismissed state ── */
+    .dismissed-notice {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      z-index: 30;
+      background: var(--surface);
+    }
+    .dismissed-notice.show { display: flex; }
+
+    .dismissed-text {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .btn-show-again {
+      padding: 10px 20px;
+      border-radius: var(--radius-btn);
+      background: var(--primary-light);
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--duration-quick) var(--ease);
+    }
+    .btn-show-again:hover         { background: var(--primary); color: #fff; }
+    .btn-show-again:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+    @media (max-width: 420px) {
+      .phone  { width: 100%; min-width: 320px; border-radius: 0; padding: 12px 0 0; }
+      .screen { border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#signup-sheet" class="skip-link">Skip to sign up prompt</a>
+
+  <div class="phone" role="presentation">
+    <div class="island" aria-hidden="true"></div>
+
+    <div class="status-bar" aria-hidden="true">
+      <span>9:41</span>
+      <div class="status-icons">
+        <svg width="15" height="11" viewBox="0 0 15 11" fill="white" aria-hidden="true">
+          <rect x="0" y="8"   width="3" height="3"  rx="0.5"/>
+          <rect x="4" y="5.5" width="3" height="5.5" rx="0.5"/>
+          <rect x="8" y="3"   width="3" height="8"  rx="0.5"/>
+          <rect x="12" y="0"  width="3" height="11" rx="0.5" opacity="0.35"/>
+        </svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+          <path d="M8 10.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" fill="white"/>
+          <path d="M5 7.5a4.5 4.5 0 0 1 6 0" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M2.5 5a8 8 0 0 1 11 0" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="white" aria-hidden="true">
+          <rect x="0.5" y="0.5" width="21" height="11" rx="3" stroke="white" stroke-opacity="0.4" fill="none"/>
+          <rect x="22"  y="4"   width="2.5" height="4" rx="1" fill="white" opacity="0.4"/>
+          <rect x="2"   y="2"   width="16"  height="8" rx="1.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <main class="screen" id="main-content">
+
+      <!-- Completion screen peeking behind -->
+      <div class="bg-completion" aria-hidden="true">
+        <div class="bg-trophy">🏆</div>
+        <p class="bg-complete-label">Quest complete</p>
+        <h2 class="bg-complete-title">You did it!</h2>
+        <p class="bg-complete-sub">Find the Oldest Thing</p>
+      </div>
+
+      <!-- Dimming overlay -->
+      <div class="overlay" id="overlay" aria-hidden="true"></div>
+
+      <!-- Signup sheet -->
+      <section class="signup-sheet" id="signup-sheet"
+               role="dialog" aria-modal="true"
+               aria-labelledby="sheet-title">
+
+        <div class="sheet-handle" aria-hidden="true"></div>
+
+        <div class="sheet-icon-wrap" aria-hidden="true">🔒</div>
+
+        <h1 class="sheet-title" id="sheet-title">Keep your XP and streak</h1>
+
+        <p class="sheet-body">
+          You've earned <strong>40 XP</strong> and are on a <strong>3-day streak</strong>.
+          Create a free account to make sure they're not lost.
+        </p>
+
+        <div class="xp-highlight" role="status" aria-label="40 XP at risk">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 1l1.6 3.2 3.4.5-2.5 2.4.6 3.4L7 8.8l-3.1 1.7.6-3.4L2 4.7l3.4-.5L7 1z" fill="#B45309"/>
+          </svg>
+          40 XP at risk if you continue as guest
+        </div>
+
+        <!-- Benefits -->
+        <ul class="benefits" aria-label="Benefits of creating an account">
+          <li class="benefit-item">
+            <span class="benefit-dot" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6l3 3 5-5" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            Save XP and level progress permanently
+          </li>
+          <li class="benefit-item">
+            <span class="benefit-dot" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6l3 3 5-5" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            Maintain your streak across devices
+          </li>
+          <li class="benefit-item">
+            <span class="benefit-dot" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6l3 3 5-5" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            Challenge friends and track results
+          </li>
+        </ul>
+
+        <button class="btn-signup" id="btn-signup" aria-label="Create a free account">
+          Create free account
+        </button>
+        <button class="btn-guest" id="btn-guest" aria-label="Continue as guest and lose progress">
+          Continue as guest
+        </button>
+
+      </section>
+
+      <!-- Post-dismiss notice (shown after "continue as guest") -->
+      <div class="dismissed-notice" id="dismissed-notice" role="status" aria-live="polite">
+        <p class="dismissed-text">
+          Prompt dismissed. In the app, this sheet appears contextually only once at XP / streak / challenge moments — never on first launch.
+        </p>
+        <button class="btn-show-again" id="btn-reset">Show prompt again</button>
+      </div>
+
+    </main>
+
+    <div class="home-bar" aria-hidden="true"></div>
+  </div>
+
+  <script>
+    /* ── Focus trap ── */
+    let trapHandler = null;
+
+    function installFocusTrap(el) {
+      removeFocusTrap(el);
+      trapHandler = function (e) {
+        if (e.key !== 'Tab') return;
+        const focusable = Array.from(
+          el.querySelectorAll('button:not([disabled]), [href], input, [tabindex="0"]')
+        ).filter(function (n) { return !n.closest('[aria-hidden="true"]') && n.offsetParent !== null; });
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last  = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+        }
+      };
+      el.addEventListener('keydown', trapHandler);
+    }
+
+    function removeFocusTrap(el) {
+      if (trapHandler) {
+        el.removeEventListener('keydown', trapHandler);
+        trapHandler = null;
+      }
+    }
+
+    /* ── On load: install focus trap, focus primary action ── */
+    const sheet        = document.getElementById('signup-sheet');
+    const dismissed    = document.getElementById('dismissed-notice');
+
+    function showSheet() {
+      sheet.removeAttribute('aria-hidden');
+      dismissed.classList.remove('show');
+      installFocusTrap(sheet);
+      setTimeout(function () {
+        document.getElementById('btn-signup').focus();
+      }, 100);
+    }
+
+    function hideSheet(reason) {
+      sheet.setAttribute('aria-hidden', 'true');
+      removeFocusTrap(sheet);
+      dismissed.classList.add('show');
+      document.getElementById('btn-reset').focus();
+    }
+
+    /* ── Create account ── */
+    document.getElementById('btn-signup').addEventListener('click', function () {
+      this.textContent = 'Creating account…';
+      this.disabled = true;
+      setTimeout(() => {
+        this.textContent = 'Account created ✓';
+        this.style.background = '#2E7D32';
+      }, 800);
+      setTimeout(() => { window.location.href = '06-home.html'; }, 1600);
+    });
+
+    /* ── Continue as guest → back to completion ── */
+    document.getElementById('btn-guest').addEventListener('click', function () {
+      window.location.href = '05-completion.html';
+    });
+
+    /* ── Escape closes sheet ── */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !sheet.hasAttribute('aria-hidden')) {
+        e.preventDefault();
+        hideSheet('escape');
+      }
+    });
+
+    /* ── Reset (prototype only) ── */
+    document.getElementById('btn-reset').addEventListener('click', showSheet);
+
+    /* ── Overlay tap (informational only for this static sheet) ── */
+    document.getElementById('overlay').addEventListener('click', function () {
+      hideSheet('overlay');
+    });
+
+    /* ── Auto-focus on load ── */
+    showSheet();
+  </script>
+</body>
+</html>

@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SideQuest — Start your quest</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap');
+
+    /* ── Design tokens ─────────────────────────────────── */
+    :root {
+      --ink:            #0E0E1A;
+      --surface:        #FFFFFF;
+      --surface-muted:  #F5F3FF;
+      --primary:        #5B3DE8;
+      --primary-dark:   #4A2ED6;
+      --primary-light:  #EBE7FD;
+      --accent:         #FFB800;
+      --text-secondary: #6B6880;
+      --border:         #E8E5F4;
+      --error:          #E53935;
+      --radius-card:    16px;
+      --radius-btn:     14px;
+      --ease:           cubic-bezier(0.4, 0, 0.2, 1);
+      --font-display:   'Syne', system-ui, sans-serif;
+      --font-body:      'Inter', system-ui, sans-serif;
+    }
+
+    /* ── Reset ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #12082A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-body);
+      padding: 32px 16px;
+    }
+
+    /* ── Phone frame ───────────────────────────────────── */
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: #1C1532;
+      border-radius: 52px;
+      box-shadow:
+        0 0 0 1.5px #2E2250,
+        0 0 0 3px #1C1532,
+        0 40px 100px rgba(0,0,0,0.7),
+        inset 0 0 0 1px rgba(255,255,255,0.06);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Dynamic island */
+    .island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 126px;
+      height: 36px;
+      background: #0E0E1A;
+      border-radius: 20px;
+      z-index: 20;
+    }
+
+    /* Status bar */
+    .status-bar {
+      height: 52px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 28px 10px;
+      color: var(--ink);
+      background: var(--surface);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .status-time { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+    .status-icons { display: flex; gap: 7px; align-items: center; }
+
+    /* Screen viewport */
+    .screen {
+      flex: 1;
+      background: var(--surface);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Steps carousel */
+    .carousel {
+      display: flex;
+      height: 100%;
+      transition: transform 0.35s var(--ease);
+      will-change: transform;
+    }
+
+    .step {
+      min-width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 22px 28px;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .step::-webkit-scrollbar { display: none; }
+
+    /* Progress bar */
+    .progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 32px;
+      align-items: center;
+    }
+    .progress-seg {
+      height: 4px;
+      border-radius: 2px;
+      flex: 1;
+      background: var(--border);
+      transition: background 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-seg.done { background: var(--primary); opacity: 0.45; }
+    .progress-seg.active { background: var(--border); }
+    .progress-seg.active::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--primary);
+      border-radius: 2px;
+      animation: fillBar 0.4s var(--ease) forwards;
+    }
+    @keyframes fillBar {
+      from { width: 0; } to { width: 100%; }
+    }
+    .progress-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      white-space: nowrap;
+      margin-left: 4px;
+    }
+
+    /* Question heading */
+    .q-heading {
+      font-family: var(--font-display);
+      font-size: 29px;
+      font-weight: 800;
+      line-height: 1.18;
+      color: var(--ink);
+      letter-spacing: -0.6px;
+      margin-bottom: 6px;
+    }
+    .q-sub {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    /* Option cards */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      flex: 1;
+    }
+
+    .opt {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 15px 16px;
+      border-radius: var(--radius-card);
+      border: 2px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+    }
+    .opt:hover  { border-color: var(--primary); background: var(--surface-muted); }
+    .opt:active { transform: scale(0.985); }
+
+    .opt.selected {
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+    .opt.selected .opt-label { color: #fff; }
+
+    /* Keyboard focus */
+    .opt:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .opt-emoji {
+      font-size: 21px;
+      width: 30px;
+      text-align: center;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .opt-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      transition: color 0.15s ease;
+      flex: 1;
+    }
+
+    /* Checkmark circle */
+    .opt-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    .opt.selected .opt-check {
+      border-color: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.18);
+    }
+    .opt-check .check-icon {
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .opt.selected .opt-check .check-icon {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Bottom CTA area */
+    .cta-area { padding-top: 18px; flex-shrink: 0; }
+
+    .btn-next {
+      width: 100%;
+      height: 54px;
+      border-radius: var(--radius-btn);
+      background: var(--primary);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+      letter-spacing: 0.01em;
+    }
+    .btn-next:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 3px;
+    }
+    .btn-next:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(91,61,232,0.38);
+    }
+    .btn-next:active:not(:disabled) { transform: scale(0.98); box-shadow: none; }
+    .btn-next:disabled {
+      background: var(--border);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ── Loading screen ────────────────────────────────── */
+    .loading {
+      position: absolute;
+      inset: 0;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      z-index: 30;
+    }
+    .loading.show { opacity: 1; pointer-events: auto; }
+
+    .loading-orb {
+      width: 80px;
+      height: 80px;
+      border-radius: 24px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin-bottom: 28px;
+      animation: orbPulse 1.6s ease-in-out infinite;
+      box-shadow: 0 0 0 0 rgba(91,61,232,0.5);
+    }
+    @keyframes orbPulse {
+      0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(91,61,232,0.4); }
+      50%      { transform: scale(1.06); box-shadow: 0 0 0 18px rgba(91,61,232,0); }
+    }
+
+    .loading-heading {
+      font-family: var(--font-display);
+      font-size: 23px;
+      font-weight: 800;
+      color: var(--ink);
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: -0.4px;
+    }
+    .loading-body {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .dots {
+      display: flex;
+      gap: 7px;
+      margin-top: 36px;
+    }
+    .dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: 0.35;
+      animation: dotBounce 1.3s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.18s; }
+    .dot:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes dotBounce {
+      0%,80%,100% { transform: translateY(0); opacity: 0.35; }
+      40%          { transform: translateY(-9px); opacity: 1; }
+    }
+
+    /* Summary chips (shown on loading screen) */
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* ── Home bar ───────────────────────────────────────── */
+    .home-bar {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .home-bar-pill {
+      width: 128px; height: 5px;
+      background: var(--ink);
+      border-radius: 3px;
+      opacity: 0.12;
+    }
+
+    /* Skip to content (accessibility) */
+    .skip {
+      position: absolute;
+      left: -9999px;
+      top: auto;
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 100;
+    }
+    .skip:focus { left: 12px; top: 12px; }
+  </style>
+</head>
+
+<body>
+  <div class="phone" role="application" aria-label="SideQuest">
+    <div class="island" aria-hidden="true"></div>
+
+    <!-- Status bar -->
+    <div class="status-bar" aria-hidden="true">
+      <span class="status-time">9:41</span>
+      <div class="status-icons">
+        <!-- Signal -->
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="var(--ink)">
+          <rect x="0"   y="8"   width="3" height="4" rx="1" opacity="0.25"/>
+          <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" opacity="0.5"/>
+          <rect x="9"   y="3"   width="3" height="9" rx="1" opacity="0.75"/>
+          <rect x="13.5" y="0" width="3" height="12" rx="1"/>
+        </svg>
+        <!-- Wi-Fi -->
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="var(--ink)">
+          <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
+          <path d="M4.5 7C5.7 5.8 6.8 5 8 5s2.3.8 3.5 2" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M1.5 4C3.5 2 5.7 1 8 1s4.5 1 6.5 3" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+        <!-- Battery -->
+        <svg width="26" height="13" viewBox="0 0 26 13" fill="none">
+          <rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="var(--ink)" stroke-opacity="0.3"/>
+          <rect x="2" y="2" width="17" height="9" rx="2.5" fill="var(--ink)"/>
+          <path d="M24 4.5v4a2 2 0 000-4z" fill="var(--ink)" opacity="0.35"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Screen -->
+    <div class="screen">
+      <a href="#step-1-options" class="skip">Skip to options</a>
+
+      <!-- Carousel -->
+      <div class="carousel" id="carousel">
+
+        <!-- ── Step 1: Who ───────────────────────────── -->
+        <section class="step" aria-labelledby="q1" id="step0">
+          <div class="progress" aria-hidden="true">
+            <div class="progress-seg active"></div>
+            <div class="progress-seg"></div>
+            <div class="progress-seg"></div>
+            <div class="progress-seg"></div>
+            <span class="progress-label">1 of 4</span>
+          </div>
+
+          <h1 class="q-heading" id="q1">Who are you going with?</h1>
+          <p class="q-sub">Pick your crew for today</p>
+
+          <div class="options" id="step-1-options" role="radiogroup" aria-labelledby="q1">
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="0" data-value="Solo"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🧍</span>
+              <span class="opt-label">Solo</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="0" data-value="Partner"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">💑</span>
+              <span class="opt-label">Partner</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="0" data-value="Friends"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">👥</span>
+              <span class="opt-label">Friends</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="0" data-value="Family"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">👨‍👩‍👧</span>
+              <span class="opt-label">Family</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="0" data-value="Kids Mode"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🧸</span>
+              <span class="opt-label">Kids Mode</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="cta-area">
+            <button class="btn-next" id="btn0" disabled aria-disabled="true" onclick="advance(0)">
+              Next
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8h10M9.5 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- ── Step 2: Time ──────────────────────────── -->
+        <section class="step" aria-labelledby="q2" id="step1" aria-hidden="true">
+          <div class="progress" aria-hidden="true">
+            <div class="progress-seg done"></div>
+            <div class="progress-seg active"></div>
+            <div class="progress-seg"></div>
+            <div class="progress-seg"></div>
+            <span class="progress-label">2 of 4</span>
+          </div>
+
+          <h1 class="q-heading" id="q2">How much time do you have?</h1>
+          <p class="q-sub">We'll match missions to your window</p>
+
+          <div class="options" role="radiogroup" aria-labelledby="q2">
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="1" data-value="15 min"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">⚡</span>
+              <span class="opt-label">15 minutes</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="1" data-value="30 min"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🕐</span>
+              <span class="opt-label">30 minutes</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="1" data-value="1 hour"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🕑</span>
+              <span class="opt-label">About an hour</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="1" data-value="2+ hours"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🌅</span>
+              <span class="opt-label">2+ hours</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="cta-area">
+            <button class="btn-next" id="btn1" disabled aria-disabled="true" onclick="advance(1)">
+              Next
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8h10M9.5 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- ── Step 3: Setting ───────────────────────── -->
+        <section class="step" aria-labelledby="q3" id="step2" aria-hidden="true">
+          <div class="progress" aria-hidden="true">
+            <div class="progress-seg done"></div>
+            <div class="progress-seg done"></div>
+            <div class="progress-seg active"></div>
+            <div class="progress-seg"></div>
+            <span class="progress-label">3 of 4</span>
+          </div>
+
+          <h1 class="q-heading" id="q3">What's your setting?</h1>
+          <p class="q-sub">Where are you right now?</p>
+
+          <div class="options" role="radiogroup" aria-labelledby="q3">
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="2" data-value="Indoors"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🛋️</span>
+              <span class="opt-label">Indoors</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="2" data-value="Outdoors"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🌿</span>
+              <span class="opt-label">Outdoors</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="2" data-value="City"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🏙️</span>
+              <span class="opt-label">City</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="2" data-value="Nature"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🌲</span>
+              <span class="opt-label">Nature</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="2" data-value="Anywhere"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🌍</span>
+              <span class="opt-label">Anywhere</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="cta-area">
+            <button class="btn-next" id="btn2" disabled aria-disabled="true" onclick="advance(2)">
+              Next
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8h10M9.5 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- ── Step 4: Budget ────────────────────────── -->
+        <section class="step" aria-labelledby="q4" id="step3" aria-hidden="true">
+          <div class="progress" aria-hidden="true">
+            <div class="progress-seg done"></div>
+            <div class="progress-seg done"></div>
+            <div class="progress-seg done"></div>
+            <div class="progress-seg active"></div>
+            <span class="progress-label">4 of 4</span>
+          </div>
+
+          <h1 class="q-heading" id="q4">What's your budget?</h1>
+          <p class="q-sub">Last one — almost there</p>
+
+          <div class="options" role="radiogroup" aria-labelledby="q4">
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="3" data-value="Free"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🆓</span>
+              <span class="opt-label">Free only</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="3" data-value="Under $10"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">☕</span>
+              <span class="opt-label">Under $10</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="3" data-value="Under $30"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🎟️</span>
+              <span class="opt-label">Under $30</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+            <div class="opt" role="radio" aria-checked="false" tabindex="0"
+                 data-step="3" data-value="No limit"
+                 onclick="pick(this)" onkeydown="keyPick(event,this)">
+              <span class="opt-emoji" aria-hidden="true">🚀</span>
+              <span class="opt-label">No limit</span>
+              <span class="opt-check" aria-hidden="true">
+                <svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="cta-area">
+            <button class="btn-next" id="btn3" disabled aria-disabled="true" onclick="advance(3)">
+              Find My Missions
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8h10M9.5 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+      </div><!-- /carousel -->
+
+      <!-- ── Loading overlay ─────────────────────────── -->
+      <div class="loading" id="loading" role="status" aria-live="polite" aria-label="Finding missions">
+        <div class="loading-orb" aria-hidden="true">⚡</div>
+        <p class="loading-heading">Finding your missions…</p>
+        <p class="loading-body">Matching to your vibe</p>
+        <div class="summary" id="summary" aria-label="Your selections"></div>
+        <div class="dots" aria-hidden="true">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+
+    </div><!-- /screen -->
+
+    <!-- Home indicator -->
+    <div class="home-bar" aria-hidden="true">
+      <div class="home-bar-pill"></div>
+    </div>
+  </div><!-- /phone -->
+
+  <script>
+    const sel = {};   // { 0: "Solo", 1: "30 min", ... }
+
+    function pick(card) {
+      const step = +card.dataset.step;
+      // Deselect all in group
+      card.closest('[role="radiogroup"]').querySelectorAll('.opt').forEach(c => {
+        c.classList.remove('selected');
+        c.setAttribute('aria-checked', 'false');
+      });
+      // Select this
+      card.classList.add('selected');
+      card.setAttribute('aria-checked', 'true');
+      sel[step] = card.dataset.value;
+      // Enable button
+      const btn = document.getElementById('btn' + step);
+      btn.disabled = false;
+      btn.setAttribute('aria-disabled', 'false');
+    }
+
+    function keyPick(e, card) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(card); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const group = card.closest('[role="radiogroup"]');
+        const cards = [...group.querySelectorAll('.opt')];
+        const i = cards.indexOf(card);
+        const next = e.key === 'ArrowDown'
+          ? cards[(i + 1) % cards.length]
+          : cards[(i - 1 + cards.length) % cards.length];
+        next.focus();
+      }
+    }
+
+    function advance(step) {
+      if (!sel[step]) return;
+      if (step < 3) {
+        const next = step + 1;
+        document.getElementById('carousel').style.transform =
+          `translateX(-${next * 100}%)`;
+        // Hide current step from AT, reveal next
+        document.getElementById('step' + step).setAttribute('aria-hidden', 'true');
+        const nextSection = document.getElementById('step' + next);
+        nextSection.removeAttribute('aria-hidden');
+        // Focus first option in next step after transition
+        setTimeout(() => {
+          const first = nextSection.querySelector('.opt');
+          if (first) first.focus();
+        }, 360);
+      } else {
+        // Build summary chips safely via DOM API (no innerHTML interpolation)
+        const summary = document.getElementById('summary');
+        summary.innerHTML = '';
+        Object.values(sel).forEach(v => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.textContent = v;
+          summary.appendChild(chip);
+        });
+        document.getElementById('loading').classList.add('show');
+        setTimeout(() => { window.location.href = '02-mission-results.html'; }, 2800);
+      }
+    }
+  </script>
+</body>
+</html>
