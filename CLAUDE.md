@@ -168,18 +168,18 @@ front-matter (description, model, tools)
 | Fast read-only tasks (inspect, parse) | `claude-haiku-4-5-20251001` |
 | Pure orchestration (routing/dispatch only) | `claude-fable-5` |
 
-Reviewers must be **separate agents** invoked via `Agent()` — not inline skill calls within the producer. This is the Swiss Cheese independence guarantee.
+Reviewers must be **separate agents** invoked via `Agent()`, called by the orchestrating conversation — not by the producer itself. Nested agent spawning is not supported in this environment: a producer's own `Agent()` calls silently do nothing even when `Agent` is listed in its tools (confirmed empirically across multiple `rn-implementer`/`backend-implementer` runs). Producers therefore never list `Agent` in their tools; they deliver output and state that independent review is still needed, and the calling conversation invokes the reviewer.
 
 **Fable 5 is reserved for orchestration only** — command files (`~/.claude/commands/*.md`) and any agent whose entire job is parsing input and delegating to other agents/skills, with no independent content generation, analysis, or code review. This keeps token spend proportional to the work actually being reasoned about. Never assign `claude-fable-5` to a producer, code generator, or reviewer — those steps need full reasoning/generation capability and downgrading them would silently degrade output quality, not just cost.
 
 ### Swiss Cheese EDD — mandatory before delivery
 
-Every producer agent must invoke an independent reviewer agent after output is produced. The reviewer runs on a different model and has read-only tools. Maximum 2 fix-and-re-eval cycles before escalating to the user.
+Every producer agent's output must go through an independent reviewer agent before it ships. The orchestrating conversation invokes the reviewer after the producer completes (producers cannot do this themselves — see above). The reviewer runs on a different model and has read-only tools. Maximum 2 fix-and-re-eval cycles before escalating to the user.
 
 ### Permissions (tools field)
 
 Grant the minimum tools required:
 - Reviewers: `Read, Grep, Glob` only — never Write or Edit
-- Designers/implementers: `Read, Write, Edit, Glob, Grep, Bash, Agent` — the Swiss Cheese review step requires `Agent()`, so producers need the `Agent` tool even though they aren't full orchestrators
+- Designers/implementers: `Read, Write, Edit, Glob, Grep, Bash` — no `Agent`; nested spawning doesn't work, so review is the caller's job, not the producer's
 - Research skills: add `WebFetch`
 - Orchestrators: add `Agent`
