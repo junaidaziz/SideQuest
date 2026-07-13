@@ -2,10 +2,10 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MissionResultsScreen, { buildFilterChips, whenPressed } from './MissionResultsScreen';
-import { generateMissions, saveMission, unsaveMission } from '../services/missionsApi';
-import type { GenerateMissionsRequest, Mission } from '../types/api';
+import { generateMissions, saveMission, unsaveMission } from '../../services/missionsApi';
+import type { GenerateMissionsRequest, Mission } from '../../types/api';
 
-jest.mock('../services/missionsApi');
+jest.mock('../../services/missionsApi');
 
 const mockGenerate = generateMissions as jest.Mock;
 const mockSaveMission = saveMission as jest.Mock;

@@ -7,14 +7,14 @@ import ProofSubmissionScreen, {
   isGuestLimitError,
   whenPressed,
 } from './ProofSubmissionScreen';
-import { submitPhotoProof, submitTextProof } from '../services/proofApi';
-import { ApiError } from '../services/apiClient';
-import { GUEST_COMPLETION_LIMIT_REACHED } from '../types/api';
-import type { ProofSubmissionResponse } from '../types/api';
-import { Colors } from '../constants/design';
+import { submitPhotoProof, submitTextProof } from '../../services/proofApi';
+import { ApiError } from '../../services/apiClient';
+import { GUEST_COMPLETION_LIMIT_REACHED } from '../../types/api';
+import type { ProofSubmissionResponse } from '../../types/api';
+import { Colors } from '../../constants/design';
 
 jest.mock('expo-image-picker');
-jest.mock('../services/proofApi');
+jest.mock('../../services/proofApi');
 
 const mockSubmitPhoto = submitPhotoProof as jest.Mock;
 const mockSubmitText = submitTextProof as jest.Mock;
