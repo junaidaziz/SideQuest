@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import LoginScreen, { validateLoginFields, whenPressed } from './LoginScreen';
-import type { LoginRequest } from '../types/api';
+import type { LoginRequest } from '../../types/api';
 
 /**
  * The screen reads `useAuthStore((s) => s.login)`. We mock the store to hand
@@ -10,7 +10,7 @@ import type { LoginRequest } from '../types/api';
  */
 const mockLogin = jest.fn<Promise<void>, [LoginRequest]>();
 
-jest.mock('../store/authStore', () => ({
+jest.mock('../../store/authStore', () => ({
   useAuthStore: (selector: (s: { login: typeof mockLogin }) => unknown) =>
     selector({ login: mockLogin }),
 }));

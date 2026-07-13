@@ -1,0 +1,232 @@
+import { StyleSheet } from 'react-native';
+import {
+  Colors,
+  Fonts,
+  FontSize,
+  LineHeight,
+  Radius,
+  Spacing,
+} from '../../constants/design';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+  },
+  flex: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.chip,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconBtnPressed: {
+    backgroundColor: Colors.surfaceMuted,
+    borderColor: Colors.primary,
+  },
+  iconGlyph: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.ink,
+    lineHeight: 22,
+  },
+  headerSpacer: {
+    width: 40,
+    height: 40,
+  },
+  headerTitle: {
+    fontFamily: Fonts.displayBold,
+    fontSize: FontSize.cardLabel,
+    color: Colors.ink,
+    letterSpacing: -0.2,
+  },
+  content: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xxxl,
+  },
+  lockup: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.card,
+    backgroundColor: Colors.primaryLight,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.base,
+  },
+  lockupGlyph: {
+    fontSize: 26,
+  },
+  leadTitle: {
+    fontFamily: Fonts.displayExtraBold,
+    fontSize: FontSize.h1,
+    lineHeight: LineHeight.h1,
+    color: Colors.ink,
+    letterSpacing: -0.5,
+    marginBottom: Spacing.sm,
+  },
+  leadSub: {
+    fontFamily: Fonts.bodyRegular,
+    fontSize: FontSize.body,
+    lineHeight: LineHeight.body,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xl,
+  },
+  formError: {
+    padding: Spacing.md,
+    backgroundColor: Colors.surfaceMuted,
+    borderWidth: 1.5,
+    borderColor: Colors.error,
+    borderRadius: Radius.chip,
+    marginBottom: Spacing.base,
+  },
+  formErrorText: {
+    fontFamily: Fonts.bodyMedium,
+    fontSize: FontSize.caption,
+    lineHeight: LineHeight.caption,
+    color: Colors.error,
+  },
+  field: {
+    marginBottom: Spacing.base,
+  },
+  fieldLabel: {
+    fontFamily: Fonts.bodySemiBold,
+    fontSize: FontSize.caption,
+    color: Colors.ink,
+    marginBottom: Spacing.sm,
+  },
+  inputWrap: {
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  input: {
+    height: 52,
+    borderRadius: Radius.btn,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.base,
+    fontFamily: Fonts.bodyMedium,
+    fontSize: FontSize.cardLabel,
+    color: Colors.ink,
+  },
+  inputWithToggle: {
+    paddingRight: 72,
+  },
+  inputInvalid: {
+    borderColor: Colors.error,
+  },
+  pwToggle: {
+    position: 'absolute',
+    right: Spacing.sm,
+    height: 36,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.chip,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pwTogglePressed: {
+    backgroundColor: Colors.surfaceMuted,
+  },
+  pwToggleText: {
+    fontFamily: Fonts.bodySemiBold,
+    fontSize: FontSize.caption,
+    color: Colors.primary,
+  },
+  fieldError: {
+    fontFamily: Fonts.bodyMedium,
+    fontSize: FontSize.caption,
+    lineHeight: LineHeight.caption,
+    color: Colors.error,
+    marginTop: Spacing.sm,
+  },
+  forgotRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: Spacing.base,
+  },
+  linkBtn: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+    borderRadius: Radius.chip,
+  },
+  linkBtnPressed: {
+    opacity: 0.6,
+  },
+  linkBtnText: {
+    fontFamily: Fonts.bodySemiBold,
+    fontSize: FontSize.caption,
+    color: Colors.primary,
+    textDecorationLine: 'underline',
+  },
+  stubNote: {
+    padding: Spacing.md,
+    backgroundColor: Colors.surfaceMuted,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: Radius.chip,
+    marginBottom: Spacing.base,
+  },
+  stubNoteText: {
+    fontFamily: Fonts.bodyRegular,
+    fontSize: FontSize.caption,
+    lineHeight: LineHeight.caption,
+    color: Colors.textSecondary,
+  },
+  primaryBtn: {
+    height: 54,
+    borderRadius: Radius.btn,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.sm,
+  },
+  primaryBtnPressed: {
+    backgroundColor: Colors.primaryDark,
+  },
+  primaryBtnDisabled: {
+    backgroundColor: Colors.border,
+  },
+  primaryBtnSuccess: {
+    backgroundColor: Colors.success,
+  },
+  primaryBtnText: {
+    fontFamily: Fonts.bodySemiBold,
+    fontSize: FontSize.button,
+    color: Colors.white,
+    letterSpacing: 0.2,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: Spacing.xl,
+  },
+  switchText: {
+    fontFamily: Fonts.bodyRegular,
+    fontSize: FontSize.body,
+    color: Colors.textSecondary,
+  },
+  switchLink: {
+    fontFamily: Fonts.bodySemiBold,
+    fontSize: FontSize.body,
+    color: Colors.primary,
+    textDecorationLine: 'underline',
+  },
+});
