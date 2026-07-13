@@ -2,6 +2,7 @@ import { apiRequest } from './apiClient';
 import { submitPhotoProof, submitTextProof } from './proofApi';
 
 jest.mock('./apiClient');
+jest.mock('expo-file-system');
 
 const mockApiRequest = apiRequest as jest.Mock;
 
@@ -36,37 +37,34 @@ describe('proofApi', () => {
         '/missions/mission-1/proof',
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) }),
       );
-      expect(appendSpy).toHaveBeenCalledWith(
-        'photo',
-        expect.objectContaining({ uri: 'file:///tmp/capture.jpg', type: 'image/jpeg' }),
-      );
+      // A real Blob (via File.slice()) is appended — not a duck-typed
+      // { uri, name, type } object, and not the File instance itself
+      // (which only structurally, not actually, implements Blob at
+      // runtime) — see proofApi.ts for why both alternatives were rejected.
+      const [, blob] = appendSpy.mock.calls[0];
+      expect(blob).toBeInstanceOf(Blob);
+      expect(blob.type).toBe('image/jpeg');
+      expect(appendSpy).toHaveBeenCalledWith('photo', expect.any(Blob), 'capture.jpg');
     });
 
-    it('derives the mimetype from the file extension', async () => {
+    it('derives the filename from the source URI regardless of extension', async () => {
       await submitPhotoProof('mission-1', 'file:///tmp/capture.png');
 
-      expect(appendSpy).toHaveBeenCalledWith(
-        'photo',
-        expect.objectContaining({ type: 'image/png' }),
-      );
+      const [, blob] = appendSpy.mock.calls[0];
+      expect(blob.type).toBe('image/png');
+      expect(appendSpy).toHaveBeenCalledWith('photo', expect.any(Blob), 'capture.png');
     });
 
-    it('recognizes webp', async () => {
-      await submitPhotoProof('mission-1', 'file:///tmp/capture.webp');
-
-      expect(appendSpy).toHaveBeenCalledWith(
-        'photo',
-        expect.objectContaining({ type: 'image/webp' }),
-      );
-    });
-
-    it('defaults to image/jpeg for an unrecognized or missing extension', async () => {
+    it('handles a URI with no file extension', async () => {
       await submitPhotoProof('mission-1', 'file:///tmp/capture');
 
-      expect(appendSpy).toHaveBeenCalledWith(
-        'photo',
-        expect.objectContaining({ type: 'image/jpeg' }),
-      );
+      // No extension means no detectable MIME type — this exercises the
+      // regression the reviewer flagged: slice() must still be called with
+      // whatever contentType the file reports, not silently default to a
+      // valid-looking type that would mask a missing-type bug.
+      const [, blob] = appendSpy.mock.calls[0];
+      expect(blob.type).toBe('');
+      expect(appendSpy).toHaveBeenCalledWith('photo', expect.any(Blob), 'capture');
     });
   });
 
