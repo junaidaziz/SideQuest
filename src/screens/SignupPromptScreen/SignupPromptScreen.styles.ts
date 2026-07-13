@@ -169,6 +169,53 @@ export const styles = StyleSheet.create({
     color: Colors.white,
     letterSpacing: 0.2,
   },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    marginVertical: Spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1.5,
+    backgroundColor: Colors.border,
+  },
+  dividerText: {
+    fontFamily: Fonts.bodyMedium,
+    fontSize: FontSize.caption,
+    color: Colors.textSecondary,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    height: 54,
+    borderRadius: Radius.btn,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  googleBtnPressed: {
+    backgroundColor: Colors.surfaceMuted,
+    borderColor: Colors.primary,
+  },
+  googleBtnDisabled: {
+    backgroundColor: Colors.surfaceMuted,
+  },
+  googleIcon: {
+    fontFamily: Fonts.displayBold,
+    fontSize: FontSize.button,
+    color: Colors.primary,
+  },
+  googleBtnLabel: {
+    fontFamily: Fonts.bodySemiBold,
+    fontSize: FontSize.button,
+    color: Colors.ink,
+    letterSpacing: 0.2,
+  },
   guestBtn: {
     height: 44,
     alignItems: 'center',

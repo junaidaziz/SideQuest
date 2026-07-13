@@ -3,6 +3,7 @@ import { Stack, useNavigationContainerRef } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '../src/store/authStore';
 
 const queryClient = new QueryClient({
@@ -27,6 +28,20 @@ Sentry.init({
   tracesSampleRate: 0.2,
   integrations: [navigationIntegration],
 });
+
+/**
+ * Configure Google Sign-In once at module load. Unlike Sentry.init() above
+ * (which is always called, with `enabled` doing the no-op work), this SDK
+ * rejects an undefined `webClientId` outright, so the guard here is an `if`
+ * around the call itself rather than an `enabled` flag — different mechanism,
+ * same effect: safe to leave unset in local/CI runs without Google Cloud
+ * credentials. `webClientId` is the same OAuth client on both platforms — the
+ * iOS native URL scheme lives in app.json.
+ */
+const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+if (googleWebClientId) {
+  GoogleSignin.configure({ webClientId: googleWebClientId });
+}
 
 function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);

@@ -1,6 +1,18 @@
 import { create } from 'zustand';
+import {
+  GoogleSignin,
+  isSuccessResponse,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import { getTokens, saveTokens, clearTokens } from '../services/tokenStorage';
-import { bootstrapGuest, getCurrentUser, login, logoutRequest, signup } from '../services/authApi';
+import {
+  bootstrapGuest,
+  getCurrentUser,
+  googleAuth,
+  login,
+  logoutRequest,
+  signup,
+} from '../services/authApi';
 import type { LoginRequest, SignupRequest, UserProfile } from '../types/api';
 
 interface AuthState {
@@ -17,6 +29,11 @@ interface AuthState {
   hydrate: () => Promise<void>;
   login: (payload: LoginRequest) => Promise<void>;
   signup: (payload: SignupRequest) => Promise<void>;
+  /** Runs the native Google Sign-In flow, exchanges the resulting ID token
+   * with the backend, and promotes the session — the Google analogue of
+   * `login`/`signup`. Errors (including user cancellation) propagate to the
+   * calling screen, which owns the silent-cancel-vs-error-banner UX decision. */
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -50,6 +67,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signup: async (payload) => {
     const result = await signup(payload);
+    await saveTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken });
+    set({ user: result.user, status: 'ready' });
+  },
+
+  loginWithGoogle: async () => {
+    // No-op on iOS; on Android this verifies Google Play Services is present
+    // and up to date before signIn() is attempted (throws a coded error if not).
+    await GoogleSignin.hasPlayServices();
+    // In v13+ signIn() no longer throws on cancellation — it resolves to a
+    // discriminated `{ type: 'cancelled' }` result. Normalise that back into a
+    // thrown, coded error so the calling screen can detect cancellation via the
+    // same statusCodes.SIGN_IN_CANCELLED check it uses for a thrown cancel on
+    // older surfaces — keeping the store's contract "reject on anything that
+    // isn't a completed sign-in" and leaving the silent-vs-banner call to the UI.
+    const response = await GoogleSignin.signIn();
+    if (!isSuccessResponse(response)) {
+      const cancelled = new Error('Google Sign-In was cancelled') as Error & {
+        code: string;
+      };
+      cancelled.code = statusCodes.SIGN_IN_CANCELLED;
+      throw cancelled;
+    }
+    const { idToken } = response.data;
+    if (!idToken) {
+      throw new Error('Google Sign-In did not return an ID token');
+    }
+    const result = await googleAuth({ idToken });
     await saveTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken });
     set({ user: result.user, status: 'ready' });
   },

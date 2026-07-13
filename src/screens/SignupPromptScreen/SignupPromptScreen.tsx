@@ -10,6 +10,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import {
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '../../store/authStore';
 import {
   Colors,
@@ -55,6 +59,14 @@ const MIN_PASSWORD_LENGTH = 8;
 const SHEET_SLIDE = 520;
 const SUCCESS_BEAT_MS = 900;
 
+/**
+ * Shown when the Google path fails for any reason other than the user backing
+ * out (which is silent). Reuses the same `error` banner state/styling as the
+ * password path.
+ */
+const GENERIC_GOOGLE_ERROR =
+  "We couldn't sign you in with Google just now. Please try again.";
+
 /** Returns a human-readable validation message, or null when the form is valid. */
 export function validateSignup(email: string, password: string): string | null {
   const trimmed = email.trim();
@@ -77,6 +89,7 @@ export default function SignupPromptScreen({
   streakDays = 3,
 }: SignupPromptScreenProps) {
   const signup = useAuthStore((s) => s.signup);
+  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -177,6 +190,28 @@ export default function SignupPromptScreen({
       );
     }
   }, [displayName, email, onSuccess, password, signup, status]);
+
+  const handleGoogleSignIn = useCallback(async () => {
+    if (status !== 'idle') {
+      return;
+    }
+    // Shares `status` with the password path, so starting Google sign-in locks
+    // the whole sheet (fields, create-account, continue-as-guest) identically.
+    setError(null);
+    setStatus('submitting');
+    try {
+      await loginWithGoogle();
+      setStatus('success');
+      successTimer.current = setTimeout(onSuccess, SUCCESS_BEAT_MS);
+    } catch (err) {
+      setStatus('idle');
+      // Backing out of the Google picker is not a failure — silent reset.
+      if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED) {
+        return;
+      }
+      setError(GENERIC_GOOGLE_ERROR);
+    }
+  }, [loginWithGoogle, onSuccess, status]);
 
   const submitLabel = isSuccess
     ? 'Account created ✓'
@@ -348,6 +383,34 @@ export default function SignupPromptScreen({
             ]}
           >
             <Text style={styles.primaryBtnLabel}>{submitLabel}</Text>
+          </Pressable>
+
+          <View style={styles.divider} importantForAccessibility="no">
+            <View style={styles.dividerLine} accessibilityElementsHidden />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} accessibilityElementsHidden />
+          </View>
+
+          <Pressable
+            onPress={handleGoogleSignIn}
+            disabled={locked}
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
+            accessibilityState={{ disabled: locked, busy: isSubmitting }}
+            style={({ pressed }) => [
+              styles.googleBtn,
+              locked && styles.googleBtnDisabled,
+              pressed && !locked && styles.googleBtnPressed,
+            ]}
+          >
+            <Text
+              style={styles.googleIcon}
+              importantForAccessibility="no"
+              accessibilityElementsHidden
+            >
+              G
+            </Text>
+            <Text style={styles.googleBtnLabel}>Continue with Google</Text>
           </Pressable>
 
           <Pressable

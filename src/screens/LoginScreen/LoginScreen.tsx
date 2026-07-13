@@ -11,6 +11,10 @@ import {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '../../store/authStore';
 import { Colors } from '../../constants/design';
 import { styles } from './LoginScreen.styles';
@@ -57,6 +61,16 @@ const SUCCESS_BEAT_MS = 900;
 const GENERIC_CREDENTIAL_ERROR =
   "That email and password don't match. Try again, or reset your password.";
 
+/**
+ * Shown when the Google path fails for any reason other than the user backing
+ * out (which is silent). Reuses the same `formError` banner state/styling as the
+ * password path — only the copy differs, because reusing the "email and password
+ * don't match" line here would be actively misleading for a user who never typed
+ * a password.
+ */
+const GENERIC_GOOGLE_ERROR =
+  "We couldn't sign you in with Google just now. Please try again.";
+
 const NO_ERRORS: LoginFieldErrors = { email: null, password: null };
 
 /** Per-field validation, or nulls when the field is acceptable to submit. */
@@ -95,6 +109,7 @@ export default function LoginScreen({
   onGoToSignup,
 }: LoginScreenProps) {
   const login = useAuthStore((s) => s.login);
+  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -185,6 +200,31 @@ export default function LoginScreen({
       setFormError(GENERIC_CREDENTIAL_ERROR);
     }
   }, [email, login, onSuccess, password, status]);
+
+  const handleGoogleSignIn = useCallback(async () => {
+    if (status !== 'idle') {
+      return;
+    }
+    // Google sign-in and password sign-in share the same `status`, so kicking
+    // one off locks the whole form (fields, submit, and the other path) exactly
+    // as the password flow does — no parallel in-flight state to reconcile.
+    setFieldErrors(NO_ERRORS);
+    setFormError(null);
+    setStatus('submitting');
+    try {
+      await loginWithGoogle();
+      setStatus('success');
+      successTimer.current = setTimeout(() => onSuccess?.(), SUCCESS_BEAT_MS);
+    } catch (err) {
+      setStatus('idle');
+      // Backing out of the Google account picker is not a failure — reset to
+      // idle with no banner. Everything else surfaces the generic banner.
+      if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED) {
+        return;
+      }
+      setFormError(GENERIC_GOOGLE_ERROR);
+    }
+  }, [loginWithGoogle, onSuccess, status]);
 
   const submitLabel = isSuccess
     ? 'Logged in ✓'
@@ -379,6 +419,34 @@ export default function LoginScreen({
             ]}
           >
             <Text style={styles.primaryBtnText}>{submitLabel}</Text>
+          </Pressable>
+
+          <View style={styles.divider} importantForAccessibility="no">
+            <View style={styles.dividerLine} accessibilityElementsHidden />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} accessibilityElementsHidden />
+          </View>
+
+          <Pressable
+            onPress={handleGoogleSignIn}
+            disabled={locked}
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
+            accessibilityState={{ disabled: locked, busy: isSubmitting }}
+            style={({ pressed }) => [
+              styles.googleBtn,
+              locked && styles.googleBtnDisabled,
+              whenPressed(pressed, !locked ? styles.googleBtnPressed : null),
+            ]}
+          >
+            <Text
+              style={styles.googleIcon}
+              importantForAccessibility="no"
+              accessibilityElementsHidden
+            >
+              G
+            </Text>
+            <Text style={styles.googleBtnText}>Continue with Google</Text>
           </Pressable>
 
           <View style={styles.switchRow}>

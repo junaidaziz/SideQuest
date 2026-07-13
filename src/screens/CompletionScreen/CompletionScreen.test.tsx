@@ -12,16 +12,25 @@ import type { ProofSubmissionResponse, SignupRequest } from '../../types/api';
 
 /**
  * `CompletionScreen` mounts the shared `SignupPromptScreen` gate, which reads
- * `useAuthStore((s) => s.signup)`. We mock the store the same way
- * `SignupPromptScreen.test.tsx` does — handing back a controllable `signup`
- * spy — so the guest-to-account flow can be exercised without token
- * persistence or native secure-store.
+ * `useAuthStore((s) => s.signup)` and (since M17) `useAuthStore((s) =>
+ * s.loginWithGoogle)` for its "Continue with Google" button. We mock the
+ * store the same way `SignupPromptScreen.test.tsx` does — handing back
+ * controllable spies — so the guest-to-account flow can be exercised without
+ * token persistence or native secure-store. No test here presses the Google
+ * button, but `loginWithGoogle` must still be a callable stub or selecting it
+ * throws `TypeError: loginWithGoogle is not a function` the moment
+ * `SignupPromptScreen` renders.
  */
 const mockSignup = jest.fn<Promise<void>, [SignupRequest]>();
+const mockLoginWithGoogle = jest.fn<Promise<void>, []>();
 
 jest.mock('../../store/authStore', () => ({
-  useAuthStore: (selector: (s: { signup: typeof mockSignup }) => unknown) =>
-    selector({ signup: mockSignup }),
+  useAuthStore: (
+    selector: (s: {
+      signup: typeof mockSignup;
+      loginWithGoogle: typeof mockLoginWithGoogle;
+    }) => unknown,
+  ) => selector({ signup: mockSignup, loginWithGoogle: mockLoginWithGoogle }),
 }));
 
 const shareSpy = jest.spyOn(Share, 'share');

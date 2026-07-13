@@ -1,5 +1,12 @@
 import { apiRequest } from './apiClient';
-import { bootstrapGuest, getCurrentUser, login, logoutRequest, signup } from './authApi';
+import {
+  bootstrapGuest,
+  getCurrentUser,
+  googleAuth,
+  login,
+  logoutRequest,
+  signup,
+} from './authApi';
 
 jest.mock('./apiClient');
 
@@ -32,6 +39,17 @@ describe('authApi', () => {
       method: 'POST',
       body: payload,
       auth: false,
+    });
+  });
+
+  it('googleAuth posts the idToken to /auth/google with auth enabled so a guest token can upgrade in place', async () => {
+    await googleAuth({ idToken: 'id-token-123' });
+
+    // No `auth: false` — the default (auth: true) sends any existing guest
+    // token so the backend upgrades that guest's row in place, like signup().
+    expect(apiRequest).toHaveBeenCalledWith('/auth/google', {
+      method: 'POST',
+      body: { idToken: 'id-token-123' },
     });
   });
 

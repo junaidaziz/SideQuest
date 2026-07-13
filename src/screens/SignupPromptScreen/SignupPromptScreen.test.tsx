@@ -10,11 +10,36 @@ import type { SignupRequest } from '../../types/api';
  * without pulling in token persistence / native secure-store.
  */
 const mockSignup = jest.fn<Promise<void>, [SignupRequest]>();
+const mockLoginWithGoogle = jest.fn<Promise<void>, []>();
 
 jest.mock('../../store/authStore', () => ({
-  useAuthStore: (selector: (s: { signup: typeof mockSignup }) => unknown) =>
-    selector({ signup: mockSignup }),
+  useAuthStore: (
+    selector: (s: {
+      signup: typeof mockSignup;
+      loginWithGoogle: typeof mockLoginWithGoogle;
+    }) => unknown,
+  ) => selector({ signup: mockSignup, loginWithGoogle: mockLoginWithGoogle }),
 }));
+
+// Fully mock the native module — never let it load under Jest. `isErrorWithCode`
+// mirrors the real guard (an error object carrying a string `code`).
+jest.mock('@react-native-google-signin/google-signin', () => ({
+  isErrorWithCode: (error: unknown): boolean =>
+    typeof (error as { code?: unknown })?.code === 'string',
+  statusCodes: { SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED' },
+}));
+
+/** An error shaped like the store's cancellation rejection. */
+function cancelledError(): Error & { code: string } {
+  const err = new Error('Google Sign-In was cancelled') as Error & {
+    code: string;
+  };
+  err.code = 'SIGN_IN_CANCELLED';
+  return err;
+}
+
+const GENERIC_GOOGLE_ERROR =
+  "We couldn't sign you in with Google just now. Please try again.";
 
 const VALID_EMAIL = 'quester@example.com';
 const VALID_PASSWORD = 'superSecret1';
@@ -39,6 +64,7 @@ describe('SignupPromptScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSignup.mockResolvedValue(undefined);
+    mockLoginWithGoogle.mockResolvedValue(undefined);
   });
 
   describe('rendering', () => {
@@ -363,6 +389,81 @@ describe('SignupPromptScreen', () => {
       expect(handled).toBe(true);
       expect(onDismiss).toHaveBeenCalledTimes(1);
       spy.mockRestore();
+    });
+  });
+
+  describe('Continue with Google', () => {
+    it('renders the Google button with the correct role and label', async () => {
+      await renderScreen();
+      const btn = screen.getByLabelText('Continue with Google');
+      expect(btn).toBeTruthy();
+      expect(btn.props.accessibilityRole).toBe('button');
+    });
+
+    it('calls loginWithGoogle then onSuccess on a successful sign-in', async () => {
+      const { onSuccess } = await renderScreen();
+      await fireEvent.press(screen.getByLabelText('Continue with Google'));
+      await waitFor(() => expect(mockLoginWithGoogle).toHaveBeenCalledTimes(1));
+      // The password path is untouched — Google is a separate route to "in".
+      expect(mockSignup).not.toHaveBeenCalled();
+      await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1), {
+        timeout: 2000,
+      });
+    });
+
+    it('silently resets on user cancellation with no error banner', async () => {
+      mockLoginWithGoogle.mockRejectedValueOnce(cancelledError());
+      const { onSuccess } = await renderScreen();
+      await fireEvent.press(screen.getByLabelText('Continue with Google'));
+      await waitFor(() => expect(mockLoginWithGoogle).toHaveBeenCalledTimes(1));
+      expect(screen.queryByText(GENERIC_GOOGLE_ERROR)).toBeNull();
+      expect(screen.queryByRole('alert')).toBeNull();
+      expect(onSuccess).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('Continue with Google')).toBeTruthy();
+    });
+
+    it('shows the generic banner on a non-cancellation Google failure', async () => {
+      mockLoginWithGoogle.mockRejectedValueOnce(new Error('network down'));
+      const { onSuccess } = await renderScreen();
+      await fireEvent.press(screen.getByLabelText('Continue with Google'));
+      await waitFor(() =>
+        expect(screen.getByText(GENERIC_GOOGLE_ERROR)).toBeTruthy(),
+      );
+      expect(onSuccess).not.toHaveBeenCalled();
+    });
+
+    it('disables the whole sheet while a Google sign-in is in flight', async () => {
+      let resolve: (() => void) | undefined;
+      mockLoginWithGoogle.mockReturnValueOnce(
+        new Promise<void>((r) => {
+          resolve = () => r();
+        }),
+      );
+      await renderScreen();
+      const pending = fireEvent.press(
+        screen.getByLabelText('Continue with Google'),
+      );
+      await waitFor(() =>
+        expect(
+          screen.getByLabelText('Continue with Google').props.accessibilityState
+            .disabled,
+        ).toBe(true),
+      );
+      // The shared status also locks the create-account button and backdrop.
+      expect(
+        screen.getByLabelText('Creating account').props.accessibilityState
+          .disabled,
+      ).toBe(true);
+      resolve?.();
+      await pending;
+    });
+
+    it('does not fire loginWithGoogle twice on a rapid double press', async () => {
+      await renderScreen();
+      const btn = screen.getByLabelText('Continue with Google');
+      await fireEvent.press(btn);
+      await fireEvent.press(btn);
+      await waitFor(() => expect(mockLoginWithGoogle).toHaveBeenCalledTimes(1));
     });
   });
 

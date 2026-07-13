@@ -35,6 +35,11 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface GoogleAuthRequest {
+  /** The Google-issued OpenID Connect ID token obtained from the native SDK. */
+  idToken: string;
+}
+
 export interface ApiErrorBody {
   statusCode: number;
   timestamp: string;
