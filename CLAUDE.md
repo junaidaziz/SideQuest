@@ -4,19 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Expo (React Native) mobile app — cross-platform iOS and Android.
+Expo (React Native) mobile app — cross-platform iOS and Android — for SideQuest, a real-world mission generator. Talks to `sidequest-backend` (sibling repo, see `backend/CLAUDE.md`); backend is the source of truth for data shape.
 
-## Setup
-
-```bash
-npx create-expo-app@latest . --template blank-typescript
-npm install
-```
+This document is written from the actual codebase as of 2026-07-13. If you find a discrepancy between this file and the code, the code wins — update this file.
 
 ## Common Commands
 
 ```bash
-npx expo start              # Start dev server (opens Expo Go on device/simulator)
+npx expo start              # Start dev server (opens Expo Go / dev client on device/simulator)
 npx expo start --ios        # Start and open iOS simulator
 npx expo start --android    # Start and open Android emulator
 npx expo start --web        # Start web version
@@ -32,24 +27,7 @@ npm run lint                # Run ESLint
 npx expo install <package>  # Install Expo-compatible package version (preferred over npm install)
 ```
 
-## Architecture
-
-This is a new project. As it grows, document the structure here:
-
-- **Navigation**: Expo Router (file-based), routes under `app/`
-- **State management**: Zustand — client/session state (e.g. `src/store/authStore.ts`)
-- **Data fetching**: TanStack Query, provisioned via `QueryClientProvider` in `app/_layout.tsx` — server state (missions, etc.). Auth bootstrap itself runs directly through `src/services/authApi.ts` rather than a query, since it must complete before other queries are meaningful.
-- **API client**: `src/services/apiClient.ts` — thin `fetch` wrapper with automatic 401 → refresh-token retry. Base URL from `EXPO_PUBLIC_API_BASE_URL`, defaulting per-platform (Android emulator needs `10.0.2.2`, not `localhost`).
-- **Token storage**: `src/services/tokenStorage.ts` via `expo-secure-store` — never AsyncStorage for tokens.
-- **Type contract with backend**: manually mirrored in `src/types/api.ts` against `sidequest-backend`'s DTOs — no codegen yet (tracked as a backlog item; revisit if drift becomes painful).
-
-### Key Expo conventions
-
-- `app.json` / `app.config.js` — Expo configuration (bundle ID, permissions, plugins)
-- `assets/` — Images, fonts, and other static assets
-- With **Expo Router** (file-based): `app/` directory maps to routes; `app/(tabs)/` for tab groups
-- With **React Navigation**: navigation stacks are composed in code, typically under `src/navigation/`
-- `eas.json` — EAS Build/Submit configuration for production builds
+Note: running `npx expo prebuild` (or any command that triggers it) rewrites this project's `package.json` `"android"`/`"ios"` scripts from `expo start --android`/`--ios` to `expo run:android`/`run:ios`. That's an Expo side-effect, not an intentional change — revert it if it shows up in an unrelated diff.
 
 ### Building for production
 
@@ -60,6 +38,87 @@ eas build --platform android
 eas submit                  # Submit to App Store / Play Store
 ```
 
+EAS project env vars (`EXPO_PUBLIC_*`) are set per-profile (development/preview/production) via `eas env:create` — a local `.env` alone isn't enough for a build run on EAS's infrastructure.
+
+## Architecture
+
+### Navigation — Expo Router (file-based)
+
+Routes live under `app/`:
+
+```
+app/_layout.tsx                    # root layout — QueryClientProvider, GoogleSignin.configure(), hydrate() on mount
+app/index.tsx                      # entry — routes to onboarding (first launch) or home
+app/onboarding.tsx
+app/mode-select.tsx                # quick-start mode taps → mapped to a GenerateMissionsRequest
+app/mission-results.tsx
+app/proof-submission/[missionId].tsx
+app/completion.tsx
+app/home.tsx
+app/profile.tsx
+app/login.tsx
+app/signup-prompt.tsx              # shown to a guest hitting the one-free-completion gate
+```
+
+### State management — Zustand
+
+`src/store/authStore.ts` is the only global store. It owns:
+
+- `hydrate()` — runs once at launch: restores a session from stored tokens, or **silently bootstraps a fresh anonymous guest session** if none exist. This is not optional/experimental — every first launch is a guest session by design (see `backend/CLAUDE.md`'s "guest-first" note; do not treat guest mode as something to remove).
+- `login` / `signup` / `loginWithGoogle` / `logout` — `logout` best-effort revokes the server-side refresh token, then always clears local tokens and immediately re-calls `hydrate()` so the app lands back on a fresh guest session rather than an indefinite loading spinner.
+
+Server state (missions, home data) goes through TanStack Query (`QueryClientProvider` in `app/_layout.tsx`). Auth bootstrap itself deliberately does **not** run through a query — it must complete before other queries are meaningful.
+
+### API client — `src/services/apiClient.ts`
+
+Thin `fetch` wrapper, not a generated client:
+
+- Base URL from `EXPO_PUBLIC_API_BASE_URL`, falling back per-platform: Android emulator needs `10.0.2.2` (can't reach the host via `localhost`), iOS simulator/web use `localhost`.
+- Automatic 401 → refresh-token retry, with in-flight-refresh deduplication (`refreshInFlight` promise) so concurrent 401s don't each trigger their own refresh call.
+- Detects `FormData` bodies and deliberately omits a manual `Content-Type` header for them — `fetch`/RN sets the multipart boundary itself, and setting `Content-Type` manually would drop that boundary parameter.
+- `ApiError` carries the HTTP status and the backend's structured error body (`{ statusCode, timestamp, path, message }`).
+
+### Token storage — `src/services/tokenStorage.ts`
+
+Via `expo-secure-store`. Never AsyncStorage for tokens — this is a hard rule, not a preference, since AsyncStorage is unencrypted on-device storage.
+
+### Type contract with backend — `src/types/api.ts`
+
+Manually mirrored against `sidequest-backend`'s DTOs, field-for-field — **no codegen**. Two known intentional divergences to preserve, not "fix":
+
+- Mission fields use short names (`desc`/`full`/`proof`/`time`/`xp`/`diff`/`dots`) that differ from the backend's Prisma column names (`description`/`fullBrief`/`proofRequirement`/`estimatedMinutes`/`xpReward`/`difficulty`/`difficultyDots`) — the backend's `MissionResponseDto` renames on the way out specifically to match this file.
+- `HomeResponse.pendingChallenges: unknown[]` is documented as always `[]` — there is no challenge-sending backend yet (see `backend/CLAUDE.md`'s product-scope conflicts).
+
+### Google Sign-In
+
+`@react-native-google-signin/google-signin`, configured in `app/_layout.tsx` with **both** `webClientId` and `iosClientId` (`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`). Both are required — omitting `iosClientId` produces a real runtime failure ("failed to determine clientID") on iOS specifically, since this project has no `GoogleService-Info.plist`/Firebase project to fall back to. The resulting ID token is verified server-side (`google-auth-library`), not via Firebase.
+
+### Photo proof upload — `src/services/proofApi.ts`
+
+Appends a real `Blob` via `expo-file-system`'s `File.slice(start, end, contentType)`, **always passing `file.type` explicitly as the third argument**. Two things to not regress:
+
+- A plain `{ uri, name, type }` object (the old RN convention) fails under React Native's New Architecture (default on RN 0.86 here) with "Unsupported FormDataPart implementation" — FormData does a strict `instanceof Blob` check.
+- `expo-file-system`'s `File` class only *structurally* implements the TypeScript `Blob` interface — it does not extend the runtime `Blob` global, so appending a `File` instance directly still fails that same check. `File.slice()` is the one call that produces a genuine `Blob`.
+- Calling `slice()` with no arguments produces a Blob with an empty MIME type, which the backend's `ALLOWED_IMAGE_MIME_TYPES` filter rejects — always pass `file.type` through as `contentType`.
+
+### Key Expo conventions
+
+- `app.json` — Expo configuration (bundle ID, permissions, plugins: `expo-router`, `expo-image-picker`, `expo-splash-screen`, `@react-native-google-signin/google-signin`, `expo-build-properties`, `@sentry/react-native`)
+- `assets/` — brand assets (icons, splash) live under `assets/`, sources under `assets/brand/`
+- `eas.json` — EAS Build/Submit configuration for production builds
+
+## Product-scope conflicts (flagged, not silently resolved)
+
+Same conflicts as documented in `backend/CLAUDE.md` apply here, since the mobile client and backend contract must agree:
+
+1. Guest mode is core to `authStore.hydrate()`, not absent — an earlier "no guest mode" planning rule does not match this app.
+2. `ModeSelectScreen` offers more than three named modes and maps them onto generic `crew`/`setting` filters, not three backend-modeled modes named "Friends Night"/"Couple Mode"/"Solo Adventure".
+3. No challenge-sending UI or backend exists (`pendingChallenges` is always `[]`).
+4. No paid-pack purchase/unlock flow exists. The Stripe work now planned is payment-methods-on-file (add/select/remove a card), not a pack-purchase-and-receipt-validation flow.
+5. No account-deletion screen or endpoint exists.
+6. No content-reporting UI exists.
+7. No push-notification integration exists.
+
 ---
 
 ## Testing Requirements
@@ -68,7 +127,7 @@ eas submit                  # Submit to App Store / Play Store
 
 ### Coverage threshold — 80% minimum
 
-Coverage is enforced via Jest's `coverageThreshold` in `jest.config.js`:
+Coverage is enforced via Jest's `coverageThreshold` in `package.json`:
 
 ```js
 coverageThreshold: {
@@ -82,8 +141,8 @@ A PR that drops any dimension below 80% must not be merged. When adding new code
 
 - **Runner**: Jest with `jest-expo` preset
 - **Component testing**: `@testing-library/react-native`
-- **Mocking**: Jest built-ins; `jest.mock()` for native modules
-- **File location**: co-located next to the source file — `src/screens/FooScreen.test.tsx` beside `FooScreen.tsx`
+- **Mocking**: Jest built-ins; `jest.mock()` for native modules; manual mocks under `__mocks__/` for modules whose native backing can't load under Jest (e.g. `expo-file-system`)
+- **File location**: co-located next to the source file — feature-first folders (`src/screens/FooScreen/FooScreen.tsx` + `.styles.ts` if the stylesheet exceeds ~150 lines + `.test.tsx` + `index.ts` barrel export)
 
 ### What must be tested for every component
 
