@@ -35,12 +35,24 @@ Sentry.init({
  * rejects an undefined `webClientId` outright, so the guard here is an `if`
  * around the call itself rather than an `enabled` flag — different mechanism,
  * same effect: safe to leave unset in local/CI runs without Google Cloud
- * credentials. `webClientId` is the same OAuth client on both platforms — the
- * iOS native URL scheme lives in app.json.
+ * credentials.
+ *
+ * `webClientId` is the OAuth client the backend verifies ID tokens against
+ * (same value on both platforms). `iosClientId` is required in addition on
+ * iOS specifically: without a `GoogleService-Info.plist` (this project isn't
+ * on Firebase), the native SDK can't derive its own client id and throws
+ * "failed to determine clientID" at sign-in time — confirmed by hitting this
+ * exact error on a real device test before adding this. The iOS native URL
+ * scheme (the *reversed* form of this same client id) is configured
+ * separately in app.json's plugin config.
  */
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 if (googleWebClientId) {
-  GoogleSignin.configure({ webClientId: googleWebClientId });
+  GoogleSignin.configure({
+    webClientId: googleWebClientId,
+    iosClientId: googleIosClientId,
+  });
 }
 
 function RootLayout() {
