@@ -539,6 +539,7 @@ export default function ProfileScreen({
             <ProfileSkeleton label="Loading your level and streak" />
           ) : isError || !data ? (
             <View
+              accessible
               style={styles.inlineError}
               accessibilityRole="alert"
               accessibilityLiveRegion="polite"
@@ -564,7 +565,7 @@ export default function ProfileScreen({
             <View style={styles.progressGroup}>
               {/* XP level card. TODO: install expo-linear-gradient for the
                   mockup's purple gradient — solid primary fill is the interim. */}
-              <View style={styles.levelCard} accessibilityLabel="Your level and XP">
+              <View style={styles.levelCard} accessible accessibilityLabel="Your level and XP">
                 <View style={styles.levelTop}>
                   <View>
                     <Text style={styles.levelEyebrow}>

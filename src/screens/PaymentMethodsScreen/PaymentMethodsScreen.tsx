@@ -9,6 +9,7 @@ import {
   removePaymentMethod,
   setDefaultPaymentMethod,
 } from '../../services/paymentApi';
+import { useAuthStore } from '../../store/authStore';
 import type { PaymentMethod } from '../../types/api';
 import { whenPressed } from '../HomeScreen';
 import { styles } from './PaymentMethodsScreen.styles';
@@ -62,9 +63,42 @@ function CardsSkeleton() {
   );
 }
 
+/**
+ * Shown instead of the card-management UI when a guest reaches this screen
+ * (e.g. via deep link or manual navigation) despite ProfileScreen's entry
+ * point already being gated to non-guests. Defense in depth, not the primary
+ * checkpoint — app/payment-methods.tsx redirects a guest before this screen
+ * ever mounts; this fallback covers the case where it somehow doesn't.
+ */
+function GuestPrompt({ onBack }: { onBack?: () => void }) {
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.emptyWrap}>
+        <Text style={styles.emptyTitle} accessibilityRole="header">
+          Create an account to add a payment method
+        </Text>
+        <Text style={styles.emptyBody}>
+          Payment methods are saved to your account, so guest sessions can&apos;t add one.
+        </Text>
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            style={({ pressed }) => [styles.retryBtn, pressed && styles.retryBtnPressed]}
+          >
+            <Text style={styles.retryBtnText}>Go back</Text>
+          </Pressable>
+        ) : null}
+      </View>
+    </SafeAreaView>
+  );
+}
+
 export default function PaymentMethodsScreen({
   onBack,
 }: PaymentMethodsScreenProps) {
+  const isGuest = useAuthStore((s) => s.user?.isGuest ?? true);
   const queryClient = useQueryClient();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -75,8 +109,13 @@ export default function PaymentMethodsScreen({
   const cardsQuery = useQuery({
     queryKey: PAYMENT_METHODS_QUERY_KEY,
     queryFn: listPaymentMethods,
+    // Guests never see the card list (GuestPrompt renders below instead),
+    // so don't even fire the request — this hook still runs unconditionally
+    // per the Rules of Hooks, but there's no reason to hit the endpoint for
+    // a screen state a guest can't act on.
+    enabled: !isGuest,
   });
-  const { data: cards, isLoading, isError } = cardsQuery;
+  const { data: cards, isLoading, isError, refetch } = cardsQuery;
 
   // Both mutating endpoints return the freshly-projected list, so we write it
   // straight into the cache instead of triggering a follow-up refetch.
@@ -136,13 +175,13 @@ export default function PaymentMethodsScreen({
         }
         return;
       }
-      await cardsQuery.refetch();
+      await refetch();
     } catch {
       setAddError("Couldn't save that card. Please try again.");
     } finally {
       setAddingCard(false);
     }
-  }, [busy, initPaymentSheet, presentPaymentSheet, cardsQuery]);
+  }, [busy, initPaymentSheet, presentPaymentSheet, refetch]);
 
   const handleSetDefault = useCallback(
     (id: string) => {
@@ -176,8 +215,15 @@ export default function PaymentMethodsScreen({
   );
 
   const handleRetry = useCallback(() => {
-    cardsQuery.refetch();
-  }, [cardsQuery]);
+    refetch();
+  }, [refetch]);
+
+  // Defense in depth (see GuestPrompt's doc comment) — checked after every
+  // hook above so this never violates the Rules of Hooks by branching before
+  // a hook call.
+  if (isGuest) {
+    return <GuestPrompt onBack={onBack} />;
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -212,6 +258,7 @@ export default function PaymentMethodsScreen({
           <CardsSkeleton />
         ) : isError ? (
           <View
+            accessible
             style={styles.inlineError}
             accessibilityRole="alert"
             accessibilityLiveRegion="polite"

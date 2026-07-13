@@ -13,9 +13,24 @@ import {
   removePaymentMethod,
   setDefaultPaymentMethod,
 } from '../../services/paymentApi';
-import type { PaymentMethod } from '../../types/api';
+import type { PaymentMethod, UserProfile } from '../../types/api';
 
 jest.mock('../../services/paymentApi');
+
+/**
+ * PaymentMethodsScreen gates its card-management UI behind a signed-in
+ * (non-guest) user — see the GuestPrompt fallback in the component. Mocked
+ * the same way ProfileScreen's tests mock the store, defaulting to a
+ * signed-in user so every existing test below exercises the real screen; a
+ * dedicated describe block flips this to a guest to cover the fallback.
+ */
+let mockIsGuest = false;
+jest.mock('../../store/authStore', () => ({
+  useAuthStore: (selector: (s: { user: UserProfile | null }) => unknown) =>
+    selector({
+      user: { id: 'user-1', email: 'a@example.com', displayName: 'A', isGuest: mockIsGuest, avatarUrl: null },
+    }),
+}));
 
 // Stripe's native hook is mocked to controllable spies so the add-card flow can
 // be driven without a native PaymentSheet. PaymentSheetError mirrors the real
@@ -87,6 +102,7 @@ async function pressAlertAction(label: string, actionIndex: number) {
 describe('PaymentMethodsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsGuest = false;
     mockList.mockResolvedValue([VISA, MASTERCARD]);
     mockCreateSetupIntent.mockResolvedValue({ clientSecret: 'seti_1_secret' });
     mockInitPaymentSheet.mockResolvedValue({});
@@ -392,6 +408,30 @@ describe('PaymentMethodsScreen', () => {
       expect(cardAccessibilityLabel(MASTERCARD)).toBe(
         'Mastercard ending 4444, expires 01/30',
       );
+    });
+  });
+
+  describe('guest fallback', () => {
+    beforeEach(() => {
+      mockIsGuest = true;
+    });
+
+    it('shows a guest prompt instead of the card-management UI', async () => {
+      await renderScreen();
+
+      expect(
+        screen.getByText('Create an account to add a payment method'),
+      ).toBeTruthy();
+      expect(screen.queryByLabelText('Add a card')).toBeNull();
+      expect(mockList).not.toHaveBeenCalled();
+    });
+
+    it('the guest prompt back button fires onBack', async () => {
+      const { onBack } = await renderScreen();
+
+      fireEvent.press(screen.getByLabelText('Go back'));
+
+      expect(onBack).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -345,7 +345,7 @@ export default function HomeScreen({
         >
           {/* XP level card. TODO: install expo-linear-gradient for the mockup's
               purple gradient — a solid primary fill is the interim treatment. */}
-          <View style={styles.levelCard} accessibilityLabel="Your level and XP">
+          <View style={styles.levelCard} accessible accessibilityLabel="Your level and XP">
             <View style={styles.levelTop}>
               <View>
                 <Text style={styles.levelEyebrow}>YOUR LEVEL</Text>
