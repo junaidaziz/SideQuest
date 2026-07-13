@@ -34,6 +34,11 @@ interface AuthState {
    * `login`/`signup`. Errors (including user cancellation) propagate to the
    * calling screen, which owns the silent-cancel-vs-error-banner UX decision. */
   loginWithGoogle: () => Promise<void>;
+  /** Replaces the cached `user` with a freshly-fetched profile (e.g. after a
+   * display-name or avatar change). Keeps every screen reading `user` in sync
+   * without re-running hydrate() or routing the update through screen-local
+   * state that would go stale elsewhere. */
+  updateProfile: (user: UserProfile) => void;
   logout: () => Promise<void>;
 }
 
@@ -96,6 +101,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const result = await googleAuth({ idToken });
     await saveTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken });
     set({ user: result.user, status: 'ready' });
+  },
+
+  updateProfile: (user) => {
+    set({ user });
   },
 
   logout: async () => {

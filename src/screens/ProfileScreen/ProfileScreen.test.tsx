@@ -1,41 +1,71 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
 import ProfileScreen, {
   displayNameOrFallback,
   initialsFromName,
+  validateDisplayName,
 } from './ProfileScreen';
 import { getHome } from '../../services/homeApi';
+import { updateDisplayName } from '../../services/profileApi';
+import { removeAvatar, uploadAvatar } from '../../services/avatarApi';
 import type { HomeResponse, UserProfile } from '../../types/api';
 
 jest.mock('../../services/homeApi');
+jest.mock('../../services/profileApi');
+jest.mock('../../services/avatarApi');
+jest.mock('expo-image-picker');
 
 /**
- * ProfileScreen reads `user` and `logout` from the auth store via selectors.
- * We mock the store the same way the other screen tests do — handing back a
- * controllable state object so the guest/signed-in split and the logout flow
- * can be exercised without token persistence or native secure-store.
+ * ProfileScreen reads `user`, `logout` and `updateProfile` from the auth store
+ * via selectors. We mock the store the same way the other screen tests do —
+ * handing back a controllable state object so the guest/signed-in split, the
+ * logout flow, and profile edits can be exercised without token persistence or
+ * native secure-store. `updateProfile` is a plain spy — we assert it is called
+ * with the freshly-fetched profile (the store's re-render behaviour belongs to
+ * the authStore unit tests, and mutating shared module state here would leak
+ * across tests when async mutation callbacks land after a test completes).
  */
 const mockLogout = jest.fn<Promise<void>, []>();
+const mockUpdateProfile = jest.fn<void, [UserProfile]>();
 let mockUser: UserProfile | null;
 
 interface MockAuthState {
   user: UserProfile | null;
   logout: typeof mockLogout;
+  updateProfile: typeof mockUpdateProfile;
 }
 
 jest.mock('../../store/authStore', () => ({
   useAuthStore: (selector: (s: MockAuthState) => unknown) =>
-    selector({ user: mockUser, logout: mockLogout }),
+    selector({
+      user: mockUser,
+      logout: mockLogout,
+      updateProfile: mockUpdateProfile,
+    }),
 }));
 
 const mockGetHome = getHome as jest.MockedFunction<typeof getHome>;
+const mockUpdateDisplayName = updateDisplayName as jest.MockedFunction<
+  typeof updateDisplayName
+>;
+const mockUploadAvatar = uploadAvatar as jest.MockedFunction<typeof uploadAvatar>;
+const mockRemoveAvatar = removeAvatar as jest.MockedFunction<typeof removeAvatar>;
+const mockRequestCamera =
+  ImagePicker.requestCameraPermissionsAsync as jest.Mock;
+const mockRequestLibrary =
+  ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
+const mockLaunchCamera = ImagePicker.launchCameraAsync as jest.Mock;
+const mockLaunchLibrary = ImagePicker.launchImageLibraryAsync as jest.Mock;
 
 const GUEST_USER: UserProfile = {
   id: 'guest-1',
   email: null,
   displayName: null,
   isGuest: true,
+  avatarUrl: null,
 };
 
 const SIGNED_IN_USER: UserProfile = {
@@ -43,7 +73,25 @@ const SIGNED_IN_USER: UserProfile = {
   email: 'jordan.ellis@example.com',
   displayName: 'Jordan Ellis',
   isGuest: false,
+  avatarUrl: null,
 };
+
+const SIGNED_IN_WITH_AVATAR: UserProfile = {
+  ...SIGNED_IN_USER,
+  avatarUrl: 'https://s3.example.test/avatar.jpg?sig=abc',
+};
+
+function grantedPermission() {
+  return { granted: true, status: 'granted' as const };
+}
+
+function deniedPermission() {
+  return { granted: false, status: 'denied' as const };
+}
+
+function pickedAsset(uri = 'file:///tmp/new-avatar.jpg') {
+  return { canceled: false, assets: [{ uri }] };
+}
 
 const HOME: HomeResponse = {
   level: { level: 4, xpIntoLevel: 620, xpToNextLevel: 380, totalXp: 620 },
@@ -62,7 +110,13 @@ async function renderScreen(
   const onLoginExisting = jest.fn();
   const onLoggedOut = jest.fn();
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+    defaultOptions: {
+      // gcTime: 0 evicts cache entries as soon as they go unused, so no
+      // 5-minute garbage-collection timer lingers past a test and keeps the
+      // Jest worker alive (or leaks into the next test's act scope).
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false, gcTime: 0 },
+    },
   });
   await render(
     <QueryClientProvider client={queryClient}>
@@ -91,8 +145,45 @@ describe('ProfileScreen', () => {
     jest.clearAllMocks();
     mockGetHome.mockResolvedValue(HOME);
     mockLogout.mockResolvedValue();
+    mockUpdateDisplayName.mockResolvedValue({
+      ...SIGNED_IN_USER,
+      displayName: 'Jordan Rivera',
+    });
+    mockUploadAvatar.mockResolvedValue(SIGNED_IN_WITH_AVATAR);
+    mockRemoveAvatar.mockResolvedValue(SIGNED_IN_USER);
+    mockRequestCamera.mockResolvedValue(grantedPermission());
+    mockRequestLibrary.mockResolvedValue(grantedPermission());
+    mockLaunchCamera.mockResolvedValue(pickedAsset());
+    mockLaunchLibrary.mockResolvedValue(pickedAsset('file:///tmp/lib.png'));
     mockUser = GUEST_USER;
   });
+
+  /**
+   * Renders in a signed-in state and waits for the background `home` query to
+   * settle before returning. Flushing the query here keeps its resolution
+   * inside an act()-wrapped waitFor — otherwise it lands after the test ends,
+   * producing "not wrapped in act" warnings and a leaked react-query notify
+   * timer that force-exits the worker.
+   */
+  async function renderSignedIn(
+    user: UserProfile = SIGNED_IN_USER,
+    overrides: Partial<React.ComponentProps<typeof ProfileScreen>> = {},
+  ) {
+    mockUser = user;
+    const handles = await renderScreen(overrides);
+    await waitFor(() => expect(screen.getByText('Level 4')).toBeTruthy());
+    return handles;
+  }
+
+  /** Fires the avatar tap, then invokes the Nth Alert action's onPress. */
+  async function avatarActionVia(actionIndex: number, label: string) {
+    const alertSpy = jest.spyOn(Alert, 'alert');
+    await fireEvent.press(screen.getByLabelText(label));
+    const buttons = alertSpy.mock.calls[0]?.[2];
+    const action = buttons?.[actionIndex];
+    await action?.onPress?.();
+    alertSpy.mockRestore();
+  }
 
   describe('rendering — guest state', () => {
     it('renders the guest banner framing', async () => {
@@ -282,6 +373,282 @@ describe('ProfileScreen', () => {
     });
   });
 
+  describe('display-name editing', () => {
+    it('enters edit mode when the edit affordance is pressed', async () => {
+      await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Edit display name'));
+      expect(screen.getByLabelText('Display name')).toBeTruthy();
+      expect(screen.getByLabelText('Save display name')).toBeTruthy();
+    });
+
+    it('saves a new name and pushes the fresh profile into the store', async () => {
+      await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Edit display name'));
+      await fireEvent.changeText(
+        screen.getByLabelText('Display name'),
+        'Jordan Rivera',
+      );
+      await fireEvent.press(screen.getByLabelText('Save display name'));
+
+      await waitFor(() =>
+        expect(mockUpdateDisplayName).toHaveBeenCalledWith('Jordan Rivera'),
+      );
+      expect(mockUpdateProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ displayName: 'Jordan Rivera' }),
+      );
+      // Leaves edit mode after a successful save.
+      await waitFor(() =>
+        expect(screen.queryByLabelText('Display name')).toBeNull(),
+      );
+    });
+
+    it('trims surrounding whitespace before sending the name', async () => {
+      await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Edit display name'));
+      await fireEvent.changeText(screen.getByLabelText('Display name'), '  Sky  ');
+      await fireEvent.press(screen.getByLabelText('Save display name'));
+      await waitFor(() =>
+        expect(mockUpdateDisplayName).toHaveBeenCalledWith('Sky'),
+      );
+    });
+
+    it('rejects an empty name without calling the API', async () => {
+      await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Edit display name'));
+      await fireEvent.changeText(screen.getByLabelText('Display name'), '   ');
+      await fireEvent.press(screen.getByLabelText('Save display name'));
+
+      expect(screen.getByText('Enter a display name')).toBeTruthy();
+      expect(mockUpdateDisplayName).not.toHaveBeenCalled();
+      // Stays in edit mode so the user can correct the value.
+      expect(screen.getByLabelText('Display name')).toBeTruthy();
+    });
+
+    it('clears the validation error as the user edits', async () => {
+      await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Edit display name'));
+      await fireEvent.changeText(screen.getByLabelText('Display name'), '   ');
+      await fireEvent.press(screen.getByLabelText('Save display name'));
+      expect(screen.getByText('Enter a display name')).toBeTruthy();
+
+      await fireEvent.changeText(screen.getByLabelText('Display name'), 'Robin');
+      expect(screen.queryByText('Enter a display name')).toBeNull();
+    });
+
+    it('surfaces an error when the save request fails', async () => {
+      mockUpdateDisplayName.mockRejectedValueOnce(new Error('network down'));
+      await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Edit display name'));
+      await fireEvent.changeText(screen.getByLabelText('Display name'), 'Robin');
+      await fireEvent.press(screen.getByLabelText('Save display name'));
+
+      await waitFor(() =>
+        expect(
+          screen.getByText("Couldn't save your name. Please try again."),
+        ).toBeTruthy(),
+      );
+      // Still editing after a failure.
+      expect(screen.getByLabelText('Display name')).toBeTruthy();
+    });
+
+    it('shows a saving state while the update is in flight', async () => {
+      // A controllable promise, resolved before the test ends so react-query's
+      // mutation settles cleanly rather than leaving a forever-pending mutation
+      // that keeps the Jest worker alive.
+      let resolveSave: (value: UserProfile) => void = () => {};
+      mockUpdateDisplayName.mockReturnValue(
+        new Promise<UserProfile>((resolve) => {
+          resolveSave = resolve;
+        }),
+      );
+      await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Edit display name'));
+      await fireEvent.changeText(screen.getByLabelText('Display name'), 'Robin');
+      await fireEvent.press(screen.getByLabelText('Save display name'));
+
+      await waitFor(() => expect(screen.getByText('Saving…')).toBeTruthy());
+      expect(
+        screen.getByLabelText('Save display name').props.accessibilityState.busy,
+      ).toBe(true);
+
+      resolveSave({ ...SIGNED_IN_USER, displayName: 'Robin' });
+      await waitFor(() =>
+        expect(screen.queryByLabelText('Display name')).toBeNull(),
+      );
+    });
+
+    it('cancels editing without calling the API', async () => {
+      await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Edit display name'));
+      await fireEvent.press(
+        screen.getByLabelText('Cancel editing display name'),
+      );
+      expect(screen.queryByLabelText('Display name')).toBeNull();
+      expect(mockUpdateDisplayName).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('avatar editing', () => {
+    it('uploads a photo from the library and pushes the profile to the store', async () => {
+      await renderSignedIn();
+      await avatarActionVia(1, 'Add a profile photo');
+      await waitFor(() => expect(mockRequestLibrary).toHaveBeenCalled());
+      expect(mockLaunchLibrary).toHaveBeenCalled();
+      await waitFor(() =>
+        expect(mockUploadAvatar).toHaveBeenCalledWith('file:///tmp/lib.png'),
+      );
+      await waitFor(() =>
+        expect(mockUpdateProfile).toHaveBeenCalledWith(SIGNED_IN_WITH_AVATAR),
+      );
+    });
+
+    it('uploads a photo from the camera path', async () => {
+      await renderSignedIn();
+      await avatarActionVia(0, 'Add a profile photo');
+      await waitFor(() => expect(mockRequestCamera).toHaveBeenCalled());
+      await waitFor(() =>
+        expect(mockUploadAvatar).toHaveBeenCalledWith(
+          'file:///tmp/new-avatar.jpg',
+        ),
+      );
+    });
+
+    it('shows an error when the upload fails', async () => {
+      mockUploadAvatar.mockRejectedValueOnce(new Error('S3 down'));
+      await renderSignedIn();
+      await avatarActionVia(1, 'Add a profile photo');
+      await waitFor(() =>
+        expect(
+          screen.getByText("Couldn't update your photo. Please try again."),
+        ).toBeTruthy(),
+      );
+    });
+
+    it('surfaces a permission error when photo access is denied', async () => {
+      mockRequestLibrary.mockResolvedValueOnce(deniedPermission());
+      await renderSignedIn();
+      await avatarActionVia(1, 'Add a profile photo');
+      await waitFor(() =>
+        expect(
+          screen.getByText(
+            'Photo access is off. Enable it in Settings to choose a photo.',
+          ),
+        ).toBeTruthy(),
+      );
+      expect(mockUploadAvatar).not.toHaveBeenCalled();
+    });
+
+    it('surfaces a permission error when camera access is denied', async () => {
+      mockRequestCamera.mockResolvedValueOnce(deniedPermission());
+      await renderSignedIn();
+      await avatarActionVia(0, 'Add a profile photo');
+      await waitFor(() =>
+        expect(
+          screen.getByText(
+            'Camera access is off. Enable it in Settings to take a photo.',
+          ),
+        ).toBeTruthy(),
+      );
+      expect(mockUploadAvatar).not.toHaveBeenCalled();
+    });
+
+    it('ignores a cancelled picker', async () => {
+      mockLaunchLibrary.mockResolvedValueOnce({ canceled: true });
+      await renderSignedIn();
+      await avatarActionVia(1, 'Add a profile photo');
+      await waitFor(() => expect(mockLaunchLibrary).toHaveBeenCalled());
+      expect(mockUploadAvatar).not.toHaveBeenCalled();
+    });
+
+    it('shows an uploading state on the avatar while in flight', async () => {
+      let resolveUpload: (value: UserProfile) => void = () => {};
+      mockUploadAvatar.mockReturnValue(
+        new Promise<UserProfile>((resolve) => {
+          resolveUpload = resolve;
+        }),
+      );
+      await renderSignedIn();
+      await avatarActionVia(1, 'Add a profile photo');
+      await waitFor(() =>
+        expect(screen.getByLabelText('Updating profile photo')).toBeTruthy(),
+      );
+
+      // Settle the mutation so no forever-pending mutation leaks past the test.
+      resolveUpload(SIGNED_IN_WITH_AVATAR);
+      await waitFor(() =>
+        expect(mockUpdateProfile).toHaveBeenCalledWith(SIGNED_IN_WITH_AVATAR),
+      );
+    });
+
+    it('renders the actual avatar image when the user has one', async () => {
+      await renderSignedIn(SIGNED_IN_WITH_AVATAR);
+      expect(screen.getByLabelText('Your profile photo')).toBeTruthy();
+      expect(
+        screen.getByLabelText('Change or remove profile photo'),
+      ).toBeTruthy();
+    });
+
+    it('does not offer removal when there is no avatar', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert');
+      await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Add a profile photo'));
+      const buttons = alertSpy.mock.calls[0]?.[2] ?? [];
+      expect(buttons.map((b) => b.text)).toEqual([
+        'Take Photo',
+        'Choose from Library',
+        'Cancel',
+      ]);
+      alertSpy.mockRestore();
+    });
+
+    it('removes the current avatar and pushes the cleared profile', async () => {
+      await renderSignedIn(SIGNED_IN_WITH_AVATAR);
+      await avatarActionVia(2, 'Change or remove profile photo');
+      await waitFor(() => expect(mockRemoveAvatar).toHaveBeenCalled());
+      await waitFor(() =>
+        expect(mockUpdateProfile).toHaveBeenCalledWith(SIGNED_IN_USER),
+      );
+    });
+
+    it('shows an error when removal fails', async () => {
+      mockRemoveAvatar.mockRejectedValueOnce(new Error('S3 down'));
+      await renderSignedIn(SIGNED_IN_WITH_AVATAR);
+      await avatarActionVia(2, 'Change or remove profile photo');
+      await waitFor(() =>
+        expect(
+          screen.getByText("Couldn't remove your photo. Please try again."),
+        ).toBeTruthy(),
+      );
+    });
+  });
+
+  describe('guest gating', () => {
+    it('hides the name and avatar edit affordances for a guest', async () => {
+      mockUser = GUEST_USER;
+      await renderScreen();
+      expect(screen.queryByLabelText('Edit display name')).toBeNull();
+      expect(screen.queryByLabelText('Add a profile photo')).toBeNull();
+      expect(screen.queryByLabelText('Change or remove profile photo')).toBeNull();
+    });
+  });
+
+  describe('validateDisplayName', () => {
+    it('accepts a name within the 1-50 char bounds', () => {
+      expect(validateDisplayName('Ada')).toBeNull();
+    });
+
+    it('rejects an empty or whitespace-only name', () => {
+      expect(validateDisplayName('')).toBe('Enter a display name');
+      expect(validateDisplayName('   ')).toBe('Enter a display name');
+    });
+
+    it('rejects a name longer than 50 characters', () => {
+      expect(validateDisplayName('a'.repeat(51))).toBe(
+        'Keep it to 50 characters or fewer',
+      );
+    });
+  });
+
   describe('accessibility', () => {
     it('gives every interactive element a button role and a label (guest)', async () => {
       await renderScreen();
@@ -318,6 +685,21 @@ describe('ProfileScreen', () => {
       expect(
         screen.getByText('Log out of this account?').props.accessibilityRole,
       ).toBe('header');
+    });
+
+    it('gives every interactive element a button role and a label (signed in)', async () => {
+      await renderSignedIn();
+      const buttons = screen.getAllByRole('button');
+      expect(buttons.length).toBeGreaterThan(0);
+      buttons.forEach((btn) => {
+        expect(btn.props.accessibilityLabel).toBeTruthy();
+      });
+    });
+
+    it('labels the avatar control and the name edit control', async () => {
+      await renderSignedIn();
+      expect(screen.getByLabelText('Add a profile photo')).toBeTruthy();
+      expect(screen.getByLabelText('Edit display name')).toBeTruthy();
     });
   });
 

@@ -1,17 +1,30 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
+  ActivityIndicator,
+  Alert,
   findNodeHandle,
+  Image,
   Modal,
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from 'react-native';
+import type { AlertButton } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authStore';
 import { getHome } from '../../services/homeApi';
+import {
+  DISPLAY_NAME_MAX_LENGTH,
+  DISPLAY_NAME_MIN_LENGTH,
+  updateDisplayName,
+} from '../../services/profileApi';
+import { removeAvatar, uploadAvatar } from '../../services/avatarApi';
+import { Colors } from '../../constants/design';
 // Reuse the exact same derivations Home uses so the shared level/streak UI
 // reads identically in both contexts — no re-implementation, no drift.
 import { computeXpProgress, formatStreakLabel, whenPressed } from '../HomeScreen';
@@ -54,6 +67,23 @@ export function displayNameOrFallback(
   return (name && name.trim()) || (email && email.trim()) || 'Explorer';
 }
 
+/**
+ * Validates a candidate display name against the same 1-50 char bounds the
+ * backend enforces (`UpdateProfileDto`). Returns an error message, or null when
+ * the trimmed value is acceptable to submit. Trims first so a whitespace-only
+ * entry is rejected client-side rather than sent and 400'd.
+ */
+export function validateDisplayName(value: string): string | null {
+  const trimmed = value.trim();
+  if (trimmed.length < DISPLAY_NAME_MIN_LENGTH) {
+    return 'Enter a display name';
+  }
+  if (trimmed.length > DISPLAY_NAME_MAX_LENGTH) {
+    return `Keep it to ${DISPLAY_NAME_MAX_LENGTH} characters or fewer`;
+  }
+  return null;
+}
+
 /** Skeleton shown while a required data source is still loading. */
 function ProfileSkeleton({ label }: { label: string }) {
   return (
@@ -77,6 +107,7 @@ export default function ProfileScreen({
 }: ProfileScreenProps) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const updateProfile = useAuthStore((s) => s.updateProfile);
 
   // Shares the ['home'] cache with HomeScreen's own query — TanStack Query
   // dedupes, so opening Profile after Home does not trigger a second fetch.
@@ -86,6 +117,136 @@ export default function ProfileScreen({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const cancelRef = useRef<View>(null);
+
+  // ── Inline display-name editing ──
+  const [editingName, setEditingName] = useState(false);
+  const [draftName, setDraftName] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
+  // ── Avatar upload / removal ──
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  const nameMutation = useMutation({
+    mutationFn: (name: string) => updateDisplayName(name),
+    onSuccess: (updated) => {
+      updateProfile(updated);
+      setEditingName(false);
+      setNameError(null);
+    },
+    onError: () => {
+      setNameError("Couldn't save your name. Please try again.");
+    },
+  });
+
+  const avatarMutation = useMutation({
+    mutationFn: (uri: string) => uploadAvatar(uri),
+    onSuccess: (updated) => {
+      updateProfile(updated);
+      setAvatarError(null);
+    },
+    onError: () => {
+      setAvatarError("Couldn't update your photo. Please try again.");
+    },
+  });
+
+  const removeAvatarMutation = useMutation({
+    mutationFn: () => removeAvatar(),
+    onSuccess: (updated) => {
+      updateProfile(updated);
+      setAvatarError(null);
+    },
+    onError: () => {
+      setAvatarError("Couldn't remove your photo. Please try again.");
+    },
+  });
+
+  const savingName = nameMutation.isPending;
+  const avatarBusy = avatarMutation.isPending || removeAvatarMutation.isPending;
+
+  const handleStartEdit = useCallback(() => {
+    setDraftName(user?.displayName ?? '');
+    setNameError(null);
+    setEditingName(true);
+  }, [user?.displayName]);
+
+  const handleDraftNameChange = useCallback((value: string) => {
+    setDraftName(value);
+    // Clear a stale validation/save error as the user corrects their input,
+    // matching LoginScreen's field-error clearing behaviour.
+    setNameError((prev) => (prev ? null : prev));
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    if (savingName) return;
+    setEditingName(false);
+    setNameError(null);
+  }, [savingName]);
+
+  const handleSaveName = useCallback(() => {
+    if (savingName) return;
+    const error = validateDisplayName(draftName);
+    if (error) {
+      setNameError(error);
+      return;
+    }
+    nameMutation.mutate(draftName.trim());
+  }, [draftName, nameMutation, savingName]);
+
+  const applyPickerResult = useCallback(
+    (result: ImagePicker.ImagePickerResult) => {
+      if (result.canceled) return;
+      const uri = result.assets?.[0]?.uri;
+      if (uri) {
+        setAvatarError(null);
+        avatarMutation.mutate(uri);
+      }
+    },
+    [avatarMutation],
+  );
+
+  const launchCamera = useCallback(async () => {
+    setAvatarError(null);
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      setAvatarError(
+        'Camera access is off. Enable it in Settings to take a photo.',
+      );
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+    applyPickerResult(result);
+  }, [applyPickerResult]);
+
+  const launchLibrary = useCallback(async () => {
+    setAvatarError(null);
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setAvatarError(
+        'Photo access is off. Enable it in Settings to choose a photo.',
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
+    applyPickerResult(result);
+  }, [applyPickerResult]);
+
+  const hasAvatar = Boolean(user?.avatarUrl);
+
+  const presentAvatarOptions = useCallback(() => {
+    if (avatarBusy) return;
+    const options: AlertButton[] = [
+      { text: 'Take Photo', onPress: () => void launchCamera() },
+      { text: 'Choose from Library', onPress: () => void launchLibrary() },
+    ];
+    if (hasAvatar) {
+      options.push({
+        text: 'Remove Current Photo',
+        style: 'destructive',
+        onPress: () => removeAvatarMutation.mutate(),
+      });
+    }
+    options.push({ text: 'Cancel', style: 'cancel' });
+    Alert.alert('Profile photo', 'Update or remove your profile photo.', options);
+  }, [avatarBusy, hasAvatar, launchCamera, launchLibrary, removeAvatarMutation]);
 
   // Move accessibility focus onto the (non-destructive) cancel action when the
   // confirm dialog opens — the safe default for a destructive confirm, mirroring
@@ -211,33 +372,150 @@ export default function ProfileScreen({
             </View>
           </View>
         ) : (
-          <View
-            style={styles.idCard}
-            accessible
-            accessibilityRole="text"
-            accessibilityLabel={`Signed in as ${name}${user.email ? `, ${user.email}` : ''}. Progress synced.`}
-          >
-            <View
-              style={styles.idAvatar}
-              importantForAccessibility="no"
-              accessibilityElementsHidden
+          <View style={styles.idCard}>
+            <Pressable
+              onPress={presentAvatarOptions}
+              disabled={avatarBusy}
+              accessibilityRole="button"
+              accessibilityLabel={
+                avatarBusy
+                  ? 'Updating profile photo'
+                  : hasAvatar
+                    ? 'Change or remove profile photo'
+                    : 'Add a profile photo'
+              }
+              accessibilityState={{ disabled: avatarBusy, busy: avatarBusy }}
+              style={({ pressed }) => [
+                styles.idAvatar,
+                whenPressed(pressed, styles.idAvatarPressed),
+              ]}
             >
-              <Text style={styles.idAvatarText}>
-                {initialsFromName(user.displayName, user.email)}
-              </Text>
-            </View>
+              {user.avatarUrl ? (
+                <Image
+                  source={{ uri: user.avatarUrl }}
+                  style={styles.idAvatarImage}
+                  accessibilityIgnoresInvertColors
+                  accessibilityLabel="Your profile photo"
+                />
+              ) : (
+                <Text style={styles.idAvatarText}>
+                  {initialsFromName(user.displayName, user.email)}
+                </Text>
+              )}
+              {avatarBusy ? (
+                <View
+                  style={styles.avatarBusyOverlay}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                >
+                  <ActivityIndicator color={Colors.white} />
+                </View>
+              ) : (
+                <View
+                  style={styles.avatarEditBadge}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                >
+                  <Text style={styles.avatarEditGlyph}>{'\u{1F4F7}'}</Text>
+                </View>
+              )}
+            </Pressable>
+
             <View style={styles.identityCopy}>
-              <Text style={styles.idName} numberOfLines={1}>
-                {name}
-              </Text>
+              {editingName ? (
+                <View style={styles.nameEditWrap}>
+                  <TextInput
+                    value={draftName}
+                    onChangeText={handleDraftNameChange}
+                    editable={!savingName}
+                    maxLength={DISPLAY_NAME_MAX_LENGTH}
+                    placeholder="Your display name"
+                    placeholderTextColor={Colors.textSecondary}
+                    autoFocus
+                    style={[
+                      styles.nameInput,
+                      nameError ? styles.nameInputInvalid : null,
+                    ]}
+                    accessibilityLabel="Display name"
+                  />
+                  {nameError ? (
+                    <Text
+                      style={styles.fieldError}
+                      accessibilityRole="alert"
+                      accessibilityLiveRegion="polite"
+                    >
+                      {nameError}
+                    </Text>
+                  ) : null}
+                  <View style={styles.nameEditActions}>
+                    <Pressable
+                      onPress={handleSaveName}
+                      disabled={savingName}
+                      accessibilityRole="button"
+                      accessibilityLabel="Save display name"
+                      accessibilityState={{ disabled: savingName, busy: savingName }}
+                      style={({ pressed }) => [
+                        styles.nameSaveBtn,
+                        whenPressed(pressed, styles.nameSaveBtnPressed),
+                        savingName ? styles.nameSaveBtnDisabled : null,
+                      ]}
+                    >
+                      <Text style={styles.nameSaveBtnText}>
+                        {savingName ? 'Saving…' : 'Save'}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={handleCancelEdit}
+                      disabled={savingName}
+                      accessibilityRole="button"
+                      accessibilityLabel="Cancel editing display name"
+                      accessibilityState={{ disabled: savingName }}
+                      style={({ pressed }) => [
+                        styles.nameCancelBtn,
+                        whenPressed(pressed, styles.nameCancelBtnPressed),
+                      ]}
+                    >
+                      <Text style={styles.nameCancelBtnText}>Cancel</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.nameRow}>
+                  <Text style={styles.idName} numberOfLines={1}>
+                    {name}
+                  </Text>
+                  <Pressable
+                    onPress={handleStartEdit}
+                    accessibilityRole="button"
+                    accessibilityLabel="Edit display name"
+                    style={({ pressed }) => [
+                      styles.nameEditBtn,
+                      whenPressed(pressed, styles.nameEditBtnPressed),
+                    ]}
+                  >
+                    <Text style={styles.nameEditGlyph}>{'✎'}</Text>
+                  </Pressable>
+                </View>
+              )}
               {user.email ? (
                 <Text style={styles.idEmail} numberOfLines={1}>
                   {user.email}
                 </Text>
               ) : null}
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>{'✓ Progress synced'}</Text>
-              </View>
+              {avatarError ? (
+                <Text
+                  style={styles.fieldError}
+                  accessibilityRole="alert"
+                  accessibilityLiveRegion="polite"
+                >
+                  {avatarError}
+                </Text>
+              ) : null}
+              {!editingName ? (
+                <View style={styles.verifiedBadge}>
+                  <Text style={styles.verifiedText}>{'✓ Progress synced'}</Text>
+                </View>
+              ) : null}
             </View>
           </View>
         )}

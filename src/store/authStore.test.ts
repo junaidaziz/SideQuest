@@ -53,8 +53,20 @@ function googleSuccess(idToken: string | null) {
   };
 }
 
-const guestUser = { id: 'u1', email: null, displayName: null, isGuest: true };
-const realUser = { id: 'u1', email: 'a@b.com', displayName: 'A', isGuest: false };
+const guestUser = {
+  id: 'u1',
+  email: null,
+  displayName: null,
+  isGuest: true,
+  avatarUrl: null,
+};
+const realUser = {
+  id: 'u1',
+  email: 'a@b.com',
+  displayName: 'A',
+  isGuest: false,
+  avatarUrl: null,
+};
 
 describe('authStore', () => {
   beforeEach(() => {
@@ -113,6 +125,19 @@ describe('authStore', () => {
 
       expect(saveTokens).toHaveBeenCalledWith({ accessToken: 'a', refreshToken: 'r' });
       expect(useAuthStore.getState().user).toEqual(realUser);
+      expect(useAuthStore.getState().status).toBe('ready');
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('replaces the cached user with the supplied profile', () => {
+      useAuthStore.setState({ user: realUser, status: 'ready' });
+      const updated = { ...realUser, displayName: 'Renamed', avatarUrl: 'u' };
+
+      useAuthStore.getState().updateProfile(updated);
+
+      expect(useAuthStore.getState().user).toEqual(updated);
+      // A profile push does not disturb session status.
       expect(useAuthStore.getState().status).toBe('ready');
     });
   });

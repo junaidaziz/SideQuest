@@ -9,6 +9,13 @@ export interface UserProfile {
   email: string | null;
   displayName: string | null;
   isGuest: boolean;
+  /**
+   * Short-lived presigned S3 GET URL for the profile avatar, or null when none
+   * is set. Resolved server-side (the client never sees the raw S3 key). It
+   * expires (~15 min), so treat it as display-only — do not persist it across
+   * app restarts as if it were permanent.
+   */
+  avatarUrl: string | null;
 }
 
 export interface AuthTokens {
