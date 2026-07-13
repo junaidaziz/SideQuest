@@ -20,6 +20,10 @@ export interface AuthResponse extends AuthTokens {
   user: UserProfile;
 }
 
+export interface LogoutResponse {
+  success: boolean;
+}
+
 export interface SignupRequest {
   email: string;
   password: string;

@@ -142,9 +142,11 @@ export default function ProfileScreen({
       setConfirmOpen(false);
       onLoggedOut?.();
     } catch {
-      // Logout failed (e.g. a secure-store clear error) — keep the dialog open
-      // so the user can retry rather than being told they logged out when the
-      // session may still be live. No unhandled rejection escapes the handler.
+      // authStore.logout() already swallows server-side revocation failures
+      // (best-effort), so the only way this rejects is a local failure (e.g.
+      // a secure-store clear error). Keep the dialog open so the user can
+      // retry rather than being told they logged out when the session may
+      // still be live. No unhandled rejection escapes the handler.
     } finally {
       setLoggingOut(false);
     }

@@ -1,5 +1,5 @@
 import { apiRequest } from './apiClient';
-import { bootstrapGuest, getCurrentUser, login, signup } from './authApi';
+import { bootstrapGuest, getCurrentUser, login, logoutRequest, signup } from './authApi';
 
 jest.mock('./apiClient');
 
@@ -39,5 +39,11 @@ describe('authApi', () => {
     await getCurrentUser();
 
     expect(apiRequest).toHaveBeenCalledWith('/auth/me');
+  });
+
+  it('logoutRequest posts to /auth/logout with default auth', async () => {
+    await logoutRequest();
+
+    expect(apiRequest).toHaveBeenCalledWith('/auth/logout', { method: 'POST' });
   });
 });

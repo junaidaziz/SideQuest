@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getTokens, saveTokens, clearTokens } from '../services/tokenStorage';
-import { bootstrapGuest, getCurrentUser, login, signup } from '../services/authApi';
+import { bootstrapGuest, getCurrentUser, login, logoutRequest, signup } from '../services/authApi';
 import type { LoginRequest, SignupRequest, UserProfile } from '../types/api';
 
 interface AuthState {
@@ -55,6 +55,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    // Best-effort server-side revocation: if this fails (offline, server
+    // down, token already expired), still clear local tokens below — a
+    // user-initiated logout must never get stuck because the network call
+    // failed. This is what actually invalidates the refresh token server-side
+    // (see POST /auth/logout); without it, clearTokens() alone only forgets
+    // the token locally while it remains valid against /auth/refresh until
+    // natural expiry.
+    try {
+      await logoutRequest();
+    } catch {
+      // Local logout proceeds regardless — see comment above.
+    }
     await clearTokens();
     set({ user: null, status: 'idle', isFirstLaunch: null });
     // Immediately re-bootstrap a fresh guest session rather than leaving the

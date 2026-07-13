@@ -1,5 +1,11 @@
 import { apiRequest } from './apiClient';
-import type { AuthResponse, LoginRequest, SignupRequest, UserProfile } from '../types/api';
+import type {
+  AuthResponse,
+  LoginRequest,
+  LogoutResponse,
+  SignupRequest,
+  UserProfile,
+} from '../types/api';
 
 export function bootstrapGuest(): Promise<AuthResponse> {
   return apiRequest<AuthResponse>('/auth/guest', { method: 'POST', auth: false });
@@ -17,4 +23,8 @@ export function login(payload: LoginRequest): Promise<AuthResponse> {
 
 export function getCurrentUser(): Promise<UserProfile> {
   return apiRequest<UserProfile>('/auth/me');
+}
+
+export function logoutRequest(): Promise<LogoutResponse> {
+  return apiRequest<LogoutResponse>('/auth/logout', { method: 'POST' });
 }

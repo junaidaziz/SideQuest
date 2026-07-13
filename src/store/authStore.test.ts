@@ -1,6 +1,6 @@
 import { useAuthStore } from './authStore';
 import { getTokens, saveTokens, clearTokens } from '../services/tokenStorage';
-import { bootstrapGuest, getCurrentUser, login, signup } from '../services/authApi';
+import { bootstrapGuest, getCurrentUser, login, logoutRequest, signup } from '../services/authApi';
 
 jest.mock('../services/tokenStorage');
 jest.mock('../services/authApi');
@@ -84,8 +84,9 @@ describe('authStore', () => {
   });
 
   describe('logout', () => {
-    it('clears tokens then re-bootstraps a fresh guest session', async () => {
+    it('revokes the session server-side, then clears tokens and re-bootstraps a fresh guest session', async () => {
       useAuthStore.setState({ user: realUser, status: 'ready', isFirstLaunch: false });
+      (logoutRequest as jest.Mock).mockResolvedValue({ success: true });
       (getTokens as jest.Mock).mockResolvedValue(null);
       (bootstrapGuest as jest.Mock).mockResolvedValue({
         accessToken: 'g2',
@@ -95,6 +96,7 @@ describe('authStore', () => {
 
       await useAuthStore.getState().logout();
 
+      expect(logoutRequest).toHaveBeenCalled();
       expect(clearTokens).toHaveBeenCalled();
       // Ends in a fully 'ready' state with a fresh guest — not stuck idle —
       // since nothing besides the root layout's one-time mount effect would
@@ -105,8 +107,27 @@ describe('authStore', () => {
       expect(useAuthStore.getState().isFirstLaunch).toBe(true);
     });
 
+    it('still clears local tokens and re-bootstraps when server-side revocation fails (offline/server down)', async () => {
+      useAuthStore.setState({ user: realUser, status: 'ready', isFirstLaunch: false });
+      (logoutRequest as jest.Mock).mockRejectedValue(new Error('network unavailable'));
+      (getTokens as jest.Mock).mockResolvedValue(null);
+      (bootstrapGuest as jest.Mock).mockResolvedValue({
+        accessToken: 'g2',
+        refreshToken: 'gr2',
+        user: guestUser,
+      });
+
+      await useAuthStore.getState().logout();
+
+      expect(logoutRequest).toHaveBeenCalled();
+      expect(clearTokens).toHaveBeenCalled();
+      expect(useAuthStore.getState().status).toBe('ready');
+      expect(useAuthStore.getState().user).toEqual(guestUser);
+    });
+
     it('leaves status as error if the post-logout re-hydrate fails', async () => {
       useAuthStore.setState({ user: realUser, status: 'ready', isFirstLaunch: false });
+      (logoutRequest as jest.Mock).mockResolvedValue({ success: true });
       (getTokens as jest.Mock).mockRejectedValue(new Error('storage unavailable'));
 
       await useAuthStore.getState().logout();
