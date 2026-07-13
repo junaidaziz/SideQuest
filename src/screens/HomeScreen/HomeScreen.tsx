@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import type { LevelInfo, Mission, SavedPack } from '../../types/api';
+import type { LevelInfo, Mission, SavedPack, TaskStats } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { styles } from './HomeScreen.styles';
 
@@ -71,6 +71,14 @@ export function formatStreakLabel(days: number): string {
 /** "1 mission" vs "6 missions" — pluralised count for a saved pack. */
 export function packCountLabel(count: number): string {
   return `${count} mission${count === 1 ? '' : 's'}`;
+}
+
+/**
+ * Server sends completionRate as a 0–1 fraction (already guarded to 0, never
+ * NaN, when total is 0). Rendered as a whole-number percentage, e.g. "60%".
+ */
+export function formatCompletionRate(rate: number): string {
+  return `${Math.round(rate * 100)}%`;
 }
 
 /** Skeleton placeholder shown while the home aggregate is loading. */
@@ -194,6 +202,60 @@ function PackCard({ pack, onPress }: PackCardProps) {
         <Text style={styles.packCount}>{packCountLabel(pack.missionCount)}</Text>
       </View>
     </Pressable>
+  );
+}
+
+/** One value/label cell inside the progress stats grid. Presentational only —
+ * the parent card owns the single combined accessibility label. */
+function StatCell({ value, label }: { value: number; label: string }) {
+  return (
+    <View style={styles.statCell}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+/**
+ * "Your progress" strip: total / completed / under-review / rejected counts plus
+ * a headline completion percentage. Shows a contextual empty card (not a row of
+ * zeros) for a brand-new user with no completions, matching the screen's other
+ * empty states. Exposed as a single accessible summary so a screen reader reads
+ * the whole picture in one pass rather than four disconnected numbers.
+ */
+function TaskStatsRow({ stats }: { stats: TaskStats }) {
+  if (stats.total === 0) {
+    return (
+      <EmptyCard
+        icon={'\u{1F4CA}'}
+        title="No missions completed yet"
+        sub="Finish a quest and your progress stats will appear here"
+      />
+    );
+  }
+  const pct = formatCompletionRate(stats.completionRate);
+  return (
+    <View
+      style={styles.statsCard}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={
+        `Your progress: ${stats.total} total, ${stats.approved} completed, ` +
+        `${stats.pending} under review, ${stats.rejected} rejected. ` +
+        `${pct} completion rate`
+      }
+    >
+      <View style={styles.statsHeaderRow}>
+        <Text style={styles.statsHeading}>Completion rate</Text>
+        <Text style={styles.statsPct}>{pct}</Text>
+      </View>
+      <View style={styles.statsGrid}>
+        <StatCell value={stats.total} label="Total" />
+        <StatCell value={stats.approved} label="Completed" />
+        <StatCell value={stats.pending} label="Under review" />
+        <StatCell value={stats.rejected} label="Rejected" />
+      </View>
+    </View>
   );
 }
 
@@ -337,6 +399,12 @@ export default function HomeScreen({
               <Text style={styles.streakValue}>{formatStreakLabel(data.streak.currentStreak)}</Text>
               <Text style={styles.streakLabel}>Complete a quest today to keep it going</Text>
             </View>
+          </View>
+
+          {/* Proof-verification progress strip */}
+          <View>
+            <Text style={styles.sectionLabel}>Your progress</Text>
+            <TaskStatsRow stats={data.taskStats} />
           </View>
 
           {/* Daily free mission — hidden entirely when the curated pool is empty. */}

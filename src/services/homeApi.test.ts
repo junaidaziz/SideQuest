@@ -10,6 +10,7 @@ const RESPONSE: HomeResponse = {
   dailyMission: null,
   pendingChallenges: [],
   savedPacks: [],
+  taskStats: { total: 8, approved: 5, pending: 2, rejected: 1, completionRate: 0.625 },
 };
 
 describe('homeApi', () => {

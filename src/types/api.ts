@@ -145,6 +145,25 @@ export interface SavedPack {
   missionCount: number;
 }
 
+/**
+ * Proof-verification tallies for the Home "your progress" strip. Mirrors
+ * backend `home/dto/home-response.dto.ts` `TaskStatsDto`. Derived server-side
+ * from the user's Completion rows grouped by verificationStatus, so the four
+ * buckets (approved + pending + rejected) always sum to `total`.
+ */
+export interface TaskStats {
+  /** Every Completion the user owns — the denominator for completionRate. */
+  total: number;
+  /** Completions whose verificationStatus is Approved — the "genuinely done" count. */
+  approved: number;
+  /** Completions still Pending review (auto-approved later by the timeout job). */
+  pending: number;
+  /** Completions an admin (or the timeout path) marked Rejected. */
+  rejected: number;
+  /** approved / total as a 0-1 fraction — deliberately 0 (never NaN) when total is 0. */
+  completionRate: number;
+}
+
 export interface HomeResponse {
   level: LevelInfo;
   streak: StreakInfo;
@@ -154,4 +173,6 @@ export interface HomeResponse {
   /** Always [] in v1 — no challenge-sending backend exists yet. */
   pendingChallenges: unknown[];
   savedPacks: SavedPack[];
+  /** Proof-verification tallies across all the user's completions. */
+  taskStats: TaskStats;
 }

@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HomeScreen, {
   computeXpProgress,
+  formatCompletionRate,
   formatStreakLabel,
   packCountLabel,
   whenPressed,
@@ -36,6 +37,7 @@ const HOME: HomeResponse = {
     { name: 'Outdoors Solo', missionCount: 6 },
     { name: 'City Explorer', missionCount: 8 },
   ],
+  taskStats: { total: 10, approved: 6, pending: 3, rejected: 1, completionRate: 0.6 },
 };
 
 async function renderScreen(
@@ -158,6 +160,48 @@ describe('HomeScreen', () => {
       await renderScreen();
       await waitFor(() => expect(screen.getByText("Couldn't load home")).toBeTruthy());
     });
+
+    it('renders the progress stats row for a normal mixed-stats case', async () => {
+      await renderScreen();
+      await waitFor(() => expect(screen.getByText('Your progress')).toBeTruthy());
+      expect(screen.getByText('Completion rate')).toBeTruthy();
+      expect(screen.getByText('60%')).toBeTruthy();
+      // Grid cells: total / approved / pending / rejected values and labels.
+      expect(screen.getByText('Total')).toBeTruthy();
+      expect(screen.getByText('Completed')).toBeTruthy();
+      expect(screen.getByText('Under review')).toBeTruthy();
+      expect(screen.getByText('Rejected')).toBeTruthy();
+      expect(screen.getByText('10')).toBeTruthy();
+      expect(screen.getByText('6')).toBeTruthy();
+      expect(screen.getByText('3')).toBeTruthy();
+      expect(screen.getByText('1')).toBeTruthy();
+    });
+
+    it('renders a contextual empty state instead of a row of zeros when nothing is completed', async () => {
+      mockGetHome.mockResolvedValue({
+        ...HOME,
+        taskStats: { total: 0, approved: 0, pending: 0, rejected: 0, completionRate: 0 },
+      });
+      await renderScreen();
+      await waitFor(() =>
+        expect(screen.getByText('No missions completed yet')).toBeTruthy(),
+      );
+      expect(
+        screen.getByText('Finish a quest and your progress stats will appear here'),
+      ).toBeTruthy();
+      // The zero-filled grid must not render alongside the empty state.
+      expect(screen.queryByText('Completion rate')).toBeNull();
+    });
+
+    it('renders 100% for an all-approved completion history', async () => {
+      mockGetHome.mockResolvedValue({
+        ...HOME,
+        taskStats: { total: 5, approved: 5, pending: 0, rejected: 0, completionRate: 1 },
+      });
+      await renderScreen();
+      await waitFor(() => expect(screen.getByText('100%')).toBeTruthy());
+      expect(screen.getByText('Completion rate')).toBeTruthy();
+    });
   });
 
   describe('interactions', () => {
@@ -213,6 +257,14 @@ describe('HomeScreen', () => {
       await renderScreen();
       expect(screen.getByText('SideQuest').props.accessibilityRole).toBe('header');
       await waitFor(() => expect(mockGetHome).toHaveBeenCalled());
+    });
+
+    it('summarises the progress stats in a single accessible label', async () => {
+      await renderScreen();
+      const summary = await screen.findByLabelText(
+        'Your progress: 10 total, 6 completed, 3 under review, 1 rejected. 60% completion rate',
+      );
+      expect(summary.props.accessibilityRole).toBe('text');
     });
   });
 
@@ -274,6 +326,24 @@ describe('HomeScreen', () => {
 
     it('uses the singular for exactly one mission', () => {
       expect(packCountLabel(1)).toBe('1 mission');
+    });
+  });
+
+  describe('formatCompletionRate', () => {
+    it('renders a mid-range fraction as a whole-number percentage', () => {
+      expect(formatCompletionRate(0.6)).toBe('60%');
+    });
+
+    it('renders a zero rate as 0%', () => {
+      expect(formatCompletionRate(0)).toBe('0%');
+    });
+
+    it('renders a full rate as 100%', () => {
+      expect(formatCompletionRate(1)).toBe('100%');
+    });
+
+    it('rounds to the nearest whole percent', () => {
+      expect(formatCompletionRate(0.666)).toBe('67%');
     });
   });
 
