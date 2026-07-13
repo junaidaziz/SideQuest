@@ -109,6 +109,7 @@ async function renderScreen(
   const onCreateAccount = jest.fn();
   const onLoginExisting = jest.fn();
   const onLoggedOut = jest.fn();
+  const onPaymentMethods = jest.fn();
   const queryClient = new QueryClient({
     defaultOptions: {
       // gcTime: 0 evicts cache entries as soon as they go unused, so no
@@ -125,11 +126,18 @@ async function renderScreen(
         onCreateAccount={onCreateAccount}
         onLoginExisting={onLoginExisting}
         onLoggedOut={onLoggedOut}
+        onPaymentMethods={onPaymentMethods}
         {...overrides}
       />
     </QueryClientProvider>,
   );
-  return { onBack, onCreateAccount, onLoginExisting, onLoggedOut };
+  return {
+    onBack,
+    onCreateAccount,
+    onLoginExisting,
+    onLoggedOut,
+    onPaymentMethods,
+  };
 }
 
 async function openLogoutDialog(): Promise<void> {
@@ -370,6 +378,33 @@ describe('ProfileScreen', () => {
       // stays open and navigation is not triggered.
       expect(screen.getByText('Log out of this account?')).toBeTruthy();
       expect(onLoggedOut).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('payment methods entry point', () => {
+    it('shows the payment methods row for a signed-in user', async () => {
+      await renderSignedIn();
+      expect(screen.getByLabelText('Payment methods')).toBeTruthy();
+    });
+
+    it('hides the payment methods row for a guest', async () => {
+      mockUser = GUEST_USER;
+      await renderScreen();
+      await waitFor(() => expect(screen.getByText('Level 4')).toBeTruthy());
+      expect(screen.queryByLabelText('Payment methods')).toBeNull();
+    });
+
+    it('calls onPaymentMethods when the row is tapped', async () => {
+      const { onPaymentMethods } = await renderSignedIn();
+      await fireEvent.press(screen.getByLabelText('Payment methods'));
+      expect(onPaymentMethods).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not throw when tapped without a handler', async () => {
+      await renderSignedIn(SIGNED_IN_USER, { onPaymentMethods: undefined });
+      expect(() =>
+        fireEvent.press(screen.getByLabelText('Payment methods')),
+      ).not.toThrow();
     });
   });
 

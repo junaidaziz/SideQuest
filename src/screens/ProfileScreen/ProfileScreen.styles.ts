@@ -399,6 +399,26 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: Spacing.xs,
   },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: Radius.btn,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.base,
+  },
+  settingsRowText: {
+    fontFamily: Fonts.bodySemiBold,
+    fontSize: FontSize.body,
+    color: Colors.ink,
+  },
+  settingsRowChevron: {
+    fontSize: 22,
+    lineHeight: 24,
+    color: Colors.textSecondary,
+  },
   logoutBtn: {
     borderRadius: Radius.btn,
     borderWidth: 1.5,

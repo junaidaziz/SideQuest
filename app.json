@@ -71,7 +71,8 @@
             "usePrecompiledModules": false
           }
         }
-      ]
+      ],
+      "@stripe/stripe-react-native"
     ],
     "extra": {
       "router": {},

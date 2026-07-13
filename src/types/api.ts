@@ -129,6 +129,39 @@ export interface SaveMissionResponse {
 }
 
 /**
+ * Mirrors sidequest-backend `src/payment/dto/payment-method.dto.ts`. A saved
+ * card projected down to only display-safe fields — Stripe never exposes the
+ * full PAN, and the backend deliberately strips fingerprints/billing details.
+ * `last4` + `brand` + expiry is all the card row needs. This is
+ * payment-methods-on-file only; there is no charge/checkout flow anywhere.
+ */
+export interface PaymentMethod {
+  /** Stripe PaymentMethod id (`pm_…`). Used to set-default or detach the card. */
+  id: string;
+  /** Card network brand, e.g. `visa`, `mastercard`. */
+  brand: string;
+  /** Last four digits of the card. */
+  last4: string;
+  /** Card expiry month, 1-12. */
+  expMonth: number;
+  /** Card expiry year, four digits. */
+  expYear: number;
+  /** Whether this is the customer's default payment method. */
+  isDefault: boolean;
+}
+
+/**
+ * Mirrors sidequest-backend `src/payment/dto/setup-intent-response.dto.ts`.
+ * The `clientSecret` is handed to the mobile Stripe PaymentSheet, which
+ * completes card collection against Stripe directly — the raw card never
+ * touches this backend. Not a persisted secret: it authorizes only this one
+ * setup attempt for the user's Stripe customer.
+ */
+export interface SetupIntentResponse {
+  clientSecret: string;
+}
+
+/**
  * Mirrors sidequest-backend `src/home/dto/*`. Flat 100-XP-per-level curve —
  * level/xpIntoLevel/xpToNextLevel are all derived server-side from totalXp,
  * never stored, so the client never computes them independently.

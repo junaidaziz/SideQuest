@@ -39,6 +39,8 @@ interface ProfileScreenProps {
   onLoginExisting?: () => void;
   /** Fired after logout completes successfully (fresh guest session). */
   onLoggedOut?: () => void;
+  /** Signed-in only: opens the saved-cards screen (routes to /payment-methods). */
+  onPaymentMethods?: () => void;
 }
 
 /**
@@ -104,6 +106,7 @@ export default function ProfileScreen({
   onCreateAccount,
   onLoginExisting,
   onLoggedOut,
+  onPaymentMethods,
 }: ProfileScreenProps) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -278,6 +281,12 @@ export default function ProfileScreen({
     // what actually runs router.push('/login').
     onLoginExisting?.();
   }, [onLoginExisting]);
+
+  const handlePaymentMethods = useCallback(() => {
+    // Nav-agnostic by design: app/profile.tsx's onPaymentMethods callback is
+    // what actually runs router.push('/payment-methods').
+    onPaymentMethods?.();
+  }, [onPaymentMethods]);
 
   const handleRetry = useCallback(() => {
     homeQuery.refetch();
@@ -654,18 +663,39 @@ export default function ProfileScreen({
             </Text>
           </View>
         ) : (
-          <Pressable
-            onPress={openConfirm}
-            accessibilityRole="button"
-            accessibilityLabel="Log out"
-            accessibilityHint="Opens a confirmation dialog"
-            style={({ pressed }) => [
-              styles.logoutBtn,
-              whenPressed(pressed, styles.logoutBtnPressed),
-            ]}
-          >
-            <Text style={styles.logoutBtnText}>Log out</Text>
-          </Pressable>
+          <View style={styles.ctaStack}>
+            <Pressable
+              onPress={handlePaymentMethods}
+              accessibilityRole="button"
+              accessibilityLabel="Payment methods"
+              accessibilityHint="Opens your saved cards"
+              style={({ pressed }) => [
+                styles.settingsRow,
+                whenPressed(pressed, styles.secondaryBtnPressed),
+              ]}
+            >
+              <Text style={styles.settingsRowText}>Payment methods</Text>
+              <Text
+                style={styles.settingsRowChevron}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              >
+                {'›'}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={openConfirm}
+              accessibilityRole="button"
+              accessibilityLabel="Log out"
+              accessibilityHint="Opens a confirmation dialog"
+              style={({ pressed }) => [
+                styles.logoutBtn,
+                whenPressed(pressed, styles.logoutBtnPressed),
+              ]}
+            >
+              <Text style={styles.logoutBtnText}>Log out</Text>
+            </Pressable>
+          </View>
         )}
       </ScrollView>
 

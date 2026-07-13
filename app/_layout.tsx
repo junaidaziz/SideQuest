@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { StripeProvider } from '@stripe/stripe-react-native';
 import { useAuthStore } from '../src/store/authStore';
 
 const queryClient = new QueryClient({
@@ -55,6 +56,17 @@ if (googleWebClientId) {
   });
 }
 
+/**
+ * Stripe publishable key — a public (non-secret) client key, safe to ship in
+ * the bundle. Falls back to an empty string when unset (local dev/CI before a
+ * real key lands): StripeProvider mounts fine with an empty key and only the
+ * PaymentSheet card-registration call fails at runtime, so this never crashes
+ * the app on launch. Card collection happens entirely against Stripe on-device
+ * via the SetupIntent client secret the backend mints — the raw card never
+ * touches this app or our backend.
+ */
+const stripePublishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
+
 function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);
   const navigationRef = useNavigationContainerRef();
@@ -70,10 +82,12 @@ function RootLayout() {
   }, [navigationRef]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }} />
-      <StatusBar style="auto" />
-    </QueryClientProvider>
+    <StripeProvider publishableKey={stripePublishableKey}>
+      <QueryClientProvider client={queryClient}>
+        <Stack screenOptions={{ headerShown: false }} />
+        <StatusBar style="auto" />
+      </QueryClientProvider>
+    </StripeProvider>
   );
 }
 

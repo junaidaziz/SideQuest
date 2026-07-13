@@ -23,12 +23,17 @@ export default function ProfileRoute() {
     router.replace('/home');
   }, []);
 
+  const handlePaymentMethods = useCallback(() => {
+    router.push('/payment-methods');
+  }, []);
+
   return (
     <ProfileScreen
       onBack={handleBack}
       onCreateAccount={handleCreateAccount}
       onLoginExisting={handleLoginExisting}
       onLoggedOut={handleLoggedOut}
+      onPaymentMethods={handlePaymentMethods}
     />
   );
 }
