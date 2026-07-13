@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SideQuest — Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:            #0E0E1A;
+      --surface:        #FFFFFF;
+      --surface-muted:  #F5F3FF;
+      --primary:        #5B3DE8;
+      --primary-dark:   #4A2ED6;
+      --primary-light:  #EBE7FD;
+      --accent:         #FFB800;
+      --accent-dark:    #B45309;
+      --accent-light:   #FFF8E1;
+      --text-secondary: #6B6880;
+      --border:         #E8E5F4;
+      --error:          #E53935;
+      --success:        #2E7D32;
+      --success-light:  #E8F5E9;
+
+      --font-display: 'Syne', system-ui, sans-serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+
+      --radius-card:   16px;
+      --radius-btn:    14px;
+      --radius-chip:   8px;
+      --radius-sheet:  24px;
+
+      --ease:            cubic-bezier(0.4, 0, 0.2, 1);
+      --duration-quick:  150ms;
+      --duration-screen: 350ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: #12082A;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 16px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Prototype state switcher (not part of the app UI) ── */
+    .proto-switch {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 300;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 14px;
+      padding: 10px 12px;
+      backdrop-filter: blur(6px);
+    }
+    .proto-label {
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 7px;
+    }
+    .proto-segs { display: flex; gap: 4px; }
+    .proto-seg {
+      border: none;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.7);
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background var(--duration-quick) var(--ease), color var(--duration-quick) var(--ease);
+    }
+    .proto-seg:hover         { background: rgba(255,255,255,0.12); color: #fff; }
+    .proto-seg[aria-pressed="true"] { background: var(--primary); color: #fff; }
+    .proto-seg:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+    /* ── Skip link ── */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 16px;
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 200;
+      text-decoration: none;
+    }
+    .skip-link:focus { top: 16px; }
+
+    /* ── Phone frame ── */
+    .phone {
+      width: 390px;
+      min-height: 844px;
+      background: #1C1532;
+      border-radius: 50px;
+      padding: 12px 12px 0;
+      position: relative;
+      box-shadow:
+        0 40px 80px rgba(0, 0, 0, 0.6),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    .island {
+      width: 120px;
+      height: 34px;
+      background: #12082A;
+      border-radius: 20px;
+      margin: 0 auto 8px;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px 8px;
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-icons { display: flex; gap: 5px; align-items: center; }
+
+    /* ── Screen ── */
+    .screen {
+      background: var(--surface);
+      border-radius: 38px 38px 0 0;
+      overflow: hidden;
+      height: 768px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ── Header ── */
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 20px 10px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink);
+      flex-shrink: 0;
+      transition:
+        background var(--duration-quick) var(--ease),
+        border-color var(--duration-quick) var(--ease),
+        transform var(--duration-quick) var(--ease);
+    }
+    .btn-icon:hover         { background: var(--surface-muted); border-color: var(--primary); }
+    .btn-icon:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-icon:active        { transform: scale(0.92); }
+
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.2px;
+    }
+
+    /* ── Scroll area ── */
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .scroll-area::-webkit-scrollbar { width: 4px; }
+    .scroll-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── Identity: guest banner ── */
+    .guest-banner {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 16px;
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-card);
+    }
+    .guest-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--primary-light);
+      border: 1.5px solid rgba(91,61,232,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .guest-copy-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.2px;
+      margin-bottom: 4px;
+    }
+    .guest-copy-sub {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* ── Identity: signed-in card ── */
+    .id-card {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-card);
+    }
+    .id-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #3B1FA8 0%, var(--primary) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .id-name {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.3px;
+      margin-bottom: 3px;
+    }
+    .id-email {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .id-verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 7px;
+      padding: 3px 8px;
+      background: var(--success-light);
+      color: var(--success);
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 10px;
+    }
+
+    /* ── XP level card (reused from Home 06) ── */
+    .level-card {
+      background: linear-gradient(135deg, #3B1FA8 0%, var(--primary) 100%);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      color: #fff;
+    }
+    .level-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .level-label {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.65);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+    .level-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.2px;
+    }
+    .xp-badge {
+      background: var(--accent);
+      color: var(--ink);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .xp-progress-track {
+      height: 8px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .xp-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      width: 40%;
+      transition: width 0.8s var(--ease);
+    }
+    .xp-progress-label {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* ── Streak card (reused from Home 06) ── */
+    .streak-card {
+      background: var(--accent-light);
+      border: 1.5px solid rgba(255,184,0,0.3);
+      border-radius: var(--radius-card);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .streak-icon { font-size: 32px; flex-shrink: 0; line-height: 1; }
+    .streak-info { flex: 1; }
+    .streak-value {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent-dark);
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+    .streak-label {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Stat row (signed-in) ── */
+    .stat-row {
+      display: flex;
+      gap: 10px;
+    }
+    .stat-cell {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.3px;
+    }
+    .stat-cap {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition:
+        background var(--duration-quick) var(--ease),
+        transform var(--duration-quick) var(--ease),
+        box-shadow var(--duration-quick) var(--ease);
+    }
+    .btn-primary:hover         { background: var(--primary-dark); box-shadow: 0 6px 24px rgba(91,61,232,0.35); }
+    .btn-primary:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-primary:active        { transform: scale(0.98); box-shadow: none; }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 14px;
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-btn);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      transition:
+        border-color var(--duration-quick) var(--ease),
+        background var(--duration-quick) var(--ease),
+        transform var(--duration-quick) var(--ease);
+    }
+    .btn-secondary:hover         { border-color: var(--primary); background: var(--primary-light); }
+    .btn-secondary:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-secondary:active        { transform: scale(0.98); }
+
+    /* Logout (destructive tone) */
+    .btn-logout {
+      width: 100%;
+      padding: 14px;
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-btn);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--error);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition:
+        border-color var(--duration-quick) var(--ease),
+        background var(--duration-quick) var(--ease),
+        transform var(--duration-quick) var(--ease);
+    }
+    .btn-logout:hover         { border-color: var(--error); background: #FDECEA; }
+    .btn-logout:focus-visible { outline: 3px solid var(--error); outline-offset: 2px; }
+    .btn-logout:active        { transform: scale(0.98); }
+
+    /* ── CTA stack for guest ── */
+    .cta-stack { display: flex; flex-direction: column; gap: 10px; }
+
+    .guest-footnote {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      text-align: center;
+      padding: 0 4px;
+    }
+
+    /* ── State visibility ── */
+    .state { display: none; flex-direction: column; gap: 18px; }
+    .state.active { display: flex; }
+
+    /* ── Logout confirm sheet ── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(14, 14, 26, 0.55);
+      border-radius: 38px 38px 0 0;
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--duration-quick) var(--ease);
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+
+    .confirm-sheet {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: var(--surface);
+      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+      padding: 0 24px 28px;
+      z-index: 50;
+      transform: translateY(100%);
+      transition: transform var(--duration-screen) var(--ease);
+    }
+    .confirm-sheet.show { transform: translateY(0); }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 12px auto 20px;
+    }
+    .sheet-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 15px;
+      background: #FDECEA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    .sheet-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.3px;
+      margin-bottom: 8px;
+    }
+    .sheet-body {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .sheet-body strong { color: var(--ink); font-weight: 600; }
+    .sheet-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-logout-confirm {
+      width: 100%;
+      padding: 15px;
+      background: var(--error);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--duration-quick) var(--ease), transform var(--duration-quick) var(--ease);
+    }
+    .btn-logout-confirm:hover         { background: #C62828; }
+    .btn-logout-confirm:focus-visible { outline: 3px solid var(--error); outline-offset: 2px; }
+    .btn-logout-confirm:active        { transform: scale(0.98); }
+
+    /* ── Home bar ── */
+    .home-bar {
+      width: 134px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 3px;
+      margin: 8px auto 10px;
+    }
+
+    @media (max-width: 460px) {
+      .proto-switch { position: static; margin-bottom: 16px; }
+      .phone  { width: 100%; min-width: 320px; border-radius: 0; padding: 12px 0 0; }
+      .screen { border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to profile</a>
+
+  <!-- Prototype-only control: toggle between the two states this screen handles -->
+  <div class="proto-switch" role="group" aria-label="Prototype: choose profile state">
+    <div class="proto-label">Prototype state</div>
+    <div class="proto-segs">
+      <button class="proto-seg" id="seg-guest"  aria-pressed="true">Guest</button>
+      <button class="proto-seg" id="seg-signed" aria-pressed="false">Signed in</button>
+    </div>
+  </div>
+
+  <div class="phone" role="presentation">
+    <div class="island" aria-hidden="true"></div>
+
+    <div class="status-bar" aria-hidden="true">
+      <span>9:41</span>
+      <div class="status-icons">
+        <svg width="15" height="11" viewBox="0 0 15 11" fill="white" aria-hidden="true">
+          <rect x="0" y="8"   width="3" height="3"  rx="0.5"/>
+          <rect x="4" y="5.5" width="3" height="5.5" rx="0.5"/>
+          <rect x="8" y="3"   width="3" height="8"  rx="0.5"/>
+          <rect x="12" y="0"  width="3" height="11" rx="0.5" opacity="0.35"/>
+        </svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+          <path d="M8 10.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" fill="white"/>
+          <path d="M5 7.5a4.5 4.5 0 0 1 6 0" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M2.5 5a8 8 0 0 1 11 0" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="white" aria-hidden="true">
+          <rect x="0.5" y="0.5" width="21" height="11" rx="3" stroke="white" stroke-opacity="0.4" fill="none"/>
+          <rect x="22"  y="4"   width="2.5" height="4" rx="1" fill="white" opacity="0.4"/>
+          <rect x="2"   y="2"   width="16"  height="8" rx="1.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <main class="screen" id="main-content">
+
+      <!-- Header -->
+      <header class="app-header">
+        <button class="btn-icon" id="btn-back" aria-label="Back to home">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="M11 14L6 9l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <h1 class="header-title">Profile</h1>
+      </header>
+
+      <div class="scroll-area">
+
+        <!-- ══════════ GUEST STATE ══════════ -->
+        <div class="state active" id="state-guest" aria-label="Guest profile">
+
+          <div class="guest-banner">
+            <div class="guest-avatar" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="var(--primary)" stroke-width="1.8"/>
+                <path d="M4.5 20c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="guest-copy-title">You're browsing as a guest</div>
+              <p class="guest-copy-sub">Your XP and streak are real — they're just saved on this device. Create an account to keep them safe, or log in to one you already have.</p>
+            </div>
+          </div>
+
+          <!-- Live session progress (same data shape as Home) -->
+          <section aria-label="Your level and XP this session">
+            <div class="section-label">This session</div>
+            <div class="level-card">
+              <div class="level-top">
+                <div>
+                  <div class="level-label">Level 2</div>
+                  <div class="level-title">Curious Wanderer</div>
+                </div>
+                <div class="xp-badge" aria-label="180 XP earned">180 XP</div>
+              </div>
+              <div class="xp-progress-track" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" aria-label="40% to level 3">
+                <div class="xp-progress-fill" id="fill-guest"></div>
+              </div>
+              <div class="xp-progress-label">120 XP to Level 3</div>
+            </div>
+          </section>
+
+          <section aria-label="Daily streak">
+            <div class="streak-card" role="status">
+              <span class="streak-icon" aria-hidden="true">🔥</span>
+              <div class="streak-info">
+                <div class="streak-value">2-day streak</div>
+                <div class="streak-label">Complete a quest today to keep it going</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Two calls to action -->
+          <div class="cta-stack">
+            <button class="btn-primary" id="btn-create">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path d="M9 3.5v11M3.5 9h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Create an account
+            </button>
+            <button class="btn-secondary" id="btn-login-existing">Log in to an existing account</button>
+          </div>
+
+          <p class="guest-footnote">
+            Creating an account keeps this exact progress — nothing resets.
+          </p>
+
+        </div>
+
+        <!-- ══════════ SIGNED-IN STATE ══════════ -->
+        <div class="state" id="state-signed" aria-label="Signed-in profile">
+
+          <div class="id-card">
+            <div class="id-avatar" aria-hidden="true">JE</div>
+            <div>
+              <div class="id-name">Jordan Ellis</div>
+              <div class="id-email">jordan.ellis@example.com</div>
+              <span class="id-verified">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path d="M2.5 6.2l2.2 2.2L9.5 3.6" stroke="var(--success)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Progress synced
+              </span>
+            </div>
+          </div>
+
+          <section aria-label="Your level and XP">
+            <div class="section-label">Your progress</div>
+            <div class="level-card">
+              <div class="level-top">
+                <div>
+                  <div class="level-label">Level 4</div>
+                  <div class="level-title">Urban Explorer</div>
+                </div>
+                <div class="xp-badge" aria-label="620 XP earned">620 XP</div>
+              </div>
+              <div class="xp-progress-track" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" aria-label="62% to level 5">
+                <div class="xp-progress-fill" id="fill-signed" style="width:62%"></div>
+              </div>
+              <div class="xp-progress-label">380 XP to Level 5</div>
+            </div>
+          </section>
+
+          <section aria-label="Daily streak">
+            <div class="streak-card" role="status">
+              <span class="streak-icon" aria-hidden="true">🔥</span>
+              <div class="streak-info">
+                <div class="streak-value">3-day streak</div>
+                <div class="streak-label">Complete a quest today to keep it going</div>
+              </div>
+            </div>
+          </section>
+
+          <section aria-label="Lifetime stats">
+            <div class="stat-row">
+              <div class="stat-cell">
+                <div class="stat-num">17</div>
+                <div class="stat-cap">Quests done</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-num">6</div>
+                <div class="stat-cap">Best streak</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-num">3</div>
+                <div class="stat-cap">Saved packs</div>
+              </div>
+            </div>
+          </section>
+
+          <button class="btn-logout" id="btn-logout" aria-haspopup="dialog">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M11 5.5V4a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 3 4v10a1.5 1.5 0 0 0 1.5 1.5h5A1.5 1.5 0 0 0 11 14v-1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M8 9h8m0 0-2.5-2.5M16 9l-2.5 2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Log out
+          </button>
+
+        </div>
+
+        <div style="height: 8px;" aria-hidden="true"></div>
+      </div>
+
+      <!-- Logout confirm overlay + sheet -->
+      <div class="overlay" id="overlay" aria-hidden="true"></div>
+      <section class="confirm-sheet" id="confirm-sheet" role="dialog" aria-modal="true"
+               aria-labelledby="confirm-title" aria-hidden="true">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2" stroke="var(--error)" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M10 12h11m0 0-3-3m3 3-3 3" stroke="var(--error)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2 class="sheet-title" id="confirm-title">Log out of this account?</h2>
+        <p class="sheet-body">
+          You'll go back to a fresh <strong>guest session</strong> on this device — new XP and streak start from zero here.
+          Your account isn't deleted: <strong>Jordan Ellis</strong> and all its progress stay safe, and you can log back in anytime to pick up where you left off.
+        </p>
+        <div class="sheet-actions">
+          <button class="btn-logout-confirm" id="btn-confirm-logout">Log out</button>
+          <button class="btn-secondary" id="btn-cancel-logout">Stay logged in</button>
+        </div>
+      </section>
+
+    </main>
+
+    <div class="home-bar" aria-hidden="true"></div>
+  </div>
+
+  <script>
+    /* ── Prototype state switch ── */
+    const segGuest  = document.getElementById('seg-guest');
+    const segSigned = document.getElementById('seg-signed');
+    const stateGuest  = document.getElementById('state-guest');
+    const stateSigned = document.getElementById('state-signed');
+
+    function setState(which) {
+      const guest = which === 'guest';
+      segGuest.setAttribute('aria-pressed', String(guest));
+      segSigned.setAttribute('aria-pressed', String(!guest));
+      stateGuest.classList.toggle('active', guest);
+      stateSigned.classList.toggle('active', !guest);
+      animateFills();
+    }
+    segGuest.addEventListener('click',  function () { setState('guest'); });
+    segSigned.addEventListener('click', function () { setState('signed'); });
+
+    /* ── Animate XP fills on show ── */
+    function animateFills() {
+      requestAnimationFrame(function () {
+        const g = document.getElementById('fill-guest');
+        const s = document.getElementById('fill-signed');
+        if (g) { g.style.width = '0%'; setTimeout(function () { g.style.width = '40%'; }, 250); }
+        if (s) { s.style.width = '0%'; setTimeout(function () { s.style.width = '62%'; }, 250); }
+      });
+    }
+
+    /* ── Navigation ── */
+    document.getElementById('btn-back').addEventListener('click', function () {
+      window.location.href = '06-home.html';
+    });
+    document.getElementById('btn-create').addEventListener('click', function () {
+      window.location.href = '08-signup-prompt.html';
+    });
+    document.getElementById('btn-login-existing').addEventListener('click', function () {
+      window.location.href = '09-login.html';
+    });
+
+    /* ── Logout confirm sheet ── */
+    const overlay    = document.getElementById('overlay');
+    const sheet      = document.getElementById('confirm-sheet');
+    const scrollArea = document.querySelector('.scroll-area');
+
+    /* ── Focus trap (mirrors 08-signup-prompt) ── */
+    let trapHandler = null;
+
+    function installFocusTrap(el) {
+      removeFocusTrap(el);
+      trapHandler = function (e) {
+        if (e.key !== 'Tab') return;
+        const focusable = Array.from(
+          el.querySelectorAll('button:not([disabled]), [href], input, [tabindex="0"]')
+        ).filter(function (n) { return !n.closest('[aria-hidden="true"]') && n.offsetParent !== null; });
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last  = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+        }
+      };
+      el.addEventListener('keydown', trapHandler);
+    }
+
+    function removeFocusTrap(el) {
+      if (trapHandler) {
+        el.removeEventListener('keydown', trapHandler);
+        trapHandler = null;
+      }
+    }
+
+    function openConfirm() {
+      overlay.classList.add('show');
+      overlay.removeAttribute('aria-hidden');
+      sheet.classList.add('show');
+      sheet.removeAttribute('aria-hidden');
+      scrollArea.setAttribute('aria-hidden', 'true');  // gate background from AT + tab order
+      installFocusTrap(sheet);
+      setTimeout(function () { document.getElementById('btn-cancel-logout').focus(); }, 120);
+    }
+    function closeConfirm() {
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+      sheet.classList.remove('show');
+      sheet.setAttribute('aria-hidden', 'true');
+      scrollArea.removeAttribute('aria-hidden');
+      removeFocusTrap(sheet);
+      document.getElementById('btn-logout').focus();
+    }
+
+    document.getElementById('btn-logout').addEventListener('click', openConfirm);
+    document.getElementById('btn-cancel-logout').addEventListener('click', closeConfirm);
+    overlay.addEventListener('click', closeConfirm);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && sheet.classList.contains('show')) { e.preventDefault(); closeConfirm(); }
+    });
+
+    /* Confirm logout → returns to a fresh guest session (this screen, guest state) */
+    document.getElementById('btn-confirm-logout').addEventListener('click', function () {
+      const confirmBtn = this;
+      confirmBtn.textContent = 'Logging out…';
+      confirmBtn.disabled = true;
+      setTimeout(function () {
+        // Tear down the dialog without returning focus to the (now-hidden) logout button
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+        sheet.classList.remove('show');
+        sheet.setAttribute('aria-hidden', 'true');
+        scrollArea.removeAttribute('aria-hidden');
+        removeFocusTrap(sheet);
+        // Reset the confirm button for any future open
+        confirmBtn.textContent = 'Log out';
+        confirmBtn.disabled = false;
+        // Return to a fresh guest session
+        setState('guest');
+        scrollArea.scrollTop = 0;
+        const createBtn = document.getElementById('btn-create');
+        if (createBtn) createBtn.focus();
+      }, 700);
+    });
+
+    /* Initial fill animation */
+    animateFills();
+  </script>
+</body>
+</html>

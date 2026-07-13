@@ -114,6 +114,20 @@
     }
     .flow-chip.branch:hover { background: rgba(255,184,0,0.25); border-color: rgba(255,184,0,0.5); }
 
+    /* ── Off-flow utility strip ── */
+    .utility-strip {
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+    .utility-note {
+      max-width: 520px;
+      margin: 0 auto 56px;
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.4);
+    }
+
     /* ── Screen grid ── */
     .screens-label {
       font-family: 'Inter', system-ui, sans-serif;
@@ -236,11 +250,11 @@
 
   <!-- Header -->
   <header class="hub-header">
-    <div class="hub-wordmark">
+    <h1 class="hub-wordmark">
       <span>SideQuest</span>
-      <div class="dot"></div>
-    </div>
-    <p class="hub-subtitle">Interactive prototype · 8 screens · Click through to explore</p>
+      <span class="dot" aria-hidden="true"></span>
+    </h1>
+    <p class="hub-subtitle">Interactive prototype · 10 screens · Click through to explore</p>
   </header>
 
   <!-- Flow map -->
@@ -274,6 +288,18 @@
       <a href="06-home.html" class="flow-chip branch">06 Home</a>
     </div>
   </nav>
+
+  <!-- Off-flow / utility screens -->
+  <p class="flow-label">Off-flow · utility screens</p>
+  <nav class="flow-strip utility-strip" aria-label="Off-flow utility screens">
+    <div class="flow-node">
+      <a href="10-profile.html" class="flow-chip branch">10 Profile</a>
+    </div>
+    <div class="flow-node">
+      <a href="09-login.html" class="flow-chip branch">09 Log In</a>
+    </div>
+  </nav>
+  <p class="utility-note">Reachable from Home's profile icon — not part of the linear quest flow. Profile → Log In for guests switching into an existing account.</p>
 
   <!-- Screen grid -->
   <p class="screens-label">All screens</p>
@@ -343,6 +369,22 @@
       <span class="screen-arrow">Open →</span>
     </a>
 
+    <a href="09-login.html" class="screen-card">
+      <span class="screen-num">09</span>
+      <span class="screen-name">Log In</span>
+      <span class="screen-desc">Full screen for returning users with an account. Email + password, inline validation, forgot-password stub.</span>
+      <span class="screen-tag tag-gate">Auth</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
+    <a href="10-profile.html" class="screen-card">
+      <span class="screen-num">10</span>
+      <span class="screen-name">Profile</span>
+      <span class="screen-desc">Reached from Home. Guest state (XP + two CTAs) and signed-in state (identity, stats, log out) with confirm.</span>
+      <span class="screen-tag tag-alt">Account</span>
+      <span class="screen-arrow">Open →</span>
+    </a>
+
   </main>
 
   <!-- Start CTA -->
@@ -350,7 +392,7 @@
     <a href="01-onboarding.html" class="btn-start">
       <span>▶</span> Start from the beginning
     </a>
-    <p class="start-note">Opens screen 01 — follow the flow through all 8 screens</p>
+    <p class="start-note">Opens screen 01 — follow the flow, or jump to any of the 10 screens above</p>
   </div>
 
 </body>

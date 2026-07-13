@@ -20,7 +20,7 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   status: 'idle',
   isFirstLaunch: null,
@@ -56,10 +56,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     await clearTokens();
-    // isFirstLaunch reset alongside status: 'idle' so a future re-entry into
-    // app/index.tsx's spinner (status === 'idle') doesn't get stuck — the
-    // route's redirect condition depends on isFirstLaunch resolving via a
-    // fresh hydrate() call, not the stale value from before logout.
     set({ user: null, status: 'idle', isFirstLaunch: null });
+    // Immediately re-bootstrap a fresh guest session rather than leaving the
+    // store idle: nothing else re-triggers hydrate() after the initial
+    // app/_layout.tsx mount effect, so without this a post-logout screen
+    // reading `status` (e.g. app/index.tsx's loading branch) would spin
+    // forever instead of ever reaching 'ready' again.
+    await get().hydrate();
   },
 }));

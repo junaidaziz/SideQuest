@@ -18,13 +18,17 @@ export default function HomeRoute() {
     router.push('/mode-select');
   }, []);
 
+  const handleOpenProfile = useCallback(() => {
+    router.push('/profile');
+  }, []);
+
   return (
     <HomeScreen
       onStartNewQuest={handleStartNewQuest}
       onSelectDailyMission={handleSelectDailyMission}
-      // onOpenProfile / onOpenPack intentionally left unwired: no profile
-      // or pack-detail screen exists yet. Left as no-ops rather than routed
-      // somewhere unrelated.
+      onOpenProfile={handleOpenProfile}
+      // onOpenPack intentionally left unwired: no pack-detail screen exists
+      // yet. Left as a no-op rather than routed somewhere unrelated.
     />
   );
 }

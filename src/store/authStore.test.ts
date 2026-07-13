@@ -84,15 +84,36 @@ describe('authStore', () => {
   });
 
   describe('logout', () => {
-    it('clears tokens and resets state to idle, including isFirstLaunch', async () => {
+    it('clears tokens then re-bootstraps a fresh guest session', async () => {
       useAuthStore.setState({ user: realUser, status: 'ready', isFirstLaunch: false });
+      (getTokens as jest.Mock).mockResolvedValue(null);
+      (bootstrapGuest as jest.Mock).mockResolvedValue({
+        accessToken: 'g2',
+        refreshToken: 'gr2',
+        user: guestUser,
+      });
+
+      await useAuthStore.getState().logout();
+
+      expect(clearTokens).toHaveBeenCalled();
+      // Ends in a fully 'ready' state with a fresh guest — not stuck idle —
+      // since nothing besides the root layout's one-time mount effect would
+      // otherwise ever re-trigger hydrate() after this.
+      expect(bootstrapGuest).toHaveBeenCalled();
+      expect(useAuthStore.getState().user).toEqual(guestUser);
+      expect(useAuthStore.getState().status).toBe('ready');
+      expect(useAuthStore.getState().isFirstLaunch).toBe(true);
+    });
+
+    it('leaves status as error if the post-logout re-hydrate fails', async () => {
+      useAuthStore.setState({ user: realUser, status: 'ready', isFirstLaunch: false });
+      (getTokens as jest.Mock).mockRejectedValue(new Error('storage unavailable'));
 
       await useAuthStore.getState().logout();
 
       expect(clearTokens).toHaveBeenCalled();
       expect(useAuthStore.getState().user).toBeNull();
-      expect(useAuthStore.getState().status).toBe('idle');
-      expect(useAuthStore.getState().isFirstLaunch).toBeNull();
+      expect(useAuthStore.getState().status).toBe('error');
     });
   });
 });
