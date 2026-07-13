@@ -49,6 +49,9 @@ export interface ApiErrorBody {
 /** Quest category — drives stripe colour and badge styling. */
 export type MissionCategory = 'explore' | 'create' | 'discover';
 
+/** Quest difficulty — mirrors backend Prisma `MissionDifficulty` enum. */
+export type MissionDifficulty = 'Easy' | 'Medium' | 'Hard';
+
 /** A single quest returned for the user's active filters. */
 export interface Mission {
   id: string;
@@ -62,7 +65,7 @@ export interface Mission {
   proof: string;
   time: string;
   xp: string;
-  diff: string;
+  diff: MissionDifficulty;
   /** Filled difficulty dots, 1–3. */
   dots: number;
 }

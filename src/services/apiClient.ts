@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import { getTokens, saveTokens, clearTokens } from './tokenStorage';
-import type { ApiErrorBody, AuthTokens } from '../types/api';
+import type { ApiErrorBody, AuthResponse } from '../types/api';
 
 // Android emulator can't reach the host machine via `localhost` — it must use
 // the special 10.0.2.2 alias. iOS simulator and web both use localhost fine.
@@ -21,9 +21,9 @@ export class ApiError extends Error {
   }
 }
 
-let refreshInFlight: Promise<AuthTokens | null> | null = null;
+let refreshInFlight: Promise<AuthResponse | null> | null = null;
 
-async function refreshAccessToken(): Promise<AuthTokens | null> {
+async function refreshAccessToken(): Promise<AuthResponse | null> {
   const tokens = await getTokens();
   if (!tokens) return null;
 
@@ -38,7 +38,7 @@ async function refreshAccessToken(): Promise<AuthTokens | null> {
     return null;
   }
 
-  const refreshed = (await response.json()) as AuthTokens;
+  const refreshed = (await response.json()) as AuthResponse;
   await saveTokens(refreshed);
   return refreshed;
 }
