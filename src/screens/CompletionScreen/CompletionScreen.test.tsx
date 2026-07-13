@@ -8,7 +8,7 @@ import CompletionScreen, {
   hasActiveStreak,
   whenPressed,
 } from './CompletionScreen';
-import type { ProofSubmissionResponse, SignupRequest } from '../types/api';
+import type { ProofSubmissionResponse, SignupRequest } from '../../types/api';
 
 /**
  * `CompletionScreen` mounts the shared `SignupPromptScreen` gate, which reads
@@ -19,7 +19,7 @@ import type { ProofSubmissionResponse, SignupRequest } from '../types/api';
  */
 const mockSignup = jest.fn<Promise<void>, [SignupRequest]>();
 
-jest.mock('../store/authStore', () => ({
+jest.mock('../../store/authStore', () => ({
   useAuthStore: (selector: (s: { signup: typeof mockSignup }) => unknown) =>
     selector({ signup: mockSignup }),
 }));

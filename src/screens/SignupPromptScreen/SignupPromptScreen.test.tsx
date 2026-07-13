@@ -2,7 +2,7 @@ import React from 'react';
 import { BackHandler } from 'react-native';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import SignupPromptScreen, { validateSignup } from './SignupPromptScreen';
-import type { SignupRequest } from '../types/api';
+import type { SignupRequest } from '../../types/api';
 
 /**
  * The screen reads `useAuthStore((s) => s.signup)`. We mock the store to hand
@@ -11,7 +11,7 @@ import type { SignupRequest } from '../types/api';
  */
 const mockSignup = jest.fn<Promise<void>, [SignupRequest]>();
 
-jest.mock('../store/authStore', () => ({
+jest.mock('../../store/authStore', () => ({
   useAuthStore: (selector: (s: { signup: typeof mockSignup }) => unknown) =>
     selector({ signup: mockSignup }),
 }));
