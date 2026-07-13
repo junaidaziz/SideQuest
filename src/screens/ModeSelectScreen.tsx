@@ -149,9 +149,6 @@ export default function ModeSelectScreen({ onSelectMode }: ModeSelectScreenProps
 
   const handleSelect = useCallback(
     (mode: QuestMode) => {
-      // TODO: replace with navigation call once nav library is chosen
-      // Expo Router:       router.push({ pathname: '/onboarding', params: { mode } })
-      // React Navigation:  navigation.navigate('Onboarding', { mode })
       onSelectMode?.(mode);
     },
     [onSelectMode],

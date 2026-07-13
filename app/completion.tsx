@@ -22,15 +22,11 @@ export default function CompletionRoute() {
   const isGuest = useAuthStore((state) => state.user?.isGuest ?? true);
 
   const handleFindAnotherQuest = useCallback(() => {
-    // Mode Select (screen 07, "entry variant" in the mockups) was designed
-    // as the intended shortcut here instead of the full onboarding wizard,
-    // but its 8 quest modes don't map cleanly onto the crew/time/setting/
-    // budget filters the backend expects — "solo"/"couple"/"family" map to
-    // a crew value fine, but "city"/"confidence"/"travel" don't correspond
-    // to any existing filter dimension. Routing through onboarding again is
-    // slower but always produces a valid, correctly-matched request; wiring
-    // Mode Select needs a product decision on that mapping first.
-    router.replace('/onboarding');
+    // Mode Select (screen 07, "entry variant" in the mockups) is the
+    // intended shortcut here instead of the full onboarding wizard — see
+    // app/mode-select.tsx's toFiltersFromMode for how its 8 modes map (or
+    // fall back) onto the backend's crew/time/setting/budget filters.
+    router.replace('/mode-select');
   }, []);
 
   const handleChallengeSent = useCallback(() => {
