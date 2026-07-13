@@ -18,11 +18,11 @@ import { styles } from './HomeScreen.styles';
 export type { HomeResponse } from '../../types/api';
 
 interface HomeScreenProps {
-  /** Header profile button. Navigation placeholder until nav library is chosen. */
+  /** Header profile button — routed to /profile by app/home.tsx. */
   onOpenProfile?: () => void;
   /** Daily curated mission card tap — hands back the mission id. */
   onSelectDailyMission?: (missionId: string) => void;
-  /** FAB "Start a new quest". Navigation placeholder to mode-select. */
+  /** FAB "Start a new quest" — routed to /mode-select by app/home.tsx. */
   onStartNewQuest?: () => void;
   /** Saved-pack card tap — hands back the pack name (no detail screen yet). */
   onOpenPack?: (packName: string) => void;
@@ -206,33 +206,33 @@ export default function HomeScreen({
   const homeQuery = useQuery({ queryKey: ['home'], queryFn: getHome });
 
   const handleOpenProfile = useCallback(() => {
-    // TODO: replace with navigation call once nav library is chosen
-    // Expo Router:       router.push('/profile')
-    // React Navigation:  navigation.navigate('Profile')
+    // Nav-agnostic by design: this screen never calls a navigation library
+    // directly. app/home.tsx's onOpenProfile callback is what actually runs
+    // router.push('/profile').
     onOpenProfile?.();
   }, [onOpenProfile]);
 
   const handleSelectDaily = useCallback(
     (missionId: string) => {
-      // TODO: replace with navigation call once nav library is chosen
-      // Expo Router:       router.push({ pathname: '/mission-detail', params: { id } })
-      // React Navigation:  navigation.navigate('MissionDetail', { missionId })
+      // Nav-agnostic by design: app/home.tsx's onSelectDailyMission callback
+      // is what actually runs router.push('/mode-select') — this is a
+      // "start fresh" fallback, not a deep link into this specific mission
+      // (no single-mission-lookup endpoint exists).
       onSelectDailyMission?.(missionId);
     },
     [onSelectDailyMission],
   );
 
   const handleStartNewQuest = useCallback(() => {
-    // TODO: replace with navigation call once nav library is chosen
-    // Expo Router:       router.push('/mode-select')
-    // React Navigation:  navigation.navigate('ModeSelect')
+    // Nav-agnostic by design: app/home.tsx's onStartNewQuest callback is
+    // what actually runs router.push('/mode-select').
     onStartNewQuest?.();
   }, [onStartNewQuest]);
 
   const handleOpenPack = useCallback(
     (packName: string) => {
-      // TODO: replace with navigation call once nav library is chosen —
-      // no mission-pack-detail screen exists yet.
+      // Permanent no-op, not a TODO: no pack-detail screen was ever
+      // designed, so app/home.tsx passes no onOpenPack callback at all.
       onOpenPack?.(packName);
     },
     [onOpenPack],

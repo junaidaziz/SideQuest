@@ -110,9 +110,9 @@ export default function ProofSubmissionScreen({
 
   const handleBack = useCallback(() => {
     if (isPending) return;
-    // TODO: replace with navigation call once nav library is chosen
-    // Expo Router:       router.back()
-    // React Navigation:  navigation.goBack()
+    // Nav-agnostic by design: this screen never calls a navigation library
+    // directly. app/proof-submission/[missionId].tsx's onCancel callback is
+    // what actually runs router.back().
     onCancel?.();
   }, [isPending, onCancel]);
 

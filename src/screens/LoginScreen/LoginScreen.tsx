@@ -124,9 +124,9 @@ export default function LoginScreen({
     if (locked) {
       return;
     }
-    // TODO: replace with navigation call once nav library is chosen
-    // Expo Router:       router.back()
-    // React Navigation:  navigation.goBack()
+    // Nav-agnostic by design: this screen never calls a navigation library
+    // directly. app/login.tsx's onBack callback is what actually runs
+    // router.back().
     onBack?.();
   }, [locked, onBack]);
 

@@ -30,8 +30,8 @@ interface CompletionScreenProps {
   /** Whether the current session is an anonymous guest. Gates the challenge
    * flow behind the signup sheet when true. */
   isGuest: boolean;
-  /** Invoked by the footer "Find Another Quest" button. Navigation placeholder
-   * until the nav library is chosen. */
+  /** Invoked by the footer "Find Another Quest" button — routed to
+   * /mode-select by app/completion.tsx. */
   onFindAnotherQuest?: () => void;
   /** Invoked once a challenge intent is satisfied — either the native share
    * sheet was invoked (signed-in user) or the guest completed signup. Actual
@@ -134,9 +134,9 @@ export default function CompletionScreen({
   }, [onChallengeSent]);
 
   const handleFindAnother = useCallback(() => {
-    // TODO: replace with navigation call once nav library is chosen
-    // Expo Router:       router.push('/mode-select')
-    // React Navigation:  navigation.navigate('ModeSelect')
+    // Nav-agnostic by design: this screen never calls a navigation library
+    // directly. app/completion.tsx's onFindAnotherQuest callback is what
+    // actually runs router.replace('/mode-select').
     onFindAnotherQuest?.();
   }, [onFindAnotherQuest]);
 

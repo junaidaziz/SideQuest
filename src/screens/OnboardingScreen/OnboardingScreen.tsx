@@ -136,9 +136,9 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
         useNativeDriver: true,
       }).start();
       completeTimer.current = setTimeout(() => {
-        // TODO: replace with navigation call once nav library is chosen
-        // Expo Router:       router.replace({ pathname: '/mission-results', params })
-        // React Navigation:  navigation.replace('MissionResults', { selections })
+        // Nav-agnostic by design: this screen never calls a navigation
+        // library directly. app/onboarding.tsx's onComplete callback is what
+        // actually runs router.push({ pathname: '/mission-results', params }).
         onComplete?.(finalSelections);
       }, LOADING_MS);
     },

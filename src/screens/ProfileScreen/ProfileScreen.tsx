@@ -18,7 +18,7 @@ import { computeXpProgress, formatStreakLabel, whenPressed } from '../HomeScreen
 import { styles } from './ProfileScreen.styles';
 
 interface ProfileScreenProps {
-  /** Header back button. Navigation placeholder until nav library is chosen. */
+  /** Header back button — routed via router.back() by app/profile.tsx. */
   onBack?: () => void;
   /** Guest state: "Create an account" CTA — routes into the signup flow. */
   onCreateAccount?: () => void;
@@ -100,23 +100,21 @@ export default function ProfileScreen({
   }, [confirmOpen]);
 
   const handleBack = useCallback(() => {
-    // TODO: replace with navigation call once nav library is chosen
-    // Expo Router:       router.back()
-    // React Navigation:  navigation.goBack()
+    // Nav-agnostic by design: this screen never calls a navigation library
+    // directly. app/profile.tsx's onBack callback is what actually runs
+    // router.back().
     onBack?.();
   }, [onBack]);
 
   const handleCreateAccount = useCallback(() => {
-    // TODO: replace with navigation call once nav library is chosen
-    // Expo Router:       router.push('/signup')
-    // React Navigation:  navigation.navigate('SignupPrompt')
+    // Nav-agnostic by design: app/profile.tsx's onCreateAccount callback is
+    // what actually runs router.push('/signup-prompt').
     onCreateAccount?.();
   }, [onCreateAccount]);
 
   const handleLoginExisting = useCallback(() => {
-    // TODO: replace with navigation call once nav library is chosen
-    // Expo Router:       router.push('/login')
-    // React Navigation:  navigation.navigate('Login')
+    // Nav-agnostic by design: app/profile.tsx's onLoginExisting callback is
+    // what actually runs router.push('/login').
     onLoginExisting?.();
   }, [onLoginExisting]);
 
