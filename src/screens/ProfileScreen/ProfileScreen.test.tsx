@@ -5,10 +5,10 @@ import ProfileScreen, {
   displayNameOrFallback,
   initialsFromName,
 } from './ProfileScreen';
-import { getHome } from '../services/homeApi';
-import type { HomeResponse, UserProfile } from '../types/api';
+import { getHome } from '../../services/homeApi';
+import type { HomeResponse, UserProfile } from '../../types/api';
 
-jest.mock('../services/homeApi');
+jest.mock('../../services/homeApi');
 
 /**
  * ProfileScreen reads `user` and `logout` from the auth store via selectors.
@@ -24,7 +24,7 @@ interface MockAuthState {
   logout: typeof mockLogout;
 }
 
-jest.mock('../store/authStore', () => ({
+jest.mock('../../store/authStore', () => ({
   useAuthStore: (selector: (s: MockAuthState) => unknown) =>
     selector({ user: mockUser, logout: mockLogout }),
 }));

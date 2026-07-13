@@ -7,10 +7,10 @@ import HomeScreen, {
   packCountLabel,
   whenPressed,
 } from './HomeScreen';
-import { getHome } from '../services/homeApi';
-import type { HomeResponse, Mission } from '../types/api';
+import { getHome } from '../../services/homeApi';
+import type { HomeResponse, Mission } from '../../types/api';
 
-jest.mock('../services/homeApi');
+jest.mock('../../services/homeApi');
 
 const mockGetHome = getHome as jest.MockedFunction<typeof getHome>;
 
