@@ -1,0 +1,26 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Android 13+ themed-icon layer: a single-alpha silhouette (color is
+       irrelevant, the OS re-tints it) of the same mark and safe-zone sizing
+       as mark-foreground.svg. -->
+  <g transform="translate(512, 490) scale(0.72)">
+    <path
+      d="M 0 -230
+         C 127 -230 230 -127 230 0
+         C 230 132 84 292 18 366
+         C 8 377 -8 377 -18 366
+         C -84 292 -230 132 -230 0
+         C -230 -127 -127 -230 0 -230
+         Z"
+      fill="#FFFFFF"
+    />
+    <path
+      d="M 0 -128
+         C 8 -66 20 -38 40 -22
+         C 20 -6 8 22 0 84
+         C -8 22 -20 -6 -40 -22
+         C -20 -38 -8 -66 0 -128
+         Z"
+      fill="#FFFFFF"
+    />
+  </g>
+</svg>
