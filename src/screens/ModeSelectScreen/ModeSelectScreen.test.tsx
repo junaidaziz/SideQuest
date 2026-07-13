@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import ModeSelectScreen, { cardStyle, type QuestMode } from './ModeSelectScreen';
-import { Colors } from '../constants/design';
+import { Colors } from '../../constants/design';
 
 /**
  * NOTE: `render` is async in this RTLRN version, so every call is awaited.

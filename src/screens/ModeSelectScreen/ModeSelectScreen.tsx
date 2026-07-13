@@ -15,7 +15,7 @@ import {
   LineHeight,
   Radius,
   Spacing,
-} from '../constants/design';
+} from '../../constants/design';
 
 /**
  * The lowercase mode keys reported back to the caller. Kept as a union so the
