@@ -31,6 +31,31 @@ export interface LogoutResponse {
   success: boolean;
 }
 
+/** Mirrors backend ChangePasswordDto (M22.1). */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+}
+
+/**
+ * Mirrors backend DeleteAccountDto (M22.2, Decision 7). A password account
+ * supplies `currentPassword`; a guest/Google-only account (no password to
+ * verify) supplies `confirm: true` instead — these are not either/or, the
+ * backend accepts exactly one shape depending on account type.
+ */
+export interface DeleteAccountRequest {
+  currentPassword?: string;
+  confirm?: boolean;
+}
+
+export interface DeleteAccountResponse {
+  success: boolean;
+}
+
 export interface SignupRequest {
   email: string;
   password: string;

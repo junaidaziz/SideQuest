@@ -1,5 +1,6 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo } from 'react';
+import { Share } from 'react-native';
 import CompletionScreenV2 from '../src/screens/CompletionScreenV2';
 import { useAuthStore } from '../src/store/authStore';
 import type { ProofSubmissionResponse } from '../src/types/api';
@@ -33,6 +34,17 @@ export default function CompletionRoute() {
     router.push('/signup-prompt');
   }, []);
 
+  const handleShare = useCallback(() => {
+    // Same RN Share API used for challenge/rewards invite links elsewhere in
+    // this migration — a real action, not the silent no-op an independent
+    // review found here (a labelled, announced button that did nothing on
+    // the app's single most emotionally significant screen).
+    if (!result) return;
+    Share.share({
+      message: `I just completed "${result.missionTitle}" on SideQuest and earned ${result.xpAwarded} XP! \u{1F3C6}`,
+    }).catch(() => {});
+  }, [result]);
+
   if (!result) {
     return <Redirect href="/today" />;
   }
@@ -44,8 +56,7 @@ export default function CompletionRoute() {
       onBackToToday={handleBackToToday}
       onOpenNextIdea={handleOpenNextIdea}
       onCreateAccount={handleCreateAccount}
-      // onShare intentionally left unwired: no share-sheet integration is
-      // defined for this migration. Documented no-op.
+      onShare={handleShare}
     />
   );
 }

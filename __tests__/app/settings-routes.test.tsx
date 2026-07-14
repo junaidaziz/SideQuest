@@ -10,8 +10,22 @@ import NotificationPreferencesRoute from '../../app/settings/notifications';
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() } }));
 
 const mockLogout = jest.fn().mockResolvedValue(undefined);
+// AccountSecurityRoute redirects a guest before AccountSecurityScreen ever
+// mounts (same primary-checkpoint pattern as app/payment-methods.tsx) —
+// default to a signed-in user so the existing render/interaction tests
+// exercise the real screen; a dedicated test flips this to a guest.
+let mockIsGuest = false;
 jest.mock('../../src/store/authStore', () => ({
-  useAuthStore: (selector: (s: { logout: () => Promise<void> }) => unknown) => selector({ logout: mockLogout }),
+  useAuthStore: (
+    selector: (s: { logout: () => Promise<void>; user: { isGuest: boolean } | null }) => unknown,
+  ) => selector({ logout: mockLogout, user: { isGuest: mockIsGuest } }),
+}));
+
+const mockChangePassword = jest.fn().mockResolvedValue({ success: true });
+const mockDeleteAccount = jest.fn().mockResolvedValue({ success: true });
+jest.mock('../../src/services/authApi', () => ({
+  changePassword: (...args: unknown[]) => mockChangePassword(...args),
+  deleteAccount: (...args: unknown[]) => mockDeleteAccount(...args),
 }));
 
 jest.mock('../../src/screens/SettingsScreen', () =>
@@ -43,16 +57,42 @@ jest.mock('../../src/screens/EditProfileScreen', () =>
   }),
 );
 jest.mock('../../src/screens/AccountSecurityScreen', () =>
-  jest.fn(({ onBack, onDeleted }: { onBack: () => void; onDeleted: () => void }) => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Pressable, Text } = require('react-native');
-    return (
-      <>
-        <Pressable accessibilityRole="button" accessibilityLabel="onBack" onPress={onBack}><Text>b</Text></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="onDeleted" onPress={onDeleted}><Text>d</Text></Pressable>
-      </>
-    );
-  }),
+  jest.fn(
+    ({
+      onBack,
+      onChangePassword,
+      onDeleteAccount,
+      onDeleted,
+    }: {
+      onBack: () => void;
+      onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+      onDeleteAccount: (password: string) => Promise<void>;
+      onDeleted: () => void;
+    }) => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { Pressable, Text } = require('react-native');
+      return (
+        <>
+          <Pressable accessibilityRole="button" accessibilityLabel="onBack" onPress={onBack}><Text>b</Text></Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="onChangePassword"
+            onPress={() => onChangePassword('old-pw', 'new-pw')}
+          >
+            <Text>p</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="onDeleteAccount"
+            onPress={() => onDeleteAccount('current-pw')}
+          >
+            <Text>x</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="onDeleted" onPress={onDeleted}><Text>d</Text></Pressable>
+        </>
+      );
+    },
+  ),
 );
 jest.mock('../../src/screens/AppearanceAccessibilityScreen', () =>
   jest.fn(({ onBack }: { onBack: () => void }) => {
@@ -108,13 +148,41 @@ describe('EditProfileRoute', () => {
 });
 
 describe('AccountSecurityRoute', () => {
-  beforeEach(() => jest.clearAllMocks());
-  it('goes back and replaces to Today after deletion', async () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsGuest = false;
+  });
+
+  it('redirects a guest before the screen ever mounts', async () => {
+    mockIsGuest = true;
+    const { queryByLabelText } = await render(<AccountSecurityRoute />);
+    expect(router.replace).toHaveBeenCalledWith('/today');
+    expect(queryByLabelText('onBack')).toBeNull();
+  });
+
+  it('goes back and, after deletion, logs out locally then replaces to Today', async () => {
     const { getByLabelText } = await render(<AccountSecurityRoute />);
     await fireEvent.press(getByLabelText('onBack'));
     await fireEvent.press(getByLabelText('onDeleted'));
     expect(router.back).toHaveBeenCalledTimes(1);
+    // The account is already soft-deleted server-side by this point (the
+    // screen only calls onDeleted after onDeleteAccount resolves) — this
+    // route still clears the device's own local session the same way
+    // logout() always does, before landing on Today.
+    expect(mockLogout).toHaveBeenCalledTimes(1);
     expect(router.replace).toHaveBeenCalledWith('/today');
+  });
+
+  it('calls the real PATCH /auth/password endpoint', async () => {
+    const { getByLabelText } = await render(<AccountSecurityRoute />);
+    await fireEvent.press(getByLabelText('onChangePassword'));
+    expect(mockChangePassword).toHaveBeenCalledWith({ currentPassword: 'old-pw', newPassword: 'new-pw' });
+  });
+
+  it('calls the real DELETE /auth/me endpoint with the password as currentPassword', async () => {
+    const { getByLabelText } = await render(<AccountSecurityRoute />);
+    await fireEvent.press(getByLabelText('onDeleteAccount'));
+    expect(mockDeleteAccount).toHaveBeenCalledWith({ currentPassword: 'current-pw' });
   });
 });
 

@@ -1,6 +1,10 @@
 import { Tabs } from 'expo-router';
-import { Text, type ColorValue } from 'react-native';
+import { StyleSheet, Text, type ColorValue } from 'react-native';
 import { useCompassTheme } from '../../src/hooks/useCompassTheme';
+
+const styles = StyleSheet.create({
+  icon: { fontSize: 22 },
+});
 
 /**
  * The four primary destinations of the Compass redesign: Today, Explore,
@@ -16,7 +20,7 @@ import { useCompassTheme } from '../../src/hooks/useCompassTheme';
  */
 function tabIcon(glyph: string) {
   return function TabIcon({ color }: { color: ColorValue }) {
-    return <Text style={{ fontSize: 22, color }}>{glyph}</Text>;
+    return <Text style={[styles.icon, { color }]}>{glyph}</Text>;
   };
 }
 

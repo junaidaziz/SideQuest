@@ -6,9 +6,9 @@ import SignupPromptScreen from '../src/screens/SignupPromptScreen';
  * Standalone route for any "create an account" entry point that isn't the
  * post-completion save/challenge gate — currently reached from the
  * guest-completion-limit gate mid proof submission (see
- * app/proof-submission/[missionId].tsx) and from Profile's guest-state
- * "Create an account" CTA (see app/profile.tsx). CompletionScreen has its
- * own separate embedded-Modal usage of this same component for the
+ * app/proof/[missionId].tsx) and from the You tab's guest-state
+ * "Create an account" CTA (see app/(tabs)/you.tsx). CompletionScreenV2 has
+ * its own separate embedded-Modal usage of this same component for the
  * post-completion gate specifically, with real XP/streak numbers to show
  * instead of this route's defaults.
  *

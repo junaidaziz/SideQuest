@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Share } from 'react-native';
 import { useAuthStore } from '../../src/store/authStore';
 import CompletionRoute from '../../app/completion';
 
@@ -21,10 +22,12 @@ jest.mock('../../src/screens/CompletionScreenV2', () =>
       onBackToToday,
       onOpenNextIdea,
       onCreateAccount,
+      onShare,
     }: {
       onBackToToday: () => void;
       onOpenNextIdea: () => void;
       onCreateAccount: () => void;
+      onShare?: () => void;
     }) => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { Pressable, Text } = require('react-native');
@@ -38,6 +41,9 @@ jest.mock('../../src/screens/CompletionScreenV2', () =>
           </Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="signup" onPress={onCreateAccount}>
             <Text>signup</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="share" onPress={onShare}>
+            <Text>share</Text>
           </Pressable>
         </>
       );
@@ -95,5 +101,17 @@ describe('CompletionRoute', () => {
     const { getByLabelText } = await render(<CompletionRoute />);
     await fireEvent.press(getByLabelText('signup'));
     expect(router.push).toHaveBeenCalledWith('/signup-prompt');
+  });
+
+  it('shares a real message via the native share sheet, not a silent no-op', async () => {
+    // Regression test: an independent review found the Share button on this
+    // screen was rendered, labelled, and announced to a screen reader, but
+    // wired to nothing — this locks in the fix.
+    const spy = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' } as never);
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ result: validResult });
+    const { getByLabelText } = await render(<CompletionRoute />);
+    await fireEvent.press(getByLabelText('share'));
+    expect(spy).toHaveBeenCalledWith({ message: expect.stringContaining('Test Mission') });
+    expect(spy).toHaveBeenCalledWith({ message: expect.stringContaining('40 XP') });
   });
 });

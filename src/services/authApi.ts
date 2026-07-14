@@ -1,6 +1,10 @@
 import { apiRequest } from './apiClient';
 import type {
   AuthResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
+  DeleteAccountRequest,
+  DeleteAccountResponse,
   GoogleAuthRequest,
   LoginRequest,
   LogoutResponse,
@@ -35,4 +39,12 @@ export function getCurrentUser(): Promise<UserProfile> {
 
 export function logoutRequest(): Promise<LogoutResponse> {
   return apiRequest<LogoutResponse>('/auth/logout', { method: 'POST' });
+}
+
+export function changePassword(payload: ChangePasswordRequest): Promise<ChangePasswordResponse> {
+  return apiRequest<ChangePasswordResponse>('/auth/password', { method: 'PATCH', body: payload });
+}
+
+export function deleteAccount(payload: DeleteAccountRequest): Promise<DeleteAccountResponse> {
+  return apiRequest<DeleteAccountResponse>('/auth/me', { method: 'DELETE', body: payload });
 }
