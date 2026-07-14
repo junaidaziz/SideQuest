@@ -92,9 +92,17 @@ describe('ChallengeFeedScreen', () => {
       expect(groups.completed).toHaveLength(1);
     });
 
-    it('statusLabel humanises status', () => {
+    it('statusLabel humanises every status', () => {
+      expect(statusLabel('Open')).toBe('Not sent yet');
+      expect(statusLabel('Invited')).toBe('Awaiting reply');
+      expect(statusLabel('Accepted')).toBe('In progress');
       expect(statusLabel('Submitted')).toBe('Awaiting review');
       expect(statusLabel('Rejected')).toBe('Needs resubmission');
+      expect(statusLabel('Approved')).toBe('Completed');
+      expect(statusLabel('Declined')).toBe('Declined');
+      expect(statusLabel('Cancelled')).toBe('Cancelled');
+      // Defensive default branch for an unknown value.
+      expect(statusLabel('Weird' as never)).toBe('Weird');
     });
 
     it('formatDeadline returns relative text or null', () => {
@@ -109,7 +117,9 @@ describe('ChallengeFeedScreen', () => {
 
     it('isDeadlineSoon flags near/overdue deadlines', () => {
       const now = new Date('2026-07-13T00:00:00.000Z').getTime();
-      expect(isDeadlineSoon('2026-07-14T00:00:00.000Z', now)).toBe(true);
+      expect(isDeadlineSoon('2026-07-14T00:00:00.000Z', now)).toBe(true); // 1 day left
+      expect(isDeadlineSoon('2026-07-13T00:00:00.000Z', now)).toBe(true); // due today
+      expect(isDeadlineSoon('2026-07-10T00:00:00.000Z', now)).toBe(true); // overdue
       expect(isDeadlineSoon('2026-07-30T00:00:00.000Z', now)).toBe(false);
       expect(isDeadlineSoon(null, now)).toBe(false);
     });
@@ -149,12 +159,27 @@ describe('ChallengeFeedScreen', () => {
       await waitFor(() => expect(screen.getByLabelText(/Peak Seeker\./)).toBeTruthy());
     });
 
-    it('shows an empty state when a tab has no challenges', async () => {
-      mockListTasks.mockResolvedValue([makeTask({ id: 'only', status: 'Accepted' })]);
+    it('renders deadline, and cards missing description/reward, without crashing', async () => {
+      const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      mockListTasks.mockResolvedValue([
+        makeTask({ id: 'soon', title: 'Due Soon', status: 'Accepted', dueAt: future }),
+        makeTask({ id: 'bare', title: 'Bare Task', status: 'Accepted', description: null, rewardXp: null }),
+      ]);
       await renderScreen();
+      // Deadline text is derived from the real dueAt.
+      await waitFor(() => expect(screen.getByLabelText(/Due Soon\..*1 day left/)).toBeTruthy());
+      // A card with no description or reward still renders its title + status.
+      expect(screen.getByLabelText(/Bare Task\. Status: In progress\.$/)).toBeTruthy();
+    });
+
+    it('shows an empty state (with a working CTA) when a tab has no challenges', async () => {
+      mockListTasks.mockResolvedValue([makeTask({ id: 'only', status: 'Accepted' })]);
+      const { onCreateChallenge } = await renderScreen();
       await waitFor(() => expect(screen.getByLabelText(/Incoming, 0 challenges/)).toBeTruthy());
       fireEvent.press(screen.getByLabelText(/Incoming, 0 challenges/));
       await waitFor(() => expect(screen.getByText('Nothing here yet')).toBeTruthy());
+      fireEvent.press(screen.getByLabelText('Send a new challenge'));
+      expect(onCreateChallenge).toHaveBeenCalled();
     });
   });
 
