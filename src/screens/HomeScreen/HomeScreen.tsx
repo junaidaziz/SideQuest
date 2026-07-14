@@ -223,8 +223,16 @@ function StatCell({ value, label }: { value: number; label: string }) {
  * empty states. Exposed as a single accessible summary so a screen reader reads
  * the whole picture in one pass rather than four disconnected numbers.
  */
-function TaskStatsRow({ stats }: { stats: TaskStats }) {
-  if (stats.total === 0) {
+/**
+ * `stats` can genuinely be missing at runtime even though the type says
+ * otherwise: this mobile build can reach an older backend deploy that
+ * predates the taskStats field (a real, demonstrated failure mode in this
+ * two-repo setup — a build shipped before the backend caught up, and it
+ * crashed the Home screen). Treat a missing/undefined stats the same as an
+ * all-zero state rather than reading `.total` off `undefined`.
+ */
+function TaskStatsRow({ stats }: { stats: TaskStats | undefined }) {
+  if (!stats || stats.total === 0) {
     return (
       <EmptyCard
         icon={'\u{1F4CA}'}

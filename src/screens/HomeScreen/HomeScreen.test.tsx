@@ -202,6 +202,18 @@ describe('HomeScreen', () => {
       await waitFor(() => expect(screen.getByText('100%')).toBeTruthy());
       expect(screen.getByText('Completion rate')).toBeTruthy();
     });
+
+    it('renders the empty state instead of crashing when an older backend omits taskStats', async () => {
+      // Real failure mode, not hypothetical: this mobile build reached a
+      // production deploy that predated the taskStats field and crashed with
+      // "Cannot read property 'total' of undefined" on a real device.
+      const { taskStats: _omitted, ...homeWithoutTaskStats } = HOME;
+      mockGetHome.mockResolvedValue(homeWithoutTaskStats as unknown as HomeResponse);
+      await renderScreen();
+      await waitFor(() =>
+        expect(screen.getByText('No missions completed yet')).toBeTruthy(),
+      );
+    });
   });
 
   describe('interactions', () => {
