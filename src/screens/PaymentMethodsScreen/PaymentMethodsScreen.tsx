@@ -73,7 +73,7 @@ function CardsSkeleton() {
 function GuestPrompt({ onBack }: { onBack?: () => void }) {
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.emptyWrap}>
+      <View style={styles.guestCenter}>
         <Text style={styles.emptyTitle} accessibilityRole="header">
           Create an account to add a payment method
         </Text>

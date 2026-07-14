@@ -357,6 +357,35 @@ export const styles = StyleSheet.create({
     fontSize: FontSize.caption,
     color: Colors.textSecondary,
   },
+  // "Lifetime stats" row (quests done / best streak / saved packs) — mockup
+  // 10-profile.html's `.stat-row`/`.stat-cell`. Was missing from the RN port
+  // even though every value it needs (taskStats.approved, streak.longestStreak,
+  // savedPacks.length) was already being fetched by this screen's /home query.
+  statRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  statCell: {
+    flex: 1,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: Radius.card,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+  },
+  statNum: {
+    fontFamily: Fonts.displayExtraBold,
+    fontSize: FontSize.statValue,
+    color: Colors.ink,
+    letterSpacing: -0.3,
+  },
+  statCap: {
+    fontFamily: Fonts.bodyRegular,
+    fontSize: FontSize.statCaption,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
   ctaStack: {
     gap: Spacing.md,
   },

@@ -232,6 +232,12 @@ export const styles = StyleSheet.create({
     fontSize: FontSize.body,
     color: Colors.primary,
   },
+  // Applied only while pressed — challengeBtnPressed swaps the container
+  // background to Colors.primary, so the label must flip to white or it's
+  // unreadable against its own pressed background.
+  challengeBtnTextPressed: {
+    color: Colors.white,
+  },
   footer: {
     borderTopWidth: 1,
     borderTopColor: Colors.border,

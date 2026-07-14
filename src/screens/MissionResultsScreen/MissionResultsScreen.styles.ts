@@ -303,8 +303,8 @@ export const styles = StyleSheet.create({
   },
   sheetBody: {
     fontFamily: Fonts.bodyRegular,
-    fontSize: 14,
-    lineHeight: 23,
+    fontSize: FontSize.bodySmall,
+    lineHeight: LineHeight.bodySmall,
     color: Colors.textSecondary,
     marginBottom: Spacing.base,
   },
@@ -327,7 +327,7 @@ export const styles = StyleSheet.create({
   proofText: {
     fontFamily: Fonts.bodyMedium,
     fontSize: FontSize.caption,
-    lineHeight: 19,
+    lineHeight: LineHeight.captionTight,
     color: Colors.ink,
   },
   sheetMetaRow: {

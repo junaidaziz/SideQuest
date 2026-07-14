@@ -102,6 +102,17 @@ function ProfileSkeleton({ label }: { label: string }) {
   );
 }
 
+/** One value/label cell inside the lifetime-stats row. Presentational only —
+ * the parent row owns the single combined accessibility label. */
+function LifetimeStatCell({ value, label }: { value: number; label: string }) {
+  return (
+    <View style={styles.statCell}>
+      <Text style={styles.statNum}>{value}</Text>
+      <Text style={styles.statCap}>{label}</Text>
+    </View>
+  );
+}
+
 export default function ProfileScreen({
   onBack,
   onCreateAccount,
@@ -633,6 +644,22 @@ export default function ProfileScreen({
                     Complete a quest today to keep it going
                   </Text>
                 </View>
+              </View>
+
+              {/* Lifetime stats — quests done / best streak / saved packs */}
+              <View
+                style={styles.statRow}
+                accessible
+                accessibilityRole="text"
+                accessibilityLabel={
+                  `Lifetime stats: ${data.taskStats.approved} quests done, ` +
+                  `${data.streak.longestStreak} best streak, ` +
+                  `${data.savedPacks.length} saved packs`
+                }
+              >
+                <LifetimeStatCell value={data.taskStats.approved} label="Quests done" />
+                <LifetimeStatCell value={data.streak.longestStreak} label="Best streak" />
+                <LifetimeStatCell value={data.savedPacks.length} label="Saved packs" />
               </View>
             </View>
           )}

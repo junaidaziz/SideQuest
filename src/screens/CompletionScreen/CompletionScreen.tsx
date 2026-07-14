@@ -261,7 +261,14 @@ export default function CompletionScreen({
             whenPressed(pressed, styles.challengeBtnPressed),
           ]}
         >
-          <Text style={styles.challengeBtnText}>Challenge a Friend</Text>
+          {({ pressed }) => (
+            // challengeBtnPressed swaps the background to Colors.primary — the
+            // label's default Colors.primary text would be invisible against
+            // it without this override, a real contrast bug caught in review.
+            <Text style={[styles.challengeBtnText, pressed && styles.challengeBtnTextPressed]}>
+              Challenge a Friend
+            </Text>
+          )}
         </Pressable>
       </ScrollView>
 

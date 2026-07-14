@@ -251,6 +251,43 @@ describe('ProfileScreen', () => {
       expect(screen.getByLabelText('Log out')).toBeTruthy();
       expect(screen.queryByLabelText('Create an account')).toBeNull();
     });
+
+    it('renders the lifetime-stats row from data already in the /home response', async () => {
+      mockGetHome.mockResolvedValue({
+        ...HOME,
+        taskStats: { total: 12, approved: 9, pending: 2, rejected: 1, completionRate: 0.75 },
+        streak: { currentStreak: 3, longestStreak: 11 },
+        savedPacks: [
+          { name: 'Outdoors Solo pack', missionCount: 3 },
+          { name: 'City Friends pack', missionCount: 2 },
+        ],
+      });
+      await renderScreen();
+      await waitFor(() =>
+        expect(
+          screen.getByLabelText(
+            'Lifetime stats: 9 quests done, 11 best streak, 2 saved packs',
+          ),
+        ).toBeTruthy(),
+      );
+      expect(screen.getByText('9')).toBeTruthy();
+      expect(screen.getByText('Quests done')).toBeTruthy();
+      expect(screen.getByText('11')).toBeTruthy();
+      expect(screen.getByText('Best streak')).toBeTruthy();
+      expect(screen.getByText('2')).toBeTruthy();
+      expect(screen.getByText('Saved packs')).toBeTruthy();
+    });
+
+    it('renders zeroed lifetime stats rather than hiding the row for a brand-new account', async () => {
+      await renderScreen();
+      await waitFor(() =>
+        expect(
+          screen.getByLabelText(
+            'Lifetime stats: 0 quests done, 7 best streak, 0 saved packs',
+          ),
+        ).toBeTruthy(),
+      );
+    });
   });
 
   describe('rendering — loading and error', () => {

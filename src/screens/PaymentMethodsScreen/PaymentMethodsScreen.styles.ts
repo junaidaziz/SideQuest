@@ -52,7 +52,20 @@ export const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.xxxl,
-    gap: Spacing.base,
+    // lg (20), not base (16): this screen is reached from ProfileScreen and
+    // shares its stacked-card vocabulary, so it should breathe on the same
+    // 20px section rhythm as Profile/Home rather than a tighter list rhythm.
+    gap: Spacing.lg,
+  },
+  // Full-screen centred container for the guest fallback. Without this the
+  // guest copy was stranded at the top of an otherwise empty screen; centring
+  // it matches how HomeScreen/ProfileScreen present their full-screen states.
+  guestCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
   },
   intro: {
     fontFamily: Fonts.bodyRegular,

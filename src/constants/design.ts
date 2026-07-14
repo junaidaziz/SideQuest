@@ -83,8 +83,16 @@ export const FontSize = {
   h2: 22,
   cardLabel: 16,
   body: 15,
+  /** Between `caption` and `body` — long-form text in a detail sheet (e.g. a
+   * mission's full brief), per the mockup's `.sheet-body` (14px/1.65). */
+  bodySmall: 14,
   caption: 13,
   button: 16,
+  /** Large numeral in a stat cell (e.g. Profile's "Quests done" count) —
+   * per the mockup's `.stat-num` (20px/800). */
+  statValue: 20,
+  /** Caption under a stat-cell numeral — per the mockup's `.stat-cap` (12px). */
+  statCaption: 12,
 } as const;
 
 /** Line heights by role (px). */
@@ -93,7 +101,12 @@ export const LineHeight = {
   h2: 26,
   cardLabel: 22,
   body: 24,
+  /** Pairs with `FontSize.bodySmall` — 14 * 1.65 from the mockup, rounded. */
+  bodySmall: 23,
   caption: 20,
+  /** A tighter caption-sized line height (13px * 1.5, vs. `caption`'s 1.54)
+   * used where the mockup specifies a distinct ratio — e.g. `.proof-text`. */
+  captionTight: 19,
 } as const;
 
 /** Motion durations (ms). */
