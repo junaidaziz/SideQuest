@@ -1,11 +1,19 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { StripeProvider } from '@stripe/stripe-react-native';
+import { useFonts } from 'expo-font';
+import { Syne_700Bold, Syne_800ExtraBold } from '@expo-google-fonts/syne';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '../src/store/authStore';
+
+// Keeps the native splash screen up until fonts finish loading below, so the
+// app never flashes system-font text before swapping to Syne/Inter.
+SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -70,6 +78,13 @@ const stripePublishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '
 function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);
   const navigationRef = useNavigationContainerRef();
+  const [fontsLoaded, fontError] = useFonts({
+    Syne_800ExtraBold,
+    Syne_700Bold,
+    Inter_600SemiBold,
+    Inter_500Medium,
+    Inter_400Regular,
+  });
 
   useEffect(() => {
     // Restores a stored session, or silently bootstraps a guest session
@@ -80,6 +95,25 @@ function RootLayout() {
   useEffect(() => {
     navigationIntegration.registerNavigationContainer(navigationRef);
   }, [navigationRef]);
+
+  // The native splash (kept up by preventAutoHideAsync() above) covers the
+  // screen until this fires, so hiding it here — not sooner — is what stops
+  // the app from ever flashing system-font text before Syne/Inter are ready.
+  // fontError still hides the splash rather than hanging forever: a failed
+  // font load shouldn't leave the whole app stuck behind the splash image.
+  const onFontsSettled = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    onFontsSettled();
+  }, [onFontsSettled]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <StripeProvider publishableKey={stripePublishableKey}>

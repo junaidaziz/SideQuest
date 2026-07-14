@@ -64,9 +64,10 @@ export const Spacing = {
 } as const;
 
 /**
- * Font family names as loaded by `expo-font` in the root `_layout.tsx`.
- * TODO: load these via `@expo-google-fonts/syne` + `@expo-google-fonts/inter`
- * in `app/_layout.tsx` before shipping — text falls back to system fonts otherwise.
+ * Font family names, loaded via `@expo-google-fonts/syne` + `@expo-google-fonts/inter`
+ * and `useFonts` in the root `app/_layout.tsx` (which blocks first render — behind
+ * the native splash screen — until these are ready, so text never flashes in a
+ * system font first).
  */
 export const Fonts = {
   displayExtraBold: 'Syne_800ExtraBold',

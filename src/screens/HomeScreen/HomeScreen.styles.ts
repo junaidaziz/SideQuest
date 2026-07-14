@@ -55,8 +55,10 @@ export const styles = StyleSheet.create({
     paddingBottom: Spacing.colossal,
     gap: Spacing.lg,
   },
+  // No backgroundColor here — HomeScreen.tsx renders this as a LinearGradient
+  // (primary → primaryDark), not a plain View, so a solid fill would be
+  // pointless dead style (the gradient always paints over the full area).
   levelCard: {
-    backgroundColor: Colors.primary,
     borderRadius: Radius.card,
     padding: Spacing.base,
   },

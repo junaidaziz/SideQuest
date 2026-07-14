@@ -275,8 +275,9 @@ export const styles = StyleSheet.create({
   progressGroup: {
     gap: Spacing.base,
   },
+  // No backgroundColor — ProfileScreen.tsx renders this as a LinearGradient
+  // (primary → primaryDark), not a plain View.
   levelCard: {
-    backgroundColor: Colors.primary,
     borderRadius: Radius.card,
     padding: Spacing.base,
   },

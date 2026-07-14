@@ -78,7 +78,8 @@
           "merchantIdentifier": [],
           "enableGooglePay": false
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "router": {},

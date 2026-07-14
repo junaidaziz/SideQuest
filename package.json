@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/syne": "^0.4.2",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@sentry/react-native": "~7.11.0",
     "@stripe/stripe-react-native": "0.64.0",
@@ -12,7 +14,9 @@
     "expo-constants": "~57.0.3",
     "expo-dev-client": "~57.0.5",
     "expo-file-system": "~57.0.0",
+    "expo-font": "~57.0.0",
     "expo-image-picker": "~57.0.2",
+    "expo-linear-gradient": "~57.0.0",
     "expo-linking": "~57.0.2",
     "expo-router": "~57.0.4",
     "expo-secure-store": "~57.0.0",

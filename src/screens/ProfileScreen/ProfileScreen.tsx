@@ -15,6 +15,7 @@ import {
 import type { AlertButton } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authStore';
 import { getHome } from '../../services/homeApi';
@@ -563,9 +564,14 @@ export default function ProfileScreen({
             </View>
           ) : (
             <View style={styles.progressGroup}>
-              {/* XP level card. TODO: install expo-linear-gradient for the
-                  mockup's purple gradient — solid primary fill is the interim. */}
-              <View style={styles.levelCard} accessible accessibilityLabel="Your level and XP">
+              <LinearGradient
+                colors={[Colors.primary, Colors.primaryDark]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.levelCard}
+                accessible
+                accessibilityLabel="Your level and XP"
+              >
                 <View style={styles.levelTop}>
                   <View>
                     <Text style={styles.levelEyebrow}>
@@ -603,7 +609,7 @@ export default function ProfileScreen({
                 <Text style={styles.xpProgressLabel}>
                   {`${data.level.xpToNextLevel} XP to Level ${data.level.level + 1}`}
                 </Text>
-              </View>
+              </LinearGradient>
 
               {/* Streak card */}
               <View

@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors } from '../../constants/design';
 import type { LevelInfo, Mission, SavedPack, TaskStats } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { styles } from './HomeScreen.styles';
@@ -351,9 +353,14 @@ export default function HomeScreen({
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* XP level card. TODO: install expo-linear-gradient for the mockup's
-              purple gradient — a solid primary fill is the interim treatment. */}
-          <View style={styles.levelCard} accessible accessibilityLabel="Your level and XP">
+          <LinearGradient
+            colors={[Colors.primary, Colors.primaryDark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.levelCard}
+            accessible
+            accessibilityLabel="Your level and XP"
+          >
             <View style={styles.levelTop}>
               <View>
                 <Text style={styles.levelEyebrow}>YOUR LEVEL</Text>
@@ -387,7 +394,7 @@ export default function HomeScreen({
             <Text style={styles.xpProgressLabel}>
               {`${data.level.xpToNextLevel} XP to Level ${data.level.level + 1}`}
             </Text>
-          </View>
+          </LinearGradient>
 
           {/* Streak card */}
           <View
@@ -426,7 +433,9 @@ export default function HomeScreen({
           {/* Pending challenges — always empty in v1 (no challenge backend yet). */}
           <View>
             <Text style={styles.sectionLabel}>Pending challenges</Text>
-            {/* TODO: replace hardcoded empty state with data.pendingChallenges when challenge backend ships */}
+            {/* Deliberately hardcoded, not stale: data.pendingChallenges is always []
+                (see the comment above) until a challenge backend exists — swap this
+                for a real list render at that point, not before. */}
             <EmptyCard
               icon={'\u{1F3AF}'}
               title="No challenges yet"

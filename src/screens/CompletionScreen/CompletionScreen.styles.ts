@@ -13,8 +13,9 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.surface,
   },
+  // No backgroundColor — CompletionScreen.tsx renders this as a LinearGradient
+  // (primary → primaryDark), not a plain View.
   hero: {
-    backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xxxl,
     paddingBottom: Spacing.xxxl,

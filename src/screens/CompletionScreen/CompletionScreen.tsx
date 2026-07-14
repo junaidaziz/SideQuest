@@ -10,7 +10,9 @@ import {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import SignupPromptScreen from '../SignupPromptScreen';
+import { Colors } from '../../constants/design';
 import type { ProofSubmissionResponse } from '../../types/api';
 import { styles } from './CompletionScreen.styles';
 
@@ -142,9 +144,13 @@ export default function CompletionScreen({
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Celebration hero. TODO: install expo-linear-gradient for the mockup's
-          purple gradient — a solid primary fill is the interim treatment. */}
-      <View style={styles.hero} accessibilityLabel="Quest complete">
+      <LinearGradient
+        colors={[Colors.primary, Colors.primaryDark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.hero}
+        accessibilityLabel="Quest complete"
+      >
         <View
           style={styles.trophy}
           importantForAccessibility="no"
@@ -167,7 +173,7 @@ export default function CompletionScreen({
           <Text style={styles.xpLabel}>XP earned</Text>
           <Text style={styles.xpValue}>{`+${result.xpAwarded} XP`}</Text>
         </View>
-      </View>
+      </LinearGradient>
 
       <ScrollView
         style={styles.content}
