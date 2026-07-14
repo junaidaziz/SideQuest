@@ -21,7 +21,9 @@ export function toFilters(selections: OnboardingSelections): GenerateMissionsReq
 export default function OnboardingRoute() {
   const handleComplete = useCallback((selections: OnboardingSelections) => {
     const filters = toFilters(selections);
-    router.push({ pathname: '/mission-results', params: { filters: JSON.stringify(filters) } });
+    // Compass redesign: the first-launch quest generation now lands on the new
+    // QuestResultsScreen (/quest-results), not the retired /mission-results.
+    router.push({ pathname: '/quest-results', params: { filters: JSON.stringify(filters) } });
   }, []);
 
   return <OnboardingScreen onComplete={handleComplete} />;

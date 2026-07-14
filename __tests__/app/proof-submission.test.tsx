@@ -3,61 +3,35 @@ import { render } from '@testing-library/react-native';
 import { useLocalSearchParams } from 'expo-router';
 import ProofSubmissionRoute from '../../app/proof-submission/[missionId]';
 
-// jest.mock() factories are hoisted above imports, so they can't reference
-// module-scope bindings like an imported `Text` — only a lazy require()
-// inside the factory works here.
+// The old /proof-submission/[missionId] route is retired in the Compass
+// redesign — it now forwards to /proof/[missionId] (ProofSubmissionScreenV2),
+// preserving its params.
 jest.mock('expo-router', () => ({
-  router: { back: jest.fn(), push: jest.fn(), replace: jest.fn() },
   useLocalSearchParams: jest.fn(),
-  Redirect: jest.fn(({ href }: { href: string }) => {
+  Redirect: jest.fn(({ href }: { href: string | { pathname: string; params?: Record<string, string> } }) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { Text } = require('react-native');
-    return <Text>{`redirect:${href}`}</Text>;
+    const label = typeof href === 'string' ? href : `${href.pathname}?${JSON.stringify(href.params)}`;
+    return <Text>{`redirect:${label}`}</Text>;
   }),
 }));
-jest.mock('../../src/screens/ProofSubmissionScreen', () =>
-  jest.fn(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Text } = require('react-native');
-    return <Text>proof-submission-screen</Text>;
-  }),
-);
 
-describe('ProofSubmissionRoute', () => {
+describe('ProofSubmissionRoute (retired)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('redirects to mode-select when missionId is missing', async () => {
-    (useLocalSearchParams as jest.Mock).mockReturnValue({
-      missionId: undefined,
-      proofRequirement: 'A photo.',
-    });
-
+  it('redirects to Explore when missionId is missing', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ missionId: undefined, proofRequirement: 'A photo.' });
     const { findByText } = await render(<ProofSubmissionRoute />);
-
-    expect(await findByText('redirect:/mode-select')).toBeTruthy();
+    expect(await findByText('redirect:/explore')).toBeTruthy();
   });
 
-  it('redirects to mode-select when proofRequirement is missing', async () => {
-    (useLocalSearchParams as jest.Mock).mockReturnValue({
-      missionId: 'm-1',
-      proofRequirement: undefined,
-    });
-
+  it('forwards missionId and proofRequirement to /proof/[missionId]', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ missionId: 'm-1', proofRequirement: 'A photo.' });
     const { findByText } = await render(<ProofSubmissionRoute />);
-
-    expect(await findByText('redirect:/mode-select')).toBeTruthy();
-  });
-
-  it('renders ProofSubmissionScreen when both params are present', async () => {
-    (useLocalSearchParams as jest.Mock).mockReturnValue({
-      missionId: 'm-1',
-      proofRequirement: 'A photo.',
-    });
-
-    const { findByText } = await render(<ProofSubmissionRoute />);
-
-    expect(await findByText('proof-submission-screen')).toBeTruthy();
+    expect(
+      await findByText(`redirect:/proof/[missionId]?${JSON.stringify({ missionId: 'm-1', proofRequirement: 'A photo.' })}`),
+    ).toBeTruthy();
   });
 });

@@ -1,3 +1,6 @@
+// SUPERSEDED by src/screens/CompletionScreenV2 (rendered by app/completion.tsx)
+// in the Compass redesign. Kept for rollback only — no route renders this; safe
+// to delete in a later cleanup pass once the redesign is settled.
 import React, { useCallback, useState } from 'react';
 import {
   Modal,

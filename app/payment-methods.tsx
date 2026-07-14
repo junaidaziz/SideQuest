@@ -13,7 +13,7 @@ export default function PaymentMethodsRoute() {
 
   useEffect(() => {
     if (isGuest) {
-      router.replace('/home');
+      router.replace('/today');
     }
   }, [isGuest]);
 

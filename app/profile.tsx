@@ -1,39 +1,11 @@
-import { router } from 'expo-router';
-import { useCallback } from 'react';
-import ProfileScreen from '../src/screens/ProfileScreen';
+import { Redirect } from 'expo-router';
 
+/**
+ * Retired route — superseded by the You tab (app/(tabs)/you.tsx) in the
+ * Compass redesign. Kept as a redirect (not deleted) so any external/deep link
+ * still pointing at /profile lands somewhere valid instead of 404ing. The old
+ * ProfileScreen source is preserved under src/screens/ProfileScreen for rollback.
+ */
 export default function ProfileRoute() {
-  const handleBack = useCallback(() => {
-    router.back();
-  }, []);
-
-  const handleCreateAccount = useCallback(() => {
-    router.push('/signup-prompt');
-  }, []);
-
-  const handleLoginExisting = useCallback(() => {
-    router.push('/login');
-  }, []);
-
-  const handleLoggedOut = useCallback(() => {
-    // logout() already re-bootstraps a fresh guest session before this
-    // fires (see authStore.ts), so the store is 'ready' by the time we
-    // navigate — replace, not push, so Profile isn't reachable via back
-    // from the fresh session.
-    router.replace('/home');
-  }, []);
-
-  const handlePaymentMethods = useCallback(() => {
-    router.push('/payment-methods');
-  }, []);
-
-  return (
-    <ProfileScreen
-      onBack={handleBack}
-      onCreateAccount={handleCreateAccount}
-      onLoginExisting={handleLoginExisting}
-      onLoggedOut={handleLoggedOut}
-      onPaymentMethods={handlePaymentMethods}
-    />
-  );
+  return <Redirect href="/you" />;
 }

@@ -1,3 +1,6 @@
+// SUPERSEDED by /quest-results (src/screens/QuestResultsScreen) in the Compass
+// redesign. Kept for rollback only — no route renders this; safe to delete in a
+// later cleanup pass once the redesign is settled.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,

@@ -1,3 +1,6 @@
+// SUPERSEDED by the Explore tab's mode-tile UI (src/screens/ExploreScreen) in
+// the Compass redesign. Kept for rollback only — no route renders this; safe to
+// delete in a later cleanup pass once the redesign is settled.
 import React, { useCallback } from 'react';
 import {
   Pressable,

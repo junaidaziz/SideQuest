@@ -1,16 +1,16 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import CompletionScreen from '../src/screens/CompletionScreen';
+import CompletionScreenV2 from '../src/screens/CompletionScreenV2';
 import { useAuthStore } from '../src/store/authStore';
 import type { ProofSubmissionResponse } from '../src/types/api';
 
+/**
+ * Quest completion (Compass V2). Reached via router.replace from the proof
+ * route. A cold-start deep link with no/invalid result has no completion to
+ * celebrate, so it falls back to the Today tab.
+ */
 export default function CompletionRoute() {
   const { result: resultParam } = useLocalSearchParams<{ result: string }>();
-  // Set by app/proof-submission/[missionId].tsx's router.replace, but a
-  // cold-start deep link straight into this route (no result param, or a
-  // malformed one) is still reachable in principle — there's no in-progress
-  // quest to resume in that case, so Home is the safe fallback rather than
-  // crashing on JSON.parse.
   const result = useMemo<ProofSubmissionResponse | null>(() => {
     if (!resultParam) return null;
     try {
@@ -21,28 +21,31 @@ export default function CompletionRoute() {
   }, [resultParam]);
   const isGuest = useAuthStore((state) => state.user?.isGuest ?? true);
 
-  const handleFindAnotherQuest = useCallback(() => {
-    // Mode Select (screen 07, "entry variant" in the mockups) is the
-    // intended shortcut here instead of the full onboarding wizard — see
-    // app/mode-select.tsx's toFiltersFromMode for how its 8 modes map (or
-    // fall back) onto the backend's crew/time/setting/budget filters.
-    router.replace('/mode-select');
+  const handleBackToToday = useCallback(() => {
+    router.replace('/today');
   }, []);
 
-  const handleChallengeSent = useCallback(() => {
-    router.replace('/home');
+  const handleOpenNextIdea = useCallback(() => {
+    router.replace('/explore');
+  }, []);
+
+  const handleCreateAccount = useCallback(() => {
+    router.push('/signup-prompt');
   }, []);
 
   if (!result) {
-    return <Redirect href="/home" />;
+    return <Redirect href="/today" />;
   }
 
   return (
-    <CompletionScreen
+    <CompletionScreenV2
       result={result}
       isGuest={isGuest}
-      onFindAnotherQuest={handleFindAnotherQuest}
-      onChallengeSent={handleChallengeSent}
+      onBackToToday={handleBackToToday}
+      onOpenNextIdea={handleOpenNextIdea}
+      onCreateAccount={handleCreateAccount}
+      // onShare intentionally left unwired: no share-sheet integration is
+      // defined for this migration. Documented no-op.
     />
   );
 }

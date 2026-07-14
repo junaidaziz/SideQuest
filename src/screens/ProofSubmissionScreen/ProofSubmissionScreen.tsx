@@ -1,3 +1,6 @@
+// SUPERSEDED by src/screens/ProofSubmissionScreenV2 (rendered by
+// app/proof/[missionId].tsx) in the Compass redesign. Kept for rollback only —
+// no route renders this; safe to delete in a later cleanup pass.
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,

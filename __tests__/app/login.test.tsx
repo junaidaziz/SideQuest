@@ -44,12 +44,12 @@ describe('LoginRoute', () => {
     jest.clearAllMocks();
   });
 
-  it('replaces with home on a successful login', async () => {
+  it('replaces with the Today tab on a successful login', async () => {
     const { getByLabelText } = await render(<LoginRoute />);
 
     await fireEvent.press(getByLabelText('success'));
 
-    expect(router.replace).toHaveBeenCalledWith('/home');
+    expect(router.replace).toHaveBeenCalledWith('/today');
   });
 
   it('goes back when the back button is pressed', async () => {

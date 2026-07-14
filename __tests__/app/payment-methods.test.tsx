@@ -70,10 +70,10 @@ describe('PaymentMethodsRoute', () => {
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
-  it('redirects a guest to /home instead of rendering the screen', async () => {
+  it('redirects a guest to the Today tab instead of rendering the screen', async () => {
     mockIsGuest = true;
     renderRoute();
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/home'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/today'));
     expect(screen.queryByText('Payment Methods')).toBeNull();
   });
 });

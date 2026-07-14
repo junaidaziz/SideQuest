@@ -8,7 +8,7 @@ import { Colors } from '../src/constants/design';
  * screen waits for it to settle before deciding where to send the user.
  * First-ever launch (no stored tokens, so hydrate() just bootstrapped a fresh
  * guest) goes to onboarding; every other launch — including a returning
- * guest — goes straight to Home. A hydrate() failure falls back to
+ * guest — goes straight to the Today tab. A hydrate() failure falls back to
  * onboarding too, since it's the only screen that doesn't assume a working
  * session is already in place.
  */
@@ -28,7 +28,7 @@ export default function Index() {
     );
   }
 
-  return <Redirect href={isFirstLaunch === false ? '/home' : '/onboarding'} />;
+  return <Redirect href={isFirstLaunch === false ? '/today' : '/onboarding'} />;
 }
 
 const styles = StyleSheet.create({
