@@ -210,9 +210,199 @@ export interface HomeResponse {
   /** Deterministic per UTC calendar day — a cosmetic highlight, not a gate.
    * Null only if the curated mission pool is empty. */
   dailyMission: Mission | null;
-  /** Always [] in v1 — no challenge-sending backend exists yet. */
+  /**
+   * Always [] from `GET /home` — the home endpoint's DTO still ships this
+   * placeholder field verbatim. The real peer-to-peer challenge/task data now
+   * lives on the dedicated `/tasks` API (see `Task`/`TaskDetail` below and
+   * `services/tasksApi.ts`); it is intentionally NOT folded into `/home`
+   * (backend "Decision 11" keeps the manually-mirrored HomeResponse stable).
+   * Consume tasks via `tasksApi`, not this field.
+   */
   pendingChallenges: unknown[];
   savedPacks: SavedPack[];
   /** Proof-verification tallies across all the user's completions. */
   taskStats: TaskStats;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ * Peer-to-peer tasks (M19) — mirrors sidequest-backend `src/tasks/dto/*`.
+ * A "challenge" in the redesign's product vocabulary IS a backend `UserTask`:
+ * a creator authors a task, invites a friend via a link, the assignee submits
+ * evidence, and (for CREATOR_APPROVAL tasks) the creator reviews it. Dates are
+ * ISO-8601 strings — the backend `Date` DTO fields serialize to strings over
+ * JSON, so the client never sees a live `Date`.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/** How a task's completion is verified. `AUTOMATIC` is reserved server-side and
+ * cannot be requested at creation (see `CREATABLE_VERIFICATION_METHODS`). */
+export type TaskVerificationMethod = 'NONE' | 'SELF' | 'CREATOR_APPROVAL' | 'AUTOMATIC';
+
+/** The subset a client may request when creating a task. */
+export const CREATABLE_VERIFICATION_METHODS = ['NONE', 'SELF', 'CREATOR_APPROVAL'] as const;
+
+/** Lifecycle of a UserTask — mirrors backend Prisma `UserTaskStatus`. */
+export type UserTaskStatus =
+  | 'Open'
+  | 'Invited'
+  | 'Accepted'
+  | 'Declined'
+  | 'Submitted'
+  | 'Approved'
+  | 'Rejected'
+  | 'Cancelled';
+
+/** Status of a single evidence submission. */
+export type TaskSubmissionStatus = 'Submitted' | 'Approved' | 'Rejected';
+
+/** Which side of a task the caller wants listed on `GET /tasks`. */
+export type TaskRoleFilter = 'creator' | 'assignee' | 'all';
+
+/** One evidence attachment on a submission. */
+export interface TaskAttachment {
+  id: string;
+  /** "photo" or "document". */
+  kind: string;
+  /** Short-lived presigned GET URL, or null if it could not be signed. */
+  url: string | null;
+  createdAt: string;
+}
+
+/** One evidence submission in a task's history. */
+export interface TaskSubmission {
+  id: string;
+  submittedById: string;
+  notes: string | null;
+  status: TaskSubmissionStatus;
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewedById: string | null;
+  rejectionReason: string | null;
+  attachments: TaskAttachment[];
+}
+
+/** A task as returned in list/detail views (list omits `submissions`). */
+export interface Task {
+  id: string;
+  creatorId: string;
+  /** null for personal (assignee-less) tasks. */
+  assigneeId: string | null;
+  title: string;
+  description: string | null;
+  rewardXp: number | null;
+  verificationMethod: TaskVerificationMethod;
+  evidenceRequired: boolean;
+  status: UserTaskStatus;
+  dueAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Full task detail: the task plus its submission/evidence history. */
+export interface TaskDetail extends Task {
+  /** Active invite token — exposed to the creator only (null otherwise). */
+  inviteToken: string | null;
+  submissions: TaskSubmission[];
+}
+
+/** Returned when a creator generates an invite link for a shared task. */
+export interface InviteResponse {
+  inviteToken: string;
+  /** Deep link the app shares so an invitee can accept or decline. */
+  inviteUrl: string;
+}
+
+/** Counts for tasks the caller created. */
+export interface CreatedTaskSummary {
+  total: number;
+  open: number;
+  invited: number;
+  awaitingMyReview: number;
+  approved: number;
+}
+
+/** Counts for tasks assigned to the caller. */
+export interface AssignedTaskSummary {
+  total: number;
+  active: number;
+  awaitingReview: number;
+  needsResubmission: number;
+  approved: number;
+}
+
+/** Dashboard-style task counts for the current user (`GET /tasks/summary`). */
+export interface TaskSummary {
+  created: CreatedTaskSummary;
+  assigned: AssignedTaskSummary;
+}
+
+/** Body for `POST /tasks`. Only `title` is required. */
+export interface CreateTaskRequest {
+  title: string;
+  description?: string;
+  verificationMethod?: TaskVerificationMethod;
+  evidenceRequired?: boolean;
+  rewardXp?: number;
+  /** Optional due date, ISO-8601. */
+  dueAt?: string;
+}
+
+/** The two decisions a creator can make on a pending submission. */
+export type ReviewDecision = 'Approve' | 'Reject';
+
+/** Body for `PATCH /tasks/:id/submissions/:submissionId/review`. */
+export interface ReviewSubmissionRequest {
+  decision: ReviewDecision;
+  /** Required when `decision` is `Reject`; ignored on `Approve`. */
+  rejectionReason?: string;
+}
+
+/** Query filters for `GET /tasks`. */
+export interface ListTasksQuery {
+  status?: UserTaskStatus;
+  role?: TaskRoleFilter;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ * Referrals (M20) — mirrors sidequest-backend `src/referrals/dto/*`.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/** Status of a conversion referral. */
+export type ReferralStatus = 'Pending' | 'Completed' | 'Expired';
+
+/** The caller's referral code, shareable link, and aggregate stats
+ * (`GET /referrals/me`, lazily creates the code on first call). */
+export interface ReferralMe {
+  code: string;
+  inviteUrl: string;
+  totalReferrals: number;
+  completedReferrals: number;
+  pendingReferrals: number;
+  invitesSent: number;
+  rewardsEarnedXp: number;
+}
+
+/** A single conversion referral in the caller's history. */
+export interface ReferralHistoryItem {
+  id: string;
+  refereeId: string;
+  status: ReferralStatus;
+  code: string;
+  registeredAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  rewardXp: number | null;
+}
+
+/** Paginated envelope for `GET /referrals/history`. */
+export interface PaginatedReferralHistory {
+  items: ReferralHistoryItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/** Offset/limit pagination query for `GET /referrals/history`. */
+export interface ReferralHistoryQuery {
+  limit?: number;
+  offset?: number;
 }
