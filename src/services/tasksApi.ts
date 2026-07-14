@@ -35,8 +35,8 @@ function buildQuery(params: Record<string, string | undefined>): string {
 /** Creates a task. Omitting an assignee (the only path the client has) yields a
  * personal/shareable task the creator then invites a friend to via
  * `generateTaskInvite`. */
-export function createTask(body: CreateTaskRequest): Promise<Task> {
-  return apiRequest<Task>('/tasks', { method: 'POST', body });
+export function createTask(body: CreateTaskRequest, idempotencyKey?: string): Promise<Task> {
+  return apiRequest<Task>('/tasks', { method: 'POST', body, idempotencyKey });
 }
 
 /** Lists tasks where the caller is creator or assignee, optionally filtered by
@@ -62,13 +62,13 @@ export function generateTaskInvite(taskId: string): Promise<InviteResponse> {
 }
 
 /** Accepts an invite by its token — binds the caller as the assignee. */
-export function acceptTaskInvite(token: string): Promise<Task> {
-  return apiRequest<Task>(`/tasks/invites/${token}/accept`, { method: 'POST' });
+export function acceptTaskInvite(token: string, idempotencyKey?: string): Promise<Task> {
+  return apiRequest<Task>(`/tasks/invites/${token}/accept`, { method: 'POST', idempotencyKey });
 }
 
 /** Declines an invite by its token — clears it so it cannot re-bind. */
-export function declineTaskInvite(token: string): Promise<Task> {
-  return apiRequest<Task>(`/tasks/invites/${token}/decline`, { method: 'POST' });
+export function declineTaskInvite(token: string, idempotencyKey?: string): Promise<Task> {
+  return apiRequest<Task>(`/tasks/invites/${token}/decline`, { method: 'POST', idempotencyKey });
 }
 
 /** Optional photo + notes evidence for a submission. */
@@ -91,6 +91,7 @@ export interface SubmitEvidenceInput {
 export function submitTaskEvidence(
   taskId: string,
   input: SubmitEvidenceInput,
+  idempotencyKey?: string,
 ): Promise<TaskDetail> {
   const form = new FormData();
   if (input.photoUri) {
@@ -104,6 +105,7 @@ export function submitTaskEvidence(
   return apiRequest<TaskDetail>(`/tasks/${taskId}/submissions`, {
     method: 'POST',
     body: form,
+    idempotencyKey,
   });
 }
 
@@ -112,9 +114,11 @@ export function reviewTaskSubmission(
   taskId: string,
   submissionId: string,
   body: ReviewSubmissionRequest,
+  idempotencyKey?: string,
 ): Promise<TaskDetail> {
   return apiRequest<TaskDetail>(`/tasks/${taskId}/submissions/${submissionId}/review`, {
     method: 'PATCH',
     body,
+    idempotencyKey,
   });
 }

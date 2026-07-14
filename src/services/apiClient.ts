@@ -47,10 +47,18 @@ interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
   auth?: boolean; // attach Authorization header — defaults to true
+  /**
+   * Optional client-generated `Idempotency-Key` (M23.4). The offline write
+   * queue passes the queued item's id here so a replayed mutation the server
+   * already processed returns the original response instead of re-executing —
+   * critical for proof submission, which would otherwise double-award XP. Live
+   * (non-queued) calls simply omit it.
+   */
+  idempotencyKey?: string;
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, auth = true } = options;
+  const { method = 'GET', body, auth = true, idempotencyKey } = options;
 
   // FormData (multipart uploads) must not be JSON-stringified, and fetch/RN
   // sets the correct multipart boundary itself only when Content-Type is
@@ -58,6 +66,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
 
   const headers: Record<string, string> = isFormData ? {} : { 'Content-Type': 'application/json' };
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey;
+  }
   if (auth) {
     const tokens = await getTokens();
     if (tokens) headers.Authorization = `Bearer ${tokens.accessToken}`;

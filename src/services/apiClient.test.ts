@@ -57,6 +57,41 @@ describe('apiClient', () => {
       expect(requestInit.headers.Authorization).toBe('Bearer access-1');
     });
 
+    it('attaches the Idempotency-Key header when one is provided', async () => {
+      (globalThis.fetch as jest.Mock).mockResolvedValue(jsonResponse(200, {}));
+
+      await apiRequest('/tasks', { method: 'POST', auth: false, idempotencyKey: 'key-123' });
+
+      const [, requestInit] = (globalThis.fetch as jest.Mock).mock.calls[0];
+      expect(requestInit.headers['Idempotency-Key']).toBe('key-123');
+    });
+
+    it('attaches the Idempotency-Key alongside a FormData body', async () => {
+      (globalThis.fetch as jest.Mock).mockResolvedValue(jsonResponse(200, {}));
+      const form = new FormData();
+      form.append('caption', 'hi');
+
+      await apiRequest('/missions/m1/proof', {
+        method: 'POST',
+        body: form,
+        auth: false,
+        idempotencyKey: 'proof-key',
+      });
+
+      const [, requestInit] = (globalThis.fetch as jest.Mock).mock.calls[0];
+      expect(requestInit.headers['Idempotency-Key']).toBe('proof-key');
+      expect(requestInit.headers['Content-Type']).toBeUndefined();
+    });
+
+    it('omits the Idempotency-Key header when none is provided', async () => {
+      (globalThis.fetch as jest.Mock).mockResolvedValue(jsonResponse(200, {}));
+
+      await apiRequest('/tasks', { method: 'POST', auth: false });
+
+      const [, requestInit] = (globalThis.fetch as jest.Mock).mock.calls[0];
+      expect(requestInit.headers['Idempotency-Key']).toBeUndefined();
+    });
+
     it('does not attach Authorization when auth is false', async () => {
       (globalThis.fetch as jest.Mock).mockResolvedValue(jsonResponse(200, {}));
 

@@ -5,7 +5,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
-import { generateMissions, saveMission, unsaveMission } from '../../services/missionsApi';
+import { generateMissions } from '../../services/missionsApi';
+import { enqueueSaveToggle } from '../../services/queuedActions';
 import type { GenerateMissionsRequest, Mission, MissionCategory } from '../../types/api';
 import { makeStyles } from './QuestResultsScreen.styles';
 
@@ -147,10 +148,14 @@ export default function QuestResultsScreen({
   const missions = data?.missions ?? [];
 
   const saveMutation = useMutation({
+    // Queue-and-retry (M23.3): the toggle is durably enqueued and drained on
+    // reconnect/foreground rather than lost on a failed request. enqueue
+    // resolves immediately, so the optimistic toggle only reverts if the
+    // enqueue itself fails (e.g. AsyncStorage write error), not on a transient
+    // network failure — that's the queue's job to retry now.
     mutationFn: (input: { mission: Mission; nextSaved: boolean }) =>
-      input.nextSaved ? saveMission(input.mission.id) : unsaveMission(input.mission.id),
+      enqueueSaveToggle(input.mission.id, input.nextSaved),
     onError: (_e, input) => {
-      // Revert the optimistic toggle if the persist call fails.
       setSavedIds((prev) => ({ ...prev, [input.mission.id]: !input.nextSaved }));
     },
   });

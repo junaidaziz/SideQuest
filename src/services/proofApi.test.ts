@@ -66,6 +66,22 @@ describe('proofApi', () => {
       expect(blob.type).toBe('');
       expect(appendSpy).toHaveBeenCalledWith('photo', expect.any(Blob), 'capture');
     });
+
+    it('threads an idempotency key through for offline-queue replays', async () => {
+      await submitPhotoProof('mission-1', 'file:///tmp/capture.jpg', 'idem-1');
+
+      expect(mockApiRequest).toHaveBeenCalledWith(
+        '/missions/mission-1/proof',
+        expect.objectContaining({ idempotencyKey: 'idem-1' }),
+      );
+    });
+
+    it('omits the idempotency key on a live submission', async () => {
+      await submitPhotoProof('mission-1', 'file:///tmp/capture.jpg');
+
+      const [, options] = mockApiRequest.mock.calls[0];
+      expect(options.idempotencyKey).toBeUndefined();
+    });
   });
 
   describe('submitTextProof', () => {
@@ -77,6 +93,15 @@ describe('proofApi', () => {
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) }),
       );
       expect(appendSpy).toHaveBeenCalledWith('caption', 'Found it near the old oak tree.');
+    });
+
+    it('threads an idempotency key through for offline-queue replays', async () => {
+      await submitTextProof('mission-1', 'Done', 'idem-text');
+
+      expect(mockApiRequest).toHaveBeenCalledWith(
+        '/missions/mission-1/proof',
+        expect.objectContaining({ idempotencyKey: 'idem-text' }),
+      );
     });
   });
 });

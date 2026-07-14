@@ -148,6 +148,43 @@ describe('tasksApi', () => {
     });
   });
 
+  describe('idempotency key passthrough (M23.3/M23.4)', () => {
+    it('forwards the key on createTask', async () => {
+      await createTask({ title: 'x', rewardXp: 10 }, 'k-create');
+      expect(mockApiRequest).toHaveBeenCalledWith(
+        '/tasks',
+        expect.objectContaining({ idempotencyKey: 'k-create' }),
+      );
+    });
+
+    it('forwards the key on acceptTaskInvite and declineTaskInvite', async () => {
+      await acceptTaskInvite('tok', 'k-accept');
+      expect(mockApiRequest).toHaveBeenCalledWith(
+        '/tasks/invites/tok/accept',
+        expect.objectContaining({ idempotencyKey: 'k-accept' }),
+      );
+      await declineTaskInvite('tok', 'k-decline');
+      expect(mockApiRequest).toHaveBeenCalledWith(
+        '/tasks/invites/tok/decline',
+        expect.objectContaining({ idempotencyKey: 'k-decline' }),
+      );
+    });
+
+    it('forwards the key on submitTaskEvidence and reviewTaskSubmission', async () => {
+      mockApiRequest.mockResolvedValue(DETAIL);
+      await submitTaskEvidence('task-1', { notes: 'n' }, 'k-evidence');
+      expect(mockApiRequest).toHaveBeenCalledWith(
+        '/tasks/task-1/submissions',
+        expect.objectContaining({ idempotencyKey: 'k-evidence' }),
+      );
+      await reviewTaskSubmission('task-1', 'sub-1', { decision: 'Approve' }, 'k-review');
+      expect(mockApiRequest).toHaveBeenCalledWith(
+        '/tasks/task-1/submissions/sub-1/review',
+        expect.objectContaining({ idempotencyKey: 'k-review' }),
+      );
+    });
+  });
+
   describe('reviewTaskSubmission', () => {
     it('PATCHes the review decision', async () => {
       mockApiRequest.mockResolvedValue(DETAIL);

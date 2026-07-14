@@ -17,7 +17,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation } from '@tanstack/react-query';
 import { Duration } from '../../constants/design';
-import { generateMissions, saveMission, unsaveMission } from '../../services/missionsApi';
+import { generateMissions } from '../../services/missionsApi';
+import { enqueueSaveToggle } from '../../services/queuedActions';
 import type { GenerateMissionsRequest, Mission } from '../../types/api';
 import { styles } from './MissionResultsScreen.styles';
 
@@ -322,8 +323,11 @@ export default function MissionResultsScreen({
   }, [accepted, activeMission, closeSheet, onAccept]);
 
   const saveMutation = useMutation({
+    // Queue-and-retry (M23.3): durably enqueue the toggle instead of firing a
+    // fire-and-forget request that's lost if it fails. The queue drains on
+    // reconnect/foreground and dedupes via each item's idempotency key.
     mutationFn: (params: { missionId: string; save: boolean }) =>
-      params.save ? saveMission(params.missionId) : unsaveMission(params.missionId),
+      enqueueSaveToggle(params.missionId, params.save),
   });
 
   // Optimistic toggle, reverted on failure. Note: the sheet always opens with

@@ -2,14 +2,15 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MissionResultsScreen, { buildFilterChips, whenPressed } from './MissionResultsScreen';
-import { generateMissions, saveMission, unsaveMission } from '../../services/missionsApi';
+import { generateMissions } from '../../services/missionsApi';
+import { enqueueSaveToggle } from '../../services/queuedActions';
 import type { GenerateMissionsRequest, Mission } from '../../types/api';
 
 jest.mock('../../services/missionsApi');
+jest.mock('../../services/queuedActions');
 
 const mockGenerate = generateMissions as jest.Mock;
-const mockSaveMission = saveMission as jest.Mock;
-const mockUnsaveMission = unsaveMission as jest.Mock;
+const mockEnqueueSave = enqueueSaveToggle as jest.Mock;
 
 const FILTERS: GenerateMissionsRequest = {
   crew: 'Solo',
@@ -77,8 +78,7 @@ describe('MissionResultsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGenerate.mockResolvedValue({ missions: MISSIONS });
-    mockSaveMission.mockResolvedValue({ saved: true });
-    mockUnsaveMission.mockResolvedValue({ saved: false });
+    mockEnqueueSave.mockResolvedValue({ id: 'q-1' });
   });
 
   describe('rendering', () => {
@@ -191,28 +191,28 @@ describe('MissionResultsScreen', () => {
       expect(screen.getByText('Photograph it.')).toBeTruthy();
     });
 
-    it('toggles the save button and persists the change via the save API', async () => {
+    it('toggles the save button and enqueues the change for queue-and-retry', async () => {
       await renderScreen();
       await waitFor(() => expect(screen.getByText('Find the Oldest Thing')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText(/View quest: Find the Oldest Thing/));
       await fireEvent.press(screen.getByLabelText('Save for later'));
       expect(screen.getByLabelText('Saved for later')).toBeTruthy();
-      await waitFor(() => expect(mockSaveMission).toHaveBeenCalledWith('m-1'));
+      await waitFor(() => expect(mockEnqueueSave).toHaveBeenCalledWith('m-1', true));
 
       await fireEvent.press(screen.getByLabelText('Saved for later'));
       expect(screen.getByLabelText('Save for later')).toBeTruthy();
-      await waitFor(() => expect(mockUnsaveMission).toHaveBeenCalledWith('m-1'));
+      await waitFor(() => expect(mockEnqueueSave).toHaveBeenCalledWith('m-1', false));
     });
 
-    it('reverts the optimistic save toggle if the persist call fails', async () => {
-      mockSaveMission.mockRejectedValueOnce(new Error('Network request failed'));
+    it('reverts the optimistic save toggle if enqueue itself fails', async () => {
+      mockEnqueueSave.mockRejectedValueOnce(new Error('storage full'));
       await renderScreen();
       await waitFor(() => expect(screen.getByText('Find the Oldest Thing')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText(/View quest: Find the Oldest Thing/));
       await fireEvent.press(screen.getByLabelText('Save for later'));
-      await waitFor(() => expect(mockSaveMission).toHaveBeenCalledWith('m-1'));
-      // Reverted back to unsaved once the persist call fails — the toggle
-      // did not silently stay "saved" while actually unpersisted.
+      await waitFor(() => expect(mockEnqueueSave).toHaveBeenCalledWith('m-1', true));
+      // Reverted back to unsaved once the enqueue fails — the toggle did not
+      // silently stay "saved" while actually unqueued.
       await waitFor(() => expect(screen.getByLabelText('Save for later')).toBeTruthy());
     });
 

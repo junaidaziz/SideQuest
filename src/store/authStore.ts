@@ -13,6 +13,7 @@ import {
   logoutRequest,
   signup,
 } from '../services/authApi';
+import { clearPersistedQueryCache } from '../services/queryPersistence';
 import type { LoginRequest, SignupRequest, UserProfile } from '../types/api';
 
 interface AuthState {
@@ -121,6 +122,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Local logout proceeds regardless — see comment above.
     }
     await clearTokens();
+    // Found missing by independent review: without this, the persisted query
+    // cache (Home/Challenges/Referrals data) survived a logout in AsyncStorage
+    // and the next user on a shared device would have their cold start
+    // rehydrate the previous user's XP/streak/referral data until each query
+    // happened to refetch. Best-effort like the token clear above — a failure
+    // here must not block the user from actually logging out.
+    try {
+      await clearPersistedQueryCache();
+    } catch {
+      // Proceed regardless — see comment above.
+    }
     set({ user: null, status: 'idle', isFirstLaunch: null });
     // Immediately re-bootstrap a fresh guest session rather than leaving the
     // store idle: nothing else re-triggers hydrate() after the initial

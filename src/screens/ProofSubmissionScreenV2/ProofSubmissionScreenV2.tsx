@@ -12,6 +12,8 @@ import * as Haptics from 'expo-haptics';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
 import { submitPhotoProof, submitTextProof } from '../../services/proofApi';
+import { enqueueProofSubmission } from '../../services/queuedActions';
+import { useOfflineStatus } from '../../components/states/useOfflineStatus';
 import type { ProofSubmissionResponse } from '../../types/api';
 import { makeStyles } from './ProofSubmissionScreenV2.styles';
 
@@ -56,6 +58,13 @@ interface ProofSubmissionScreenV2Props {
   onRequestAddPhoto?: () => Promise<string | null>;
   onBack?: () => void;
   onSubmitted?: (result: ProofSubmissionResponse) => void;
+  /**
+   * Called after a submission is durably queued because the device is offline
+   * (M23.4). The proof isn't lost — it's stored (photo URI, not a Blob) and
+   * replayed on reconnect. Optional so existing callers keep the online-only
+   * behaviour unchanged.
+   */
+  onQueuedOffline?: () => void;
 }
 
 export default function ProofSubmissionScreenV2({
@@ -65,12 +74,15 @@ export default function ProofSubmissionScreenV2({
   onRequestAddPhoto,
   onBack,
   onSubmitted,
+  onQueuedOffline,
 }: ProofSubmissionScreenV2Props) {
   const { colors } = useCompassTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const offline = useOfflineStatus();
   const [mode, setMode] = useState<ProofMode>('photo');
   const [photos, setPhotos] = useState<string[]>([]);
   const [caption, setCaption] = useState('');
+  const [queued, setQueued] = useState(false);
 
   const scale = useSharedValue(1);
   const ctaStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -102,12 +114,22 @@ export default function ProofSubmissionScreenV2({
     setPhotos((prev) => prev.filter((p) => p !== uri));
   }, []);
 
-  const submittable = canSubmit(mode, photos, caption) && !submitMutation.isPending;
+  const submittable = canSubmit(mode, photos, caption) && !submitMutation.isPending && !queued;
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!submittable) return;
+    // Offline: durably queue the proof (URI, not a Blob) and let the write
+    // queue replay it on reconnect with an idempotency key, rather than
+    // failing the submission outright.
+    if (offline) {
+      const content = mode === 'photo' ? photos[0] : caption.trim();
+      await enqueueProofSubmission(mode, missionId, content);
+      setQueued(true);
+      onQueuedOffline?.();
+      return;
+    }
     submitMutation.mutate();
-  }, [submittable, submitMutation]);
+  }, [submittable, offline, mode, photos, caption, missionId, submitMutation, onQueuedOffline]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -211,7 +233,12 @@ export default function ProofSubmissionScreenV2({
             </Text>
           </View>
 
-          {submitMutation.isError ? (
+          {queued ? (
+            <Text style={styles.tipText} accessibilityLiveRegion="polite" accessibilityRole="text">
+              You&apos;re offline — your proof is saved and will submit automatically once
+              you&apos;re back online.
+            </Text>
+          ) : submitMutation.isError ? (
             <Text style={styles.errorText} accessibilityLiveRegion="polite">
               Couldn&apos;t submit your proof. Check your connection and try again.
             </Text>
@@ -222,7 +249,9 @@ export default function ProofSubmissionScreenV2({
       <View style={styles.stickyCta}>
         <Animated.View style={ctaStyle}>
           <Pressable
-            onPress={handleSubmit}
+            onPress={() => {
+              void handleSubmit();
+            }}
             onPressIn={onPressIn}
             onPressOut={onPressOut}
             disabled={!submittable}
@@ -236,7 +265,11 @@ export default function ProofSubmissionScreenV2({
             ]}
           >
             <Text style={styles.primaryBtnText}>
-              {submitMutation.isPending ? 'Submitting…' : submitLabel(mode, photos, caption)}
+              {queued
+                ? 'Proof saved for later'
+                : submitMutation.isPending
+                  ? 'Submitting…'
+                  : submitLabel(mode, photos, caption)}
             </Text>
           </Pressable>
         </Animated.View>

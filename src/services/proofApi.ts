@@ -23,6 +23,7 @@ import type { ProofSubmissionResponse } from '../types/api';
 export function submitPhotoProof(
   missionId: string,
   photoUri: string,
+  idempotencyKey?: string,
 ): Promise<ProofSubmissionResponse> {
   const form = new FormData();
   const file = new File(photoUri);
@@ -39,13 +40,18 @@ export function submitPhotoProof(
   return apiRequest<ProofSubmissionResponse>(`/missions/${missionId}/proof`, {
     method: 'POST',
     body: form,
+    idempotencyKey,
   });
 }
 
-/** Submits a text caption as proof (1-500 chars, matches the backend DTO). */
+/**
+ * Submits a text caption as proof (1-500 chars, matches the backend DTO).
+ * `idempotencyKey` is threaded through for offline-queue replays (M23.4).
+ */
 export function submitTextProof(
   missionId: string,
   caption: string,
+  idempotencyKey?: string,
 ): Promise<ProofSubmissionResponse> {
   const form = new FormData();
   form.append('caption', caption);
@@ -53,5 +59,6 @@ export function submitTextProof(
   return apiRequest<ProofSubmissionResponse>(`/missions/${missionId}/proof`, {
     method: 'POST',
     body: form,
+    idempotencyKey,
   });
 }

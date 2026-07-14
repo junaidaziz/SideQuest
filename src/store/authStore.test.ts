@@ -9,9 +9,11 @@ import {
   logoutRequest,
   signup,
 } from '../services/authApi';
+import { clearPersistedQueryCache } from '../services/queryPersistence';
 
 jest.mock('../services/tokenStorage');
 jest.mock('../services/authApi');
+jest.mock('../services/queryPersistence');
 
 // Never let the real native module load under Jest. `isSuccessResponse`
 // mirrors the library's actual discriminant (response.type === 'success').
@@ -240,6 +242,11 @@ describe('authStore', () => {
 
       expect(logoutRequest).toHaveBeenCalled();
       expect(clearTokens).toHaveBeenCalled();
+      // Regression test: an independent review found the persisted query
+      // cache (Home/Challenges/Referrals data) survived a logout, so the
+      // next user on a shared device would have their cold start rehydrate
+      // the previous user's data from AsyncStorage.
+      expect(clearPersistedQueryCache).toHaveBeenCalled();
       // Ends in a fully 'ready' state with a fresh guest — not stuck idle —
       // since nothing besides the root layout's one-time mount effect would
       // otherwise ever re-trigger hydrate() after this.
@@ -262,6 +269,25 @@ describe('authStore', () => {
       await useAuthStore.getState().logout();
 
       expect(logoutRequest).toHaveBeenCalled();
+      expect(clearTokens).toHaveBeenCalled();
+      expect(useAuthStore.getState().status).toBe('ready');
+      expect(useAuthStore.getState().user).toEqual(guestUser);
+    });
+
+    it('still completes logout when clearing the persisted query cache fails', async () => {
+      useAuthStore.setState({ user: realUser, status: 'ready', isFirstLaunch: false });
+      (logoutRequest as jest.Mock).mockResolvedValue({ success: true });
+      (clearPersistedQueryCache as jest.Mock).mockRejectedValue(new Error('AsyncStorage unavailable'));
+      (getTokens as jest.Mock).mockResolvedValue(null);
+      (bootstrapGuest as jest.Mock).mockResolvedValue({
+        accessToken: 'g2',
+        refreshToken: 'gr2',
+        user: guestUser,
+      });
+
+      await useAuthStore.getState().logout();
+
+      expect(clearPersistedQueryCache).toHaveBeenCalled();
       expect(clearTokens).toHaveBeenCalled();
       expect(useAuthStore.getState().status).toBe('ready');
       expect(useAuthStore.getState().user).toEqual(guestUser);

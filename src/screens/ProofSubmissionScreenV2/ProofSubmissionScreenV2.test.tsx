@@ -28,14 +28,22 @@ jest.mock('react-native-reanimated', () => {
 });
 
 jest.mock('../../services/proofApi');
+jest.mock('../../services/queuedActions');
+jest.mock('../../components/states/useOfflineStatus', () => ({
+  useOfflineStatus: jest.fn(() => false),
+}));
 
 import * as Haptics from 'expo-haptics';
 import ProofSubmissionScreenV2, { canSubmit, submitLabel } from './ProofSubmissionScreenV2';
 import { submitPhotoProof, submitTextProof } from '../../services/proofApi';
+import { enqueueProofSubmission } from '../../services/queuedActions';
+import { useOfflineStatus } from '../../components/states/useOfflineStatus';
 import type { ProofSubmissionResponse } from '../../types/api';
 
 const mockPhoto = submitPhotoProof as jest.Mock;
 const mockText = submitTextProof as jest.Mock;
+const mockEnqueueProof = enqueueProofSubmission as jest.Mock;
+const mockOffline = useOfflineStatus as jest.Mock;
 
 const RESULT: ProofSubmissionResponse = {
   completionId: 'c-1',
@@ -70,6 +78,8 @@ describe('ProofSubmissionScreenV2', () => {
     jest.clearAllMocks();
     mockPhoto.mockResolvedValue(RESULT);
     mockText.mockResolvedValue(RESULT);
+    mockEnqueueProof.mockResolvedValue({ id: 'q-1' });
+    mockOffline.mockReturnValue(false);
   });
 
   afterEach(() => cleanup());
@@ -152,6 +162,32 @@ describe('ProofSubmissionScreenV2', () => {
       await waitFor(() => expect(screen.getByLabelText('Submit proof')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Submit proof'));
       await waitFor(() => expect(screen.getByText(/Couldn't submit your proof/)).toBeTruthy());
+    });
+
+    it('queues the proof (URI, not a Blob) instead of submitting when offline', async () => {
+      mockOffline.mockReturnValue(true);
+      const onQueuedOffline = jest.fn();
+      await renderScreen({ onQueuedOffline });
+      await fireEvent.press(screen.getByLabelText('Add a photo, opens camera or library'));
+      await waitFor(() => expect(screen.getByLabelText('Submit proof')).toBeTruthy());
+      await fireEvent.press(screen.getByLabelText('Submit proof'));
+
+      await waitFor(() =>
+        expect(mockEnqueueProof).toHaveBeenCalledWith('photo', 'm-1', 'file:///photo-a.jpg'),
+      );
+      expect(mockPhoto).not.toHaveBeenCalled();
+      expect(onQueuedOffline).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/saved and will submit automatically/)).toBeTruthy();
+    });
+
+    it('queues a text proof when offline', async () => {
+      mockOffline.mockReturnValue(true);
+      await renderScreen();
+      await fireEvent.press(screen.getByLabelText('Text proof'));
+      await fireEvent.changeText(screen.getByLabelText('Proof description'), '  did it  ');
+      await fireEvent.press(screen.getByLabelText('Submit proof'));
+      await waitFor(() => expect(mockEnqueueProof).toHaveBeenCalledWith('text', 'm-1', 'did it'));
+      expect(mockText).not.toHaveBeenCalled();
     });
 
     it('calls onBack from the top bar', async () => {

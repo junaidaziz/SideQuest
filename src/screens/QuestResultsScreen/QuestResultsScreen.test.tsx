@@ -20,18 +20,19 @@ jest.mock('react-native-reanimated', () => {
 });
 
 jest.mock('../../services/missionsApi');
+jest.mock('../../services/queuedActions');
 
 import QuestResultsScreen, {
   buildFilterChips,
   buildFitReason,
   categoryLabel,
 } from './QuestResultsScreen';
-import { generateMissions, saveMission, unsaveMission } from '../../services/missionsApi';
+import { generateMissions } from '../../services/missionsApi';
+import { enqueueSaveToggle } from '../../services/queuedActions';
 import type { GenerateMissionsRequest, Mission } from '../../types/api';
 
 const mockGenerate = generateMissions as jest.Mock;
-const mockSave = saveMission as jest.Mock;
-const mockUnsave = unsaveMission as jest.Mock;
+const mockEnqueueSave = enqueueSaveToggle as jest.Mock;
 
 const FILTERS: GenerateMissionsRequest = { crew: 'Solo', time: '30 min', setting: 'Outdoors', budget: 'Free' };
 
@@ -55,8 +56,7 @@ describe('QuestResultsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGenerate.mockResolvedValue({ missions: MISSIONS });
-    mockSave.mockResolvedValue({ saved: true });
-    mockUnsave.mockResolvedValue({ saved: false });
+    mockEnqueueSave.mockResolvedValue({ id: 'q-1' });
   });
 
   afterEach(() => {
@@ -114,23 +114,23 @@ describe('QuestResultsScreen', () => {
       expect(onViewDetails).toHaveBeenCalledWith(MISSIONS[0]);
     });
 
-    it('toggles save and persists via the save API', async () => {
+    it('toggles save and enqueues the change for queue-and-retry', async () => {
       await renderScreen();
       await waitFor(() => expect(screen.getByText('Street Type Safari')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Save Street Type Safari'));
       expect(screen.getByLabelText('Saved Street Type Safari')).toBeTruthy();
-      await waitFor(() => expect(mockSave).toHaveBeenCalledWith('m-1'));
+      await waitFor(() => expect(mockEnqueueSave).toHaveBeenCalledWith('m-1', true));
       await fireEvent.press(screen.getByLabelText('Saved Street Type Safari'));
       expect(screen.getByLabelText('Save Street Type Safari')).toBeTruthy();
-      await waitFor(() => expect(mockUnsave).toHaveBeenCalledWith('m-1'));
+      await waitFor(() => expect(mockEnqueueSave).toHaveBeenCalledWith('m-1', false));
     });
 
-    it('reverts the optimistic save toggle when the persist call fails', async () => {
-      mockSave.mockRejectedValueOnce(new Error('offline'));
+    it('reverts the optimistic save toggle when enqueue itself fails', async () => {
+      mockEnqueueSave.mockRejectedValueOnce(new Error('storage full'));
       await renderScreen();
       await waitFor(() => expect(screen.getByText('Street Type Safari')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Save Street Type Safari'));
-      await waitFor(() => expect(mockSave).toHaveBeenCalledWith('m-1'));
+      await waitFor(() => expect(mockEnqueueSave).toHaveBeenCalledWith('m-1', true));
       await waitFor(() => expect(screen.getByLabelText('Save Street Type Safari')).toBeTruthy());
     });
 
