@@ -167,17 +167,32 @@ export default function StatisticsScreen({ onBack }: StatisticsScreenProps) {
 
           <View style={styles.card}>
             <Text style={styles.cardLabel}>Proof review status</Text>
-            <View style={styles.statusRow}>
+            <View
+              style={styles.statusRow}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={`Approved: ${data.taskStats.approved}`}
+            >
               <View style={[styles.dot, { backgroundColor: colors.statusSuccess }]} />
               <Text style={styles.statusName}>Approved</Text>
               <Text style={styles.statusVal}>{data.taskStats.approved}</Text>
             </View>
-            <View style={styles.statusRow}>
+            <View
+              style={styles.statusRow}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={`Pending review: ${data.taskStats.pending}`}
+            >
               <View style={[styles.dot, { backgroundColor: colors.statusWarning }]} />
               <Text style={styles.statusName}>Pending review</Text>
               <Text style={styles.statusVal}>{data.taskStats.pending}</Text>
             </View>
-            <View style={styles.statusRow}>
+            <View
+              style={styles.statusRow}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={`Rejected: ${data.taskStats.rejected}`}
+            >
               <View style={[styles.dot, { backgroundColor: colors.statusError }]} />
               <Text style={styles.statusName}>Rejected</Text>
               <Text style={styles.statusVal}>{data.taskStats.rejected}</Text>

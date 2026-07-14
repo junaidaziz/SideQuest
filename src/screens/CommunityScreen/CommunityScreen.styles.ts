@@ -122,7 +122,7 @@ export function makeStyles(c: CompassPalette) {
       textTransform: 'uppercase',
     },
     tryBtn: {
-      minHeight: 40,
+      minHeight: 48,
       paddingHorizontal: CompassSpacing.s4,
       borderRadius: CompassRadius.btn,
       backgroundColor: c.bgSubtle,

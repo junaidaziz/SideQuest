@@ -154,15 +154,30 @@ export default function RewardsScreen({ onBack, onShareInvite }: RewardsScreenPr
 
           <View style={styles.card}>
             <Text style={styles.cardLabel}>Referral program</Text>
-            <View style={styles.statRow}>
+            <View
+              style={styles.statRow}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={`People referred: ${meQuery.data!.totalReferrals}`}
+            >
               <Text style={styles.statName}>People referred</Text>
               <Text style={styles.statVal}>{meQuery.data!.totalReferrals}</Text>
             </View>
-            <View style={styles.statRow}>
+            <View
+              style={styles.statRow}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={`Rewarded referrals: ${meQuery.data!.completedReferrals}`}
+            >
               <Text style={styles.statName}>Rewarded referrals</Text>
               <Text style={styles.statVal}>{meQuery.data!.completedReferrals}</Text>
             </View>
-            <View style={styles.statRow}>
+            <View
+              style={styles.statRow}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={`Awaiting first completion: ${meQuery.data!.pendingReferrals}`}
+            >
               <Text style={styles.statName}>Awaiting first completion</Text>
               <Text style={styles.statVal}>{meQuery.data!.pendingReferrals}</Text>
             </View>

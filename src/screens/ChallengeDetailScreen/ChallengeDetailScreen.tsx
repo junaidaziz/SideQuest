@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleProp, Text, TextInput, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -52,6 +52,17 @@ export default function ChallengeDetailScreen({
   const queryClient = useQueryClient();
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
+  const reasonInputRef = useRef<TextInput>(null);
+
+  // The reject-reason TextInput mounts only when `rejecting` becomes true —
+  // move focus onto it directly (which VoiceOver/TalkBack follow for a real
+  // text input) so screen-reader users get a signal a new field appeared,
+  // rather than focus staying on the now-gone "Reject" button.
+  useEffect(() => {
+    if (rejecting) {
+      reasonInputRef.current?.focus();
+    }
+  }, [rejecting]);
 
   const query = useQuery<TaskDetail>({ queryKey: ['task', taskId], queryFn: () => getTask(taskId) });
   const { data, isLoading, isError } = query;
@@ -223,6 +234,7 @@ export default function ChallengeDetailScreen({
                   {rejecting ? (
                     <View style={styles.rejectWrap}>
                       <TextInput
+                        ref={reasonInputRef}
                         style={styles.reasonInput}
                         placeholder="Reason for rejection"
                         placeholderTextColor={colors.textTertiary}

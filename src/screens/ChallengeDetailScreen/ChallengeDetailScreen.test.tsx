@@ -202,6 +202,16 @@ describe('ChallengeDetailScreen', () => {
         }),
       );
     });
+
+    it('hides approve/reject from the assignee even when a submission is pending', async () => {
+      // Regression test: the review actions are gated on role === 'creator',
+      // not on submission status alone — an assignee viewing their own
+      // pending submission must never see the creator's review controls.
+      await renderScreen(makeDetail({ submissions: [PENDING_SUB] }), { currentUserId: 'assignee-id' });
+      await waitFor(() => expect(screen.getByLabelText(/Peak Seeker\./)).toBeTruthy());
+      expect(screen.queryByLabelText('Approve this proof')).toBeNull();
+      expect(screen.queryByLabelText('Reject this proof')).toBeNull();
+    });
   });
 
   describe('assignee actions', () => {

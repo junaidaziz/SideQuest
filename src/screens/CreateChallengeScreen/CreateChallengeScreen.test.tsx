@@ -208,6 +208,25 @@ describe('CreateChallengeScreen', () => {
       fireEvent.press(screen.getByLabelText('Send challenge'));
       await waitFor(() => expect(screen.getByText(/Couldn't send the challenge/)).toBeTruthy());
     });
+
+    it('does not double-submit on a rapid double-tap of Send', async () => {
+      let resolveCreate: (value: typeof CREATED_TASK) => void = () => {};
+      mockCreate.mockReturnValue(new Promise((resolve) => { resolveCreate = resolve; }));
+      await renderScreen();
+      await advanceToReview();
+
+      const sendBtn = screen.getByLabelText('Send challenge');
+      fireEvent.press(sendBtn);
+      // The button must disable itself while the mutation is in flight —
+      // a second tap before the first request resolves must not fire a
+      // second POST /tasks.
+      await waitFor(() => expect(screen.getByLabelText('Send challenge').props.accessibilityState.disabled).toBe(true));
+      fireEvent.press(screen.getByLabelText('Send challenge'));
+
+      resolveCreate(CREATED_TASK);
+      await waitFor(() => expect(screen.getByText('Challenge created')).toBeTruthy());
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('navigation', () => {

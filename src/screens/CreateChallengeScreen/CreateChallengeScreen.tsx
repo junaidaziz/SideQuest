@@ -1,5 +1,14 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleProp, Text, TextInput, View, ViewStyle } from 'react-native';
+import {
+  AccessibilityInfo,
+  Pressable,
+  ScrollView,
+  StyleProp,
+  Text,
+  TextInput,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import Animated, { FadeInRight } from 'react-native-reanimated';
@@ -99,15 +108,32 @@ export default function CreateChallengeScreen({
     setDraft((prev) => ({ ...prev, ...patch }));
   }, []);
 
+  // FadeInRight visually signals a step change, but that's invisible to a
+  // screen reader — announce the new step explicitly so VoiceOver/TalkBack
+  // users know navigation happened and land on which step they're now on.
+  const announceStep = useCallback((nextStep: number) => {
+    AccessibilityInfo.announceForAccessibility(
+      `Step ${nextStep} of ${TOTAL_STEPS}: ${STEP_LABELS[nextStep - 1]}`,
+    );
+  }, []);
+
   const goNext = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    setStep((s) => Math.min(TOTAL_STEPS, s + 1));
-  }, []);
+    setStep((s) => {
+      const next = Math.min(TOTAL_STEPS, s + 1);
+      announceStep(next);
+      return next;
+    });
+  }, [announceStep]);
 
   const goBack = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    setStep((s) => s - 1);
-  }, []);
+    setStep((s) => {
+      const next = s - 1;
+      announceStep(next);
+      return next;
+    });
+  }, [announceStep]);
 
   const handleHeaderBack = useCallback(() => {
     if (step === 1) onCancel?.();
