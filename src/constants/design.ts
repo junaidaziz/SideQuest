@@ -64,14 +64,14 @@ export const Spacing = {
 } as const;
 
 /**
- * Font family names, loaded via `@expo-google-fonts/syne` + `@expo-google-fonts/inter`
- * and `useFonts` in the root `app/_layout.tsx` (which blocks first render — behind
- * the native splash screen — until these are ready, so text never flashes in a
- * system font first).
+ * Font family names, loaded via `@expo-google-fonts/plus-jakarta-sans` +
+ * `@expo-google-fonts/inter` and `useFonts` in the root `app/_layout.tsx`
+ * (which blocks first render — behind the native splash screen — until these
+ * are ready, so text never flashes in a system font first).
  */
 export const Fonts = {
-  displayExtraBold: 'Syne_800ExtraBold',
-  displayBold: 'Syne_700Bold',
+  displayExtraBold: 'PlusJakartaSans_800ExtraBold',
+  displayBold: 'PlusJakartaSans_700Bold',
   bodySemiBold: 'Inter_600SemiBold',
   bodyMedium: 'Inter_500Medium',
   bodyRegular: 'Inter_400Regular',
