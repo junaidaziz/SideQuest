@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
@@ -12,6 +12,17 @@ import { makeStyles, type LevelDetailStyles } from './LevelDetailScreen.styles';
 
 export interface LevelDetailScreenProps {
   onBack?: () => void;
+  /** "Find a quest" CTA inside the locked-level tooltip — routed to
+   * Explore/quest generation by the nav layer, same convention as
+   * StreakDetailScreen's onFindQuest. */
+  onFindQuest?: () => void;
+}
+
+/** XP still needed to unlock a locked node, given the caller's current total
+ * XP. Clamped at 0 for a node that's already reachable (defensive — callers
+ * only invoke this for 'locked' nodes, which are always above current XP). */
+export function xpRemainingToUnlock(node: LevelNode, currentTotalXp: number): number {
+  return Math.max(0, node.xp - currentTotalXp);
 }
 
 export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): StyleProp<ViewStyle> {
@@ -30,15 +41,25 @@ function nodeMeta(node: LevelNode): string {
   return `${formatXp(node.xp)} XP`;
 }
 
-export default function LevelDetailScreen({ onBack }: LevelDetailScreenProps) {
+export default function LevelDetailScreen({ onBack, onFindQuest }: LevelDetailScreenProps) {
   const { colors } = useCompassTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const query = useQuery<HomeResponse>({ queryKey: ['home'], queryFn: getHome });
   const { data, isLoading, isError } = query;
+  const [lockedNode, setLockedNode] = useState<LevelNode | null>(null);
 
   const handleRetry = useCallback(() => {
     query.refetch();
   }, [query]);
+
+  const handleCloseLockedTooltip = useCallback(() => {
+    setLockedNode(null);
+  }, []);
+
+  const handleFindQuest = useCallback(() => {
+    setLockedNode(null);
+    onFindQuest?.();
+  }, [onFindQuest]);
 
   const map = useMemo(() => (data ? buildLevelMap(data.level.level) : []), [data]);
 
@@ -115,13 +136,16 @@ export default function LevelDetailScreen({ onBack }: LevelDetailScreenProps) {
             <Text style={styles.cardLabel}>Level map</Text>
             {map.map((node) => {
               const ns = nodeStyles(node, styles);
+              const locked = node.status === 'locked';
+              const label = `Level ${node.level}, ${node.name}. ${nodeMeta(node)}${locked ? '. Tap for details' : ''}`;
               return (
-                <View
+                <Pressable
                   key={node.level}
-                  style={styles.mapItem}
-                  accessible
-                  accessibilityRole="text"
-                  accessibilityLabel={`Level ${node.level}, ${node.name}. ${nodeMeta(node)}`}
+                  onPress={locked ? () => setLockedNode(node) : undefined}
+                  disabled={!locked}
+                  style={({ pressed }) => [styles.mapItem, whenPressed(pressed && locked, styles.mapItemPressed)]}
+                  accessibilityRole={locked ? 'button' : 'text'}
+                  accessibilityLabel={label}
                 >
                   <View style={[styles.node, ns.box]}>
                     <Text style={[styles.nodeText, ns.text]}>{node.level}</Text>
@@ -135,12 +159,77 @@ export default function LevelDetailScreen({ onBack }: LevelDetailScreenProps) {
                   <Text style={styles.mapMeta}>
                     {node.status === 'done' ? '✓' : node.status === 'locked' ? '🔒' : ''}
                   </Text>
-                </View>
+                </Pressable>
               );
             })}
           </View>
         </ScrollView>
       )}
+
+      {lockedNode && data ? (
+        <Modal
+          visible
+          transparent
+          animationType="slide"
+          onRequestClose={handleCloseLockedTooltip}
+          accessibilityViewIsModal
+        >
+          <View style={styles.tooltipOverlay}>
+            <Pressable
+              testID="level-tooltip-backdrop"
+              style={styles.tooltipBackdrop}
+              onPress={handleCloseLockedTooltip}
+              importantForAccessibility="no"
+              accessibilityElementsHidden
+            />
+            <View style={styles.tooltipSheet} accessibilityViewIsModal>
+              <View style={styles.tooltipHandle} importantForAccessibility="no" />
+              <View style={styles.tooltipLockBadge} importantForAccessibility="no">
+                <Text style={styles.tooltipLockGlyph}>{'🔒'}</Text>
+              </View>
+              <Text accessibilityRole="header" style={styles.tooltipTitle}>
+                {`Level ${lockedNode.level} · ${lockedNode.name}`}
+              </Text>
+              <Text style={styles.tooltipBlurb}>{levelBlurb(lockedNode.level)}</Text>
+
+              <View style={styles.tooltipStatRow}>
+                <View style={styles.tooltipStat}>
+                  <Text style={styles.tooltipStatValue}>{formatXp(lockedNode.xp)}</Text>
+                  <Text style={styles.tooltipStatLabel}>XP required</Text>
+                </View>
+                <View style={styles.tooltipStat}>
+                  <Text style={styles.tooltipStatValue}>
+                    {formatXp(xpRemainingToUnlock(lockedNode, data.level.totalXp))}
+                  </Text>
+                  <Text style={styles.tooltipStatLabel}>XP to go</Text>
+                </View>
+              </View>
+
+              <Text style={styles.tooltipRequirement}>
+                Complete and approve quests to earn XP — every quest, category, and companion is
+                always free.
+              </Text>
+
+              <Pressable
+                onPress={handleFindQuest}
+                accessibilityRole="button"
+                accessibilityLabel="Find a quest to earn XP"
+                style={({ pressed }) => [styles.tooltipCta, whenPressed(pressed, styles.tooltipCtaPressed)]}
+              >
+                <Text style={styles.tooltipCtaText}>Find a quest</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleCloseLockedTooltip}
+                accessibilityRole="button"
+                accessibilityLabel="Got it, close"
+                style={({ pressed }) => [styles.tooltipDismiss, whenPressed(pressed, styles.tooltipDismissPressed)]}
+              >
+                <Text style={styles.tooltipDismissText}>Got it</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
     </SafeAreaView>
   );
 }
