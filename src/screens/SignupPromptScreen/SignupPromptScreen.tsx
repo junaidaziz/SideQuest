@@ -15,11 +15,9 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '../../store/authStore';
-import {
-  Colors,
-  Duration,
-} from '../../constants/design';
-import { styles } from './SignupPromptScreen.styles';
+import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { CompassMotion } from '../../constants/compassDesign';
+import { makeStyles } from './SignupPromptScreen.styles';
 
 /**
  * The guest-to-account gate. Per `sidequest.md` this appears *contextually* at
@@ -90,6 +88,8 @@ export default function SignupPromptScreen({
 }: SignupPromptScreenProps) {
   const signup = useAuthStore((s) => s.signup);
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+  const { colors } = useCompassTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -108,7 +108,7 @@ export default function SignupPromptScreen({
   useEffect(() => {
     Animated.timing(anim, {
       toValue: 1,
-      duration: Duration.screen,
+      duration: CompassMotion.durationExpressive,
       useNativeDriver: true,
     }).start();
   }, [anim]);
@@ -327,7 +327,7 @@ export default function SignupPromptScreen({
               onChangeText={handleEmailChange}
               editable={!locked}
               placeholder="Email address"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textTertiary}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
@@ -340,7 +340,7 @@ export default function SignupPromptScreen({
               onChangeText={handlePasswordChange}
               editable={!locked}
               placeholder="Password"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textTertiary}
               secureTextEntry
               autoCapitalize="none"
               autoComplete="password-new"
@@ -353,7 +353,7 @@ export default function SignupPromptScreen({
               onChangeText={setDisplayName}
               editable={!locked}
               placeholder="Display name (optional)"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textTertiary}
               autoComplete="name"
               textContentType="name"
               accessibilityLabel="Display name, optional"
