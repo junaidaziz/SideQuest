@@ -174,8 +174,8 @@ export default function LeaderboardsScreen({ onBack, onOpenWeekPicker, displayNa
                       : `${row.name}, rank ${rank}, ${row.xp.toLocaleString()} XP, sample`
                   }
                 >
-                  <View style={[styles.rank, rank <= 3 && styles.rankTop]}>
-                    <Text style={styles.rankText}>{rank}</Text>
+                  <View style={[styles.rank, rank <= 3 && styles.rankTop, row.isMe && styles.rankMe]}>
+                    <Text style={[styles.rankText, row.isMe && styles.rankTextMe]}>{rank}</Text>
                   </View>
                   <View style={styles.avatar}>
                     <Text style={styles.avatarText}>{row.initial}</Text>
