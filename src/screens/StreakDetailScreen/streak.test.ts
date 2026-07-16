@@ -1,4 +1,4 @@
-import { buildDayStrip, streakHeadline } from './streak';
+import { buildDayStrip, chunkIntoWeeks, streakHeadline } from './streak';
 
 describe('streak helpers', () => {
   describe('buildDayStrip', () => {
@@ -32,6 +32,28 @@ describe('streak helpers', () => {
     it('formats the compound label', () => {
       expect(streakHeadline(0)).toBe('0-day streak');
       expect(streakHeadline(12)).toBe('12-day streak');
+    });
+  });
+
+  describe('chunkIntoWeeks', () => {
+    it('splits a 14-day strip into two 7-day rows', () => {
+      const strip = buildDayStrip(3, 14);
+      const rows = chunkIntoWeeks(strip);
+      expect(rows).toHaveLength(2);
+      expect(rows[0]).toHaveLength(7);
+      expect(rows[1]).toHaveLength(7);
+    });
+
+    it('keeps a short final row instead of padding it', () => {
+      const strip = buildDayStrip(0, 10);
+      const rows = chunkIntoWeeks(strip);
+      expect(rows).toHaveLength(2);
+      expect(rows[0]).toHaveLength(7);
+      expect(rows[1]).toHaveLength(3);
+    });
+
+    it('returns an empty array for an empty strip', () => {
+      expect(chunkIntoWeeks([])).toEqual([]);
     });
   });
 });
