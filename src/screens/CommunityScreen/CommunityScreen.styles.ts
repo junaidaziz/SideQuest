@@ -31,7 +31,7 @@ export function makeStyles(c: CompassPalette) {
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -82,7 +82,7 @@ export function makeStyles(c: CompassPalette) {
     curateHero: { borderRadius: CompassRadius.hero, padding: CompassSpacing.s6 },
     curateEyebrow: { fontSize: CompassType.caption.size, fontWeight: '700', color: '#FFFFFF', opacity: 0.9 },
     curateTitle: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontSize: 24,
       fontWeight: '800',
       color: '#FFFFFF',
