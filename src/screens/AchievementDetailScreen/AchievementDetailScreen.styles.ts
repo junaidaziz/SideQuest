@@ -26,7 +26,7 @@ export function makeStyles(c: CompassPalette) {
     bigBadge: { width: 128, height: 128, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: CompassSpacing.s4 },
     bigBadgeLocked: { opacity: 0.5 },
     bigBadgeGlyph: { fontSize: 56 },
-    name: { fontFamily: 'Syne_800ExtraBold', fontSize: CompassType.h1.size, fontWeight: '800', color: c.textPrimary, textAlign: 'center' },
+    name: { fontFamily: 'PlusJakartaSans_800ExtraBold', fontSize: CompassType.h1.size, fontWeight: '800', color: c.textPrimary, textAlign: 'center' },
     desc: { fontSize: CompassType.bodyM.size, lineHeight: CompassType.bodyM.lineHeight, color: c.textSecondary, textAlign: 'center', marginTop: 6, maxWidth: 320 },
     statusRow: { flexDirection: 'row', alignItems: 'center', gap: CompassSpacing.s2, marginTop: CompassSpacing.s3 },
     statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: CompassRadius.pill },
@@ -65,7 +65,7 @@ export function makeStyles(c: CompassPalette) {
     sectionLabel: { fontSize: CompassType.labelM.size, fontWeight: '600', color: c.textSecondary, marginBottom: CompassSpacing.s3 },
 
     stateArea: { flex: 1, paddingHorizontal: CompassSpacing.gutterPhone, justifyContent: 'center' },
-    stateHeading: { fontFamily: 'Syne_700Bold', fontSize: CompassType.h3.size, fontWeight: '700', color: c.textPrimary, textAlign: 'center', marginBottom: CompassSpacing.s2 },
+    stateHeading: { fontFamily: 'PlusJakartaSans_700Bold', fontSize: CompassType.h3.size, fontWeight: '700', color: c.textPrimary, textAlign: 'center', marginBottom: CompassSpacing.s2 },
     stateBody: { fontSize: CompassType.bodyM.size, color: c.textSecondary, textAlign: 'center', marginBottom: CompassSpacing.s5 },
     retryBtn: { alignSelf: 'center', height: 48, paddingHorizontal: CompassSpacing.s6, borderRadius: CompassRadius.btn, backgroundColor: c.actionPrimary, alignItems: 'center', justifyContent: 'center' },
     retryBtnPressed: { backgroundColor: c.actionPressed },
