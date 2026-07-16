@@ -30,6 +30,10 @@ export default function TodayTab() {
     router.push('/verification/pending');
   }, []);
 
+  const handleOpenNotifications = useCallback(() => {
+    router.push('/notifications');
+  }, []);
+
   return (
     <TodayScreen
       displayName={displayName}
@@ -37,11 +41,7 @@ export default function TodayTab() {
       onOpenExplore={handleOpenExplore}
       onOpenProfile={handleOpenProfile}
       onOpenPendingProof={handleOpenPendingProof}
-      // onOpenNotifications intentionally left unwired: there is no
-      // notification inbox/feed screen in this migration (only a notification
-      // *preferences* screen under Settings, which the bell should not open).
-      // Left as a documented no-op, matching the app/home.tsx onOpenPack
-      // precedent, rather than routed somewhere unrelated.
+      onOpenNotifications={handleOpenNotifications}
     />
   );
 }
