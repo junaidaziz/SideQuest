@@ -23,7 +23,7 @@ export function makeStyles(c: CompassPalette) {
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -48,7 +48,7 @@ export function makeStyles(c: CompassPalette) {
     hexGlyph: { fontSize: 30 },
     heroBody: { flex: 1 },
     heroTitle: {
-      fontFamily: 'Syne_700Bold',
+      fontFamily: 'PlusJakartaSans_700Bold',
       fontSize: CompassType.h2.size,
       fontWeight: '700',
       color: c.textPrimary,
@@ -173,7 +173,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s4,
     },
     stateHeading: {
-      fontFamily: 'Syne_700Bold',
+      fontFamily: 'PlusJakartaSans_700Bold',
       fontSize: CompassType.h3.size,
       fontWeight: '700',
       color: c.textPrimary,
