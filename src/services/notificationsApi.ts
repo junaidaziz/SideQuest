@@ -1,8 +1,11 @@
 import { apiRequest } from './apiClient';
 import type {
+  DeregisterPushTokenResult,
   ListNotificationsQuery,
   MarkReadResult,
   PaginatedNotifications,
+  PushTokenResult,
+  RegisterPushTokenRequest,
   UnreadCount,
 } from '../types/api';
 
@@ -40,4 +43,21 @@ export function markNotificationRead(id: string): Promise<void> {
 /** Marks every unread notification read in one call, e.g. a "Mark all read" CTA. */
 export function markAllNotificationsRead(): Promise<MarkReadResult> {
   return apiRequest<MarkReadResult>('/notifications/read-all', { method: 'POST' });
+}
+
+/** Registers (or upserts) this device's push token against the current session. */
+export function registerPushToken(body: RegisterPushTokenRequest): Promise<PushTokenResult> {
+  return apiRequest<PushTokenResult>('/notifications/push-tokens', {
+    method: 'POST',
+    body,
+  });
+}
+
+/** Removes a push token, e.g. on logout so a shared device stops receiving
+ * the previous session's notifications. */
+export function deregisterPushToken(token: string): Promise<DeregisterPushTokenResult> {
+  return apiRequest<DeregisterPushTokenResult>(
+    `/notifications/push-tokens/${encodeURIComponent(token)}`,
+    { method: 'DELETE' },
+  );
 }

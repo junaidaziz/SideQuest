@@ -482,3 +482,29 @@ export interface UnreadCount {
 export interface MarkReadResult {
   updated: number;
 }
+
+export type PushPlatform = 'ios' | 'android';
+
+/** Body for `POST /notifications/push-tokens`. */
+export interface RegisterPushTokenRequest {
+  /** An Expo push token, e.g. `ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]`. */
+  token: string;
+  platform: PushPlatform;
+  deviceId?: string;
+}
+
+/** Registered device push token, echoed back on register. */
+export interface PushTokenResult {
+  id: string;
+  token: string;
+  platform: PushPlatform;
+  deviceId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Result of deregistering a push token (e.g. on logout). */
+export interface DeregisterPushTokenResult {
+  success: boolean;
+  removed: number;
+}

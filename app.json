@@ -10,12 +10,15 @@
     "ios": {
       "bundleIdentifier": "com.sidequest.app",
       "supportsTablet": true,
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
       "package": "com.sidequest.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -68,8 +71,15 @@
                 "modular_headers": true
               }
             ],
-            "usePrecompiledModules": false
+            "usePrecompiledModules": false,
+            "useFrameworks": "static"
           }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#5B3DE8"
         }
       ],
       [
@@ -80,7 +90,10 @@
         }
       ],
       "expo-font",
-      "expo-sqlite"
+      "expo-sqlite",
+      "@react-native-firebase/app",
+      "@react-native-firebase/analytics",
+      "@react-native-firebase/crashlytics"
     ],
     "extra": {
       "router": {},

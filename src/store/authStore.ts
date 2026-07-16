@@ -14,6 +14,7 @@ import {
   signup,
 } from '../services/authApi';
 import { clearPersistedQueryCache } from '../services/queryPersistence';
+import { unregisterCurrentDevice } from '../services/pushNotifications';
 import type { LoginRequest, SignupRequest, UserProfile } from '../types/api';
 
 interface AuthState {
@@ -121,6 +122,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       // Local logout proceeds regardless — see comment above.
     }
+    // Deregisters this device's push token while the access token is still
+    // valid (unregisterCurrentDevice is itself best-effort, but must run
+    // before clearTokens() below or the DELETE call would go out
+    // unauthenticated).
+    await unregisterCurrentDevice();
     await clearTokens();
     // Found missing by independent review: without this, the persisted query
     // cache (Home/Challenges/Referrals data) survived a logout in AsyncStorage

@@ -1,12 +1,14 @@
 import { useCallback, useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack, useNavigationContainerRef } from 'expo-router';
+import { Stack, router, useNavigationContainerRef } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import * as Sentry from '@sentry/react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { useFonts } from 'expo-font';
+import analytics from '@react-native-firebase/analytics';
+import crashlytics from '@react-native-firebase/crashlytics';
 import {
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
@@ -22,6 +24,7 @@ import { useAuthStore } from '../src/store/authStore';
 import { useThemeStore } from '../src/store/themeStore';
 import { buildPersistOptions, queryClient } from '../src/services/queryPersistence';
 import { OfflineChrome } from '../src/components/offline';
+import { registerForPushNotifications, subscribeToNotificationTaps } from '../src/services/pushNotifications';
 
 // Keeps the native splash screen up until fonts finish loading below, so the
 // app never flashes system-font text before swapping to Syne/Inter.
@@ -50,6 +53,19 @@ Sentry.init({
   tracesSampleRate: 0.2,
   integrations: [navigationIntegration],
 });
+
+/**
+ * Native-crash coverage via Crashlytics, additive to Sentry above (which
+ * already covers manual/JS error reporting) — not a replacement. Firebase's
+ * config files (`google-services.json`/`GoogleService-Info.plist`) already
+ * gate this to a no-op in any build that doesn't bundle them, so no extra
+ * enabled-flag guard is needed here the way Sentry's DSN check is.
+ */
+crashlytics()
+  .setCrashlyticsCollectionEnabled(true)
+  .catch(() => {
+    // Best-effort — a Crashlytics setup failure must never block app launch.
+  });
 
 /**
  * Configure Google Sign-In once at module load. Unlike Sentry.init() above
@@ -90,6 +106,7 @@ const stripePublishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '
 
 function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);
+  const authStatus = useAuthStore((state) => state.status);
   const hydrateTheme = useThemeStore((state) => state.hydrate);
   const navigationRef = useNavigationContainerRef();
   const [fontsLoaded, fontError] = useFonts({
@@ -116,6 +133,39 @@ function RootLayout() {
   useEffect(() => {
     navigationIntegration.registerNavigationContainer(navigationRef);
   }, [navigationRef]);
+
+  useEffect(() => {
+    const unsubscribe = navigationRef.addListener('state', () => {
+      // getCurrentRoute()'s return type collapses to `Route<never>` here since
+      // this project doesn't globally augment `ReactNavigation.RootParamList`
+      // (expo-router's typed routes cover `<Link>`/`router.push` call sites,
+      // not this ref) — narrowed to the one field actually used.
+      const name = (navigationRef.current?.getCurrentRoute() as { name: string } | undefined)?.name;
+      if (!name) return;
+      analytics()
+        .logScreenView({ screen_name: name, screen_class: name })
+        .catch(() => {
+          // Best-effort — analytics must never affect navigation.
+        });
+    });
+    return unsubscribe;
+  }, [navigationRef]);
+
+  useEffect(() => {
+    // Fires after every transition into a signed-in-or-guest ready session
+    // (hydrate, login, signup, Google sign-in all land on 'ready') — safe to
+    // call repeatedly since the backend endpoint upserts by token.
+    if (authStatus !== 'ready') return;
+    registerForPushNotifications();
+  }, [authStatus]);
+
+  useEffect(() => {
+    // A tap on a delivered push (app backgrounded or killed) opens the
+    // existing in-app Notifications list.
+    return subscribeToNotificationTaps(() => {
+      router.push('/notifications');
+    });
+  }, []);
 
   // The native splash (kept up by preventAutoHideAsync() above) covers the
   // screen until this fires, so hiding it here — not sooner — is what stops

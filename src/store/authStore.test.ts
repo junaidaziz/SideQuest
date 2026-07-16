@@ -10,10 +10,12 @@ import {
   signup,
 } from '../services/authApi';
 import { clearPersistedQueryCache } from '../services/queryPersistence';
+import { unregisterCurrentDevice } from '../services/pushNotifications';
 
 jest.mock('../services/tokenStorage');
 jest.mock('../services/authApi');
 jest.mock('../services/queryPersistence');
+jest.mock('../services/pushNotifications');
 
 // Never let the real native module load under Jest. `isSuccessResponse`
 // mirrors the library's actual discriminant (response.type === 'success').
@@ -247,6 +249,10 @@ describe('authStore', () => {
       // next user on a shared device would have their cold start rehydrate
       // the previous user's data from AsyncStorage.
       expect(clearPersistedQueryCache).toHaveBeenCalled();
+      // Deregisters this device's push token while the access token is
+      // still valid, so a shared device stops receiving the previous
+      // session's notifications once it's handed back to a fresh guest.
+      expect(unregisterCurrentDevice).toHaveBeenCalled();
       // Ends in a fully 'ready' state with a fresh guest — not stuck idle —
       // since nothing besides the root layout's one-time mount effect would
       // otherwise ever re-trigger hydrate() after this.

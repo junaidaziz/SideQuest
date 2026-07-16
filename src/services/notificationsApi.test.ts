@@ -1,11 +1,20 @@
 import { apiRequest } from './apiClient';
 import {
+  deregisterPushToken,
   getUnreadCount,
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  registerPushToken,
 } from './notificationsApi';
-import type { AppNotification, MarkReadResult, PaginatedNotifications, UnreadCount } from '../types/api';
+import type {
+  AppNotification,
+  DeregisterPushTokenResult,
+  MarkReadResult,
+  PaginatedNotifications,
+  PushTokenResult,
+  UnreadCount,
+} from '../types/api';
 
 jest.mock('./apiClient');
 
@@ -84,6 +93,39 @@ describe('notificationsApi', () => {
       mockApiRequest.mockResolvedValue(result);
       const outcome = await markAllNotificationsRead();
       expect(mockApiRequest).toHaveBeenCalledWith('/notifications/read-all', { method: 'POST' });
+      expect(outcome).toBe(result);
+    });
+  });
+
+  describe('registerPushToken', () => {
+    it('POSTs /notifications/push-tokens with the token body', async () => {
+      const result: PushTokenResult = {
+        id: 'tok-1',
+        token: 'ExponentPushToken[abc123]',
+        platform: 'ios',
+        deviceId: null,
+        createdAt: '2026-07-16T10:00:00.000Z',
+        updatedAt: '2026-07-16T10:00:00.000Z',
+      };
+      mockApiRequest.mockResolvedValue(result);
+      const outcome = await registerPushToken({ token: 'ExponentPushToken[abc123]', platform: 'ios' });
+      expect(mockApiRequest).toHaveBeenCalledWith('/notifications/push-tokens', {
+        method: 'POST',
+        body: { token: 'ExponentPushToken[abc123]', platform: 'ios' },
+      });
+      expect(outcome).toBe(result);
+    });
+  });
+
+  describe('deregisterPushToken', () => {
+    it('DELETEs /notifications/push-tokens/:token, URL-encoded', async () => {
+      const result: DeregisterPushTokenResult = { success: true, removed: 1 };
+      mockApiRequest.mockResolvedValue(result);
+      const outcome = await deregisterPushToken('ExponentPushToken[abc/123]');
+      expect(mockApiRequest).toHaveBeenCalledWith(
+        '/notifications/push-tokens/ExponentPushToken%5Babc%2F123%5D',
+        { method: 'DELETE' },
+      );
       expect(outcome).toBe(result);
     });
   });
