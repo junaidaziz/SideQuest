@@ -4,6 +4,7 @@ import type {
   CreateTaskRequest,
   InviteResponse,
   ListTasksQuery,
+  PaginatedTasks,
   ReviewSubmissionRequest,
   Task,
   TaskDetail,
@@ -40,10 +41,15 @@ export function createTask(body: CreateTaskRequest, idempotencyKey?: string): Pr
 }
 
 /** Lists tasks where the caller is creator or assignee, optionally filtered by
- * status and/or role. */
-export function listTasks(query: ListTasksQuery = {}): Promise<Task[]> {
-  const qs = buildQuery({ status: query.status, role: query.role });
-  return apiRequest<Task[]>(`/tasks${qs}`);
+ * status and/or role. Paginated — newest-created-first. */
+export function listTasks(query: ListTasksQuery = {}): Promise<PaginatedTasks> {
+  const qs = buildQuery({
+    status: query.status,
+    role: query.role,
+    limit: query.limit?.toString(),
+    offset: query.offset?.toString(),
+  });
+  return apiRequest<PaginatedTasks>(`/tasks${qs}`);
 }
 
 /** Dashboard-style task counts for the current user. */

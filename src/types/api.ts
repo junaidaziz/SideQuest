@@ -400,10 +400,20 @@ export interface ReviewSubmissionRequest {
   rejectionReason?: string;
 }
 
-/** Query filters for `GET /tasks`. */
+/** Query filters + pagination for `GET /tasks`. */
 export interface ListTasksQuery {
   status?: UserTaskStatus;
   role?: TaskRoleFilter;
+  limit?: number;
+  offset?: number;
+}
+
+/** Paginated, newest-created-first envelope for `GET /tasks`. */
+export interface PaginatedTasks {
+  items: Task[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 /* ────────────────────────────────────────────────────────────────────────

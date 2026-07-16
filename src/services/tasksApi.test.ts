@@ -10,7 +10,7 @@ import {
   reviewTaskSubmission,
   submitTaskEvidence,
 } from './tasksApi';
-import type { CreateTaskRequest, Task, TaskDetail } from '../types/api';
+import type { CreateTaskRequest, PaginatedTasks, Task, TaskDetail } from '../types/api';
 
 jest.mock('./apiClient');
 jest.mock('expo-file-system');
@@ -58,23 +58,31 @@ describe('tasksApi', () => {
   });
 
   describe('listTasks', () => {
+    const PAGE: PaginatedTasks = { items: [TASK], total: 1, limit: 20, offset: 0 };
+
     it('lists with no query when called empty', async () => {
-      mockApiRequest.mockResolvedValue([TASK]);
+      mockApiRequest.mockResolvedValue(PAGE);
       const result = await listTasks();
       expect(mockApiRequest).toHaveBeenCalledWith('/tasks');
-      expect(result).toEqual([TASK]);
+      expect(result).toBe(PAGE);
     });
 
     it('appends status and role query params', async () => {
-      mockApiRequest.mockResolvedValue([TASK]);
+      mockApiRequest.mockResolvedValue(PAGE);
       await listTasks({ status: 'Accepted', role: 'assignee' });
       expect(mockApiRequest).toHaveBeenCalledWith('/tasks?status=Accepted&role=assignee');
     });
 
     it('omits an undefined filter', async () => {
-      mockApiRequest.mockResolvedValue([TASK]);
+      mockApiRequest.mockResolvedValue(PAGE);
       await listTasks({ status: 'Invited' });
       expect(mockApiRequest).toHaveBeenCalledWith('/tasks?status=Invited');
+    });
+
+    it('appends limit and offset params', async () => {
+      mockApiRequest.mockResolvedValue(PAGE);
+      await listTasks({ limit: 5, offset: 10 });
+      expect(mockApiRequest).toHaveBeenCalledWith('/tasks?limit=5&offset=10');
     });
   });
 

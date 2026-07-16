@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import type { Task } from '../../types/api';
+import type { PaginatedTasks, Task } from '../../types/api';
 import { listTasks } from '../../services/tasksApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
@@ -105,7 +105,10 @@ export default function ChallengeFeedScreen({
   const { colors } = useCompassTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [tab, setTab] = useState<FeedBucket>('active');
-  const query = useQuery<Task[]>({ queryKey: ['tasks'], queryFn: () => listTasks() });
+  const query = useQuery<PaginatedTasks>({
+    queryKey: ['tasks'],
+    queryFn: () => listTasks({ limit: 100 }),
+  });
   const { data, isLoading, isError } = query;
 
   const handleRetry = useCallback(() => {
@@ -114,7 +117,7 @@ export default function ChallengeFeedScreen({
 
   const handleOpen = useCallback((id: string) => onOpenChallenge?.(id), [onOpenChallenge]);
 
-  const groups = useMemo(() => bucketTasks(data ?? []), [data]);
+  const groups = useMemo(() => bucketTasks(data?.items ?? []), [data]);
   const visible = groups[tab];
 
   return (

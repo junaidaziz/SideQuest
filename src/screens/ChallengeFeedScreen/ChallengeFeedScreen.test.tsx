@@ -23,9 +23,14 @@ import {
   statusLabel,
 } from './challengeUtils';
 import { listTasks } from '../../services/tasksApi';
-import type { Task } from '../../types/api';
+import type { PaginatedTasks, Task } from '../../types/api';
 
 const mockListTasks = listTasks as jest.MockedFunction<typeof listTasks>;
+
+/** Wraps a plain task array in the paginated envelope the real API returns. */
+function page(items: Task[]): PaginatedTasks {
+  return { items, total: items.length, limit: 100, offset: 0 };
+}
 
 function makeTask(overrides: Partial<Task>): Task {
   return {
@@ -73,7 +78,7 @@ describe('ChallengeFeedScreen', () => {
   afterEach(cleanup);
   beforeEach(() => {
     jest.clearAllMocks();
-    mockListTasks.mockResolvedValue(TASKS);
+    mockListTasks.mockResolvedValue(page(TASKS));
   });
 
   describe('pure helpers', () => {
@@ -154,17 +159,17 @@ describe('ChallengeFeedScreen', () => {
       mockListTasks.mockRejectedValue(new Error('offline'));
       await renderScreen();
       await waitFor(() => expect(screen.getByText("Couldn't load challenges")).toBeTruthy());
-      mockListTasks.mockResolvedValue(TASKS);
+      mockListTasks.mockResolvedValue(page(TASKS));
       fireEvent.press(screen.getByLabelText('Try again'));
       await waitFor(() => expect(screen.getByLabelText(/Peak Seeker\./)).toBeTruthy());
     });
 
     it('renders deadline, and cards missing description/reward, without crashing', async () => {
       const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      mockListTasks.mockResolvedValue([
+      mockListTasks.mockResolvedValue(page([
         makeTask({ id: 'soon', title: 'Due Soon', status: 'Accepted', dueAt: future }),
         makeTask({ id: 'bare', title: 'Bare Task', status: 'Accepted', description: null, rewardXp: null }),
-      ]);
+      ]));
       await renderScreen();
       // Deadline text is derived from the real dueAt.
       await waitFor(() => expect(screen.getByLabelText(/Due Soon\..*1 day left/)).toBeTruthy());
@@ -173,7 +178,7 @@ describe('ChallengeFeedScreen', () => {
     });
 
     it('shows an empty state (with a working CTA) when a tab has no challenges', async () => {
-      mockListTasks.mockResolvedValue([makeTask({ id: 'only', status: 'Accepted' })]);
+      mockListTasks.mockResolvedValue(page([makeTask({ id: 'only', status: 'Accepted' })]));
       const { onCreateChallenge } = await renderScreen();
       await waitFor(() => expect(screen.getByLabelText(/Incoming, 0 challenges/)).toBeTruthy());
       fireEvent.press(screen.getByLabelText(/Incoming, 0 challenges/));
