@@ -22,7 +22,7 @@ export function makeStyles(c: CompassPalette) {
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -49,7 +49,7 @@ export function makeStyles(c: CompassPalette) {
       alignItems: 'center',
     },
     metricNum: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'Inter_800ExtraBold',
       fontSize: 24,
       fontWeight: '800',
       color: c.textPrimary,
@@ -70,7 +70,7 @@ export function makeStyles(c: CompassPalette) {
     rowMuted: { fontSize: CompassType.caption.size, color: c.textSecondary },
 
     rateNum: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'Inter_800ExtraBold',
       fontSize: 32,
       fontWeight: '800',
       color: c.textPrimary,
@@ -97,7 +97,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s4,
     },
     stateHeading: {
-      fontFamily: 'Syne_700Bold',
+      fontFamily: 'PlusJakartaSans_700Bold',
       fontSize: CompassType.h3.size,
       fontWeight: '700',
       color: c.textPrimary,
