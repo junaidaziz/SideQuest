@@ -102,6 +102,11 @@ export default function ProofSubmissionScreenV2({
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       onSubmitted?.(result);
     },
+    onError: (error) => {
+      // Logged so a real failure is diagnosable — the render below only
+      // ever shows a generic connectivity message regardless of cause.
+      console.error('[ProofSubmissionScreenV2] proof submission failed:', error);
+    },
   });
 
   const handleAddPhoto = useCallback(async () => {

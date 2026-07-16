@@ -78,7 +78,13 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
       updateProfile(updated);
       setAvatarError(null);
     },
-    onError: () => setAvatarError("Couldn't update your photo. Please try again."),
+    onError: (error) => {
+      // Logged (not just swallowed) so a real failure is diagnosable from
+      // Metro/device logs instead of only ever showing the generic
+      // user-facing message below.
+      console.error('[EditProfileScreen] avatar upload failed:', error);
+      setAvatarError("Couldn't update your photo. Please try again.");
+    },
   });
 
   const removeAvatarMutation = useMutation({
@@ -87,7 +93,10 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
       updateProfile(updated);
       setAvatarError(null);
     },
-    onError: () => setAvatarError("Couldn't remove your photo. Please try again."),
+    onError: (error) => {
+      console.error('[EditProfileScreen] avatar remove failed:', error);
+      setAvatarError("Couldn't remove your photo. Please try again.");
+    },
   });
 
   const saving = nameMutation.isPending;
