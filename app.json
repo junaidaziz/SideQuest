@@ -72,7 +72,8 @@
               }
             ],
             "usePrecompiledModules": false,
-            "useFrameworks": "static"
+            "useFrameworks": "static",
+            "forceStaticLinking": ["RNFBApp", "RNFBAnalytics", "RNFBCrashlytics"]
           }
         }
       ],
