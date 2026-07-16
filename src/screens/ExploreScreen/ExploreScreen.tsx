@@ -117,15 +117,19 @@ function PressableScale({
     // eslint-disable-next-line react-hooks/immutability -- reanimated shared values are intentionally mutable
     scale.value = withSpring(1, { damping: 18, stiffness: 320 });
   }, [scale]);
+  // `style` (grid sizing/background) lives on this outer Animated.View, since
+  // it's the actual flex-item inside the caller's grid/row — putting it on
+  // the inner Pressable instead left this wrapper unsized, which breaks any
+  // percentage-width caller (see ModeTile).
   return (
-    <Animated.View style={animStyle}>
+    <Animated.View style={[style, animStyle]}>
       <Pressable
         onPress={onPress}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
-        style={style}
+        style={{ flex: 1 }}
       >
         {children}
       </Pressable>
@@ -140,7 +144,7 @@ function ModeTile({ mode, styles, onPress }: { mode: ExploreMode; styles: Styles
       onPress={() => onPress?.(mode.id)}
       style={styles.modeTile}
     >
-      <LinearGradient colors={mode.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.modeTile}>
+      <LinearGradient colors={mode.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.modeTileFill}>
         <Text style={styles.modeIcon} accessibilityElementsHidden importantForAccessibility="no">
           {mode.icon}
         </Text>
