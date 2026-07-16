@@ -23,7 +23,7 @@ export function makeStyles(c: CompassPalette) {
       paddingBottom: CompassSpacing.s3,
     },
     title: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontSize: CompassType.h2.size,
       lineHeight: CompassType.h2.lineHeight,
       fontWeight: CompassType.h2.weight,
@@ -40,6 +40,15 @@ export function makeStyles(c: CompassPalette) {
     },
     iconBtnPressed: { backgroundColor: c.borderDefault },
     iconGlyph: { fontSize: 20 },
+    unreadDot: {
+      position: 'absolute',
+      top: 11,
+      right: 11,
+      width: 9,
+      height: 9,
+      borderRadius: CompassRadius.pill,
+      backgroundColor: c.socialCoral,
+    },
 
     scroll: { flex: 1 },
     scrollContent: {
@@ -51,7 +60,7 @@ export function makeStyles(c: CompassPalette) {
     // ── State areas ──
     stateArea: { flex: 1, paddingHorizontal: CompassSpacing.gutterPhone, justifyContent: 'center' },
     stateHeading: {
-      fontFamily: 'Syne_700Bold',
+      fontFamily: 'PlusJakartaSans_700Bold',
       fontSize: CompassType.h3.size,
       fontWeight: '700',
       color: c.textPrimary,
@@ -94,7 +103,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     shieldText: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'Inter_800ExtraBold',
       fontWeight: '800',
       fontSize: 30,
       letterSpacing: -0.45,
@@ -102,7 +111,7 @@ export function makeStyles(c: CompassPalette) {
     },
     lvlLabel: { fontSize: 13, color: c.actionPrimary, fontWeight: '700' },
     lvlName: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontWeight: '800',
       fontSize: CompassType.h2.size,
       letterSpacing: -0.33,
@@ -147,7 +156,7 @@ export function makeStyles(c: CompassPalette) {
     tileIcon: { fontSize: 18 },
     tileCaption: { fontSize: CompassType.caption.size, color: c.textSecondary, fontWeight: '500' },
     tileBig: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'Inter_800ExtraBold',
       fontWeight: '800',
       fontSize: 24,
       letterSpacing: -0.36,
@@ -160,7 +169,7 @@ export function makeStyles(c: CompassPalette) {
     ringRow: { flexDirection: 'row', alignItems: 'center', gap: CompassSpacing.s4, marginTop: CompassSpacing.s3 },
     ringMeta: { flex: 1 },
     ringValue: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'Inter_800ExtraBold',
       fontWeight: '800',
       fontSize: 24,
       color: c.textPrimary,
@@ -213,7 +222,7 @@ export function makeStyles(c: CompassPalette) {
     breakdownName: { fontSize: CompassType.labelM.size, fontWeight: '600', color: c.textPrimary },
     breakdownSub: { fontSize: CompassType.caption.size, color: c.textSecondary, marginTop: 1 },
     breakdownValue: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'Inter_800ExtraBold',
       fontWeight: '800',
       fontSize: 18,
       color: c.textPrimary,
