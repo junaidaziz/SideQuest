@@ -6,7 +6,7 @@ import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import StreakFlame from './StreakFlame';
-import { buildDayStrip, streakHeadline } from './streak';
+import { buildDayStrip, chunkIntoWeeks, streakHeadline } from './streak';
 import { makeStyles, type StreakDetailStyles } from './StreakDetailScreen.styles';
 
 export interface StreakDetailScreenProps {
@@ -27,7 +27,7 @@ export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): Styl
 
 function Skeleton({ styles }: { styles: StreakDetailStyles }) {
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop: 8, gap: 20 }} accessibilityRole="progressbar" accessibilityLabel="Loading streak">
+    <View style={styles.skeletonWrap} accessibilityRole="progressbar" accessibilityLabel="Loading streak">
       <View style={[styles.skel, styles.skelHero]} />
       <View style={[styles.skel, styles.skelCard]} />
     </View>
@@ -45,6 +45,7 @@ export default function StreakDetailScreen({ onBack, onFindQuest }: StreakDetail
   }, [query]);
 
   const strip = useMemo(() => (data ? buildDayStrip(data.streak.currentStreak) : []), [data]);
+  const weeks = useMemo(() => chunkIntoWeeks(strip), [strip]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -121,14 +122,18 @@ export default function StreakDetailScreen({ onBack, onFindQuest }: StreakDetail
               accessibilityRole="image"
               accessibilityLabel={`Activity for the last 14 days. ${Math.min(data.streak.currentStreak, 14)} of the most recent days completed.`}
             >
-              {strip.map((d) => (
-                <View
-                  key={d.index}
-                  style={[styles.dayCell, d.done && styles.dayCellDone, d.isToday && styles.dayCellToday]}
-                >
-                  <Text style={[styles.dayGlyph, d.done && styles.dayGlyphDone]}>
-                    {d.done ? '✓' : ''}
-                  </Text>
+              {weeks.map((week, rowIndex) => (
+                <View key={rowIndex} style={styles.stripRow}>
+                  {week.map((d) => (
+                    <View
+                      key={d.index}
+                      style={[styles.dayCell, d.done && styles.dayCellDone, d.isToday && styles.dayCellToday]}
+                    >
+                      <Text style={[styles.dayGlyph, d.done && styles.dayGlyphDone]}>
+                        {d.done ? '✓' : ''}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
               ))}
             </View>
