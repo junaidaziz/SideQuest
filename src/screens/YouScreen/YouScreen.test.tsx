@@ -90,8 +90,8 @@ describe('YouScreen', () => {
     it('renders the signed-in identity and real level/XP data', async () => {
       await renderScreen();
       expect(screen.getByText('Alex Rivera')).toBeTruthy();
-      await waitFor(() => expect(screen.getByText('Level 7')).toBeTruthy());
-      expect(screen.getByText('1,250 XP · 38 to Level 8')).toBeTruthy();
+      await waitFor(() => expect(screen.getByText('Level 7 · Trailblazer')).toBeTruthy());
+      expect(screen.getByText('62 / 100 XP · 38 to Cartographer')).toBeTruthy();
     });
 
     it('renders real lifetime stats from the home query', async () => {
@@ -150,14 +150,14 @@ describe('YouScreen', () => {
 
     it('navigates to edit profile', async () => {
       const props = await renderScreen();
-      await waitFor(() => expect(screen.getByText('Level 7')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Level 7 · Trailblazer')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Edit profile'));
       expect(props.onEditProfile).toHaveBeenCalledTimes(1);
     });
 
     it('navigates to payment methods', async () => {
       const props = await renderScreen();
-      await waitFor(() => expect(screen.getByText('Level 7')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Level 7 · Trailblazer')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Payment methods'));
       expect(props.onPaymentMethods).toHaveBeenCalledTimes(1);
     });
@@ -182,14 +182,14 @@ describe('YouScreen', () => {
       await renderScreen();
       await waitFor(() => expect(screen.getByLabelText('Try again')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Try again'));
-      await waitFor(() => expect(screen.getByText('Level 7')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Level 7 · Trailblazer')).toBeTruthy());
     });
   });
 
   describe('logout flow', () => {
     it('opens the confirm dialog and logs out', async () => {
       const props = await renderScreen();
-      await waitFor(() => expect(screen.getByText('Level 7')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Level 7 · Trailblazer')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Log out'));
       await waitFor(() =>
         expect(screen.getByText('Log out of this account?')).toBeTruthy(),
@@ -202,7 +202,7 @@ describe('YouScreen', () => {
     it('keeps the dialog open when logout fails locally', async () => {
       mockLogout.mockRejectedValueOnce(new Error('secure store'));
       const props = await renderScreen();
-      await waitFor(() => expect(screen.getByText('Level 7')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Level 7 · Trailblazer')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Log out'));
       await waitFor(() =>
         expect(screen.getByLabelText('Log out of this account')).toBeTruthy(),
@@ -215,7 +215,7 @@ describe('YouScreen', () => {
 
     it('dismisses the dialog via the backdrop', async () => {
       await renderScreen();
-      await waitFor(() => expect(screen.getByText('Level 7')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Level 7 · Trailblazer')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Log out'));
       await waitFor(() =>
         expect(screen.getByText('Log out of this account?')).toBeTruthy(),
@@ -230,7 +230,7 @@ describe('YouScreen', () => {
 
     it('dismisses the dialog via Stay logged in', async () => {
       await renderScreen();
-      await waitFor(() => expect(screen.getByText('Level 7')).toBeTruthy());
+      await waitFor(() => expect(screen.getByText('Level 7 · Trailblazer')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Log out'));
       await waitFor(() =>
         expect(screen.getByLabelText('Stay logged in')).toBeTruthy(),

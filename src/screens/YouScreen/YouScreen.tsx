@@ -16,9 +16,9 @@ import { useAuthStore } from '../../store/authStore';
 import { getHome } from '../../services/homeApi';
 import type { LevelInfo } from '../../types/api';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
-import { CompassColorsLight } from '../../constants/compassDesign';
 import { CompassHeader, textStyle, pressedStyle } from '../../components/compass';
 import { LoadingState, ErrorState } from '../../components/states';
+import { levelName, nextLevelName, formatXp } from '../ProgressOverviewScreen/progress';
 import { createStyles } from './YouScreen.styles';
 
 export interface YouScreenProps {
@@ -153,12 +153,14 @@ export default function YouScreen({
             </View>
           </View>
         ) : (
-          <View style={styles.profileHead} accessible accessibilityLabel={`Signed in as ${name}`}>
+          <View style={styles.profileHead}>
             <LinearGradient
-              colors={[CompassColorsLight.brandViolet, CompassColorsLight.brandVioletDark]}
+              colors={[colors.brandViolet, colors.brandVioletDark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.avatarLg}
+              accessible
+              accessibilityLabel={`Signed in as ${name}`}
             >
               {user.avatarUrl ? (
                 <Image
@@ -179,7 +181,7 @@ export default function YouScreen({
               </Text>
               {data ? (
                 <>
-                  <Text style={styles.level}>{`Level ${data.level.level}`}</Text>
+                  <Text style={styles.level}>{`Level ${data.level.level} · ${levelName(data.level.level)}`}</Text>
                   <View
                     style={styles.xpTrack}
                     accessibilityRole="progressbar"
@@ -188,12 +190,12 @@ export default function YouScreen({
                       max: 100,
                       now: xpProgressPercent(data.level),
                     }}
-                    accessibilityLabel={`${data.level.xpToNextLevel} XP to level ${data.level.level + 1}`}
+                    accessibilityLabel={`${data.level.xpIntoLevel} of ${data.level.xpIntoLevel + data.level.xpToNextLevel} XP toward ${nextLevelName(data.level.level)}`}
                   >
                     <View style={[styles.xpFill, { width: `${xpProgressPercent(data.level)}%` }]} />
                   </View>
                   <Text style={[textStyle('caption'), styles.xpLine]}>
-                    {`${data.level.totalXp.toLocaleString()} XP · ${data.level.xpToNextLevel} to Level ${data.level.level + 1}`}
+                    {`${formatXp(data.level.xpIntoLevel)} / ${formatXp(data.level.xpIntoLevel + data.level.xpToNextLevel)} XP · ${formatXp(data.level.xpToNextLevel)} to ${nextLevelName(data.level.level)}`}
                   </Text>
                 </>
               ) : user.email ? (

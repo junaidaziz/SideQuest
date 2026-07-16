@@ -22,7 +22,6 @@ import {
 } from '../../services/profileApi';
 import { removeAvatar, uploadAvatar } from '../../services/avatarApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
-import { CompassColorsLight } from '../../constants/compassDesign';
 import { CompassHeader, textStyle, pressedStyle } from '../../components/compass';
 import { initialsFromName } from '../YouScreen/YouScreen';
 import { createStyles } from './EditProfileScreen.styles';
@@ -175,30 +174,39 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.avatarEdit}>
-          <LinearGradient
-            colors={[CompassColorsLight.brandViolet, CompassColorsLight.brandVioletDark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.avatarLg}
-          >
-            {user.avatarUrl ? (
-              <Image
-                source={{ uri: user.avatarUrl }}
-                style={styles.avatarImage}
-                accessibilityIgnoresInvertColors
-                accessibilityLabel="Your profile photo"
-              />
-            ) : (
-              <Text style={styles.avatarInitials}>
-                {initialsFromName(user.displayName, user.email)}
-              </Text>
-            )}
-            {avatarBusy ? (
-              <View style={styles.avatarBusy} importantForAccessibility="no">
-                <ActivityIndicator color="#FFFFFF" />
-              </View>
-            ) : null}
-          </LinearGradient>
+          <View style={styles.avatarWrap}>
+            <LinearGradient
+              colors={[colors.brandViolet, colors.brandVioletDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatarLg}
+            >
+              {user.avatarUrl ? (
+                <Image
+                  source={{ uri: user.avatarUrl }}
+                  style={styles.avatarImage}
+                  accessibilityIgnoresInvertColors
+                  accessibilityLabel="Your profile photo"
+                />
+              ) : (
+                <Text style={styles.avatarInitials}>
+                  {initialsFromName(user.displayName, user.email)}
+                </Text>
+              )}
+              {avatarBusy ? (
+                <View style={styles.avatarBusy} importantForAccessibility="no">
+                  <ActivityIndicator color="#FFFFFF" />
+                </View>
+              ) : null}
+            </LinearGradient>
+            <View
+              style={styles.camBadge}
+              importantForAccessibility="no"
+              accessibilityElementsHidden
+            >
+              <Text style={styles.camGlyph}>{'\u{1F4F7}'}</Text>
+            </View>
+          </View>
 
           <View style={styles.avatarActions}>
             <Pressable

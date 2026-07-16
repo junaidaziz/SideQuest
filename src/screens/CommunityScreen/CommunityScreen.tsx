@@ -35,12 +35,14 @@ interface PreviewDiscovery {
   icon: string;
   title: string;
   meta: string;
+  /** Which brand-color pairing tints this card's banner, per the mockup. */
+  accent: 'teal' | 'coral';
 }
 
 /** Illustrative sample content — NOT live data. See the file-level note. */
 export const PREVIEW_DISCOVERIES: PreviewDiscovery[] = [
-  { id: 'sunrise', icon: '🌄', title: 'Watch a sunrise somewhere new', meta: 'Outdoors · ~45 min' },
-  { id: 'postcard', icon: '✍️', title: 'Write a postcard to your future self', meta: 'Reset · ~20 min' },
+  { id: 'sunrise', icon: '🌄', title: 'Watch a sunrise somewhere new', meta: 'Outdoors · ~45 min', accent: 'teal' },
+  { id: 'postcard', icon: '✍️', title: 'Write a postcard to your future self', meta: 'Reset · ~20 min', accent: 'coral' },
 ];
 
 export default function CommunityScreen({ onBack, onOpenGuidelines, onOpenQuest }: CommunityScreenProps) {
@@ -109,7 +111,7 @@ export default function CommunityScreen({ onBack, onOpenGuidelines, onOpenQuest 
         <Text style={styles.hint}>Nearby appears only after you allow approximate location.</Text>
 
         <LinearGradient
-          colors={[colors.brandTeal, '#0E7A6E']}
+          colors={[colors.brandTeal, colors.brandTealDark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.curateHero}
@@ -126,11 +128,20 @@ export default function CommunityScreen({ onBack, onOpenGuidelines, onOpenQuest 
         <Text style={styles.sectionLabel}>Sample discoveries (preview)</Text>
         {PREVIEW_DISCOVERIES.map((d) => (
           <View key={d.id} style={styles.discCard}>
-            <View style={styles.discBanner}>
+            <LinearGradient
+              colors={
+                d.accent === 'teal'
+                  ? [`${colors.brandTeal}29`, `${colors.brandViolet}1F`]
+                  : [`${colors.socialCoral}29`, `${colors.brandGold}1F`]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.discBanner}
+            >
               <Text style={styles.discBannerIcon} accessibilityElementsHidden importantForAccessibility="no">
                 {d.icon}
               </Text>
-            </View>
+            </LinearGradient>
             <Text style={styles.discTitle}>{d.title}</Text>
             <Text style={styles.discMeta}>{`Sample quest · ${d.meta}`}</Text>
             <View style={styles.discFoot}>

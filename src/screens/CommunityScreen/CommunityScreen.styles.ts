@@ -101,7 +101,6 @@ export function makeStyles(c: CompassPalette) {
     discBanner: {
       height: 96,
       borderRadius: CompassRadius.md,
-      backgroundColor: c.bgSubtle,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: CompassSpacing.s3,

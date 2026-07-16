@@ -21,6 +21,7 @@ export function createStyles(colors: CompassPalette) {
       gap: CompassSpacing.s3,
       paddingTop: CompassSpacing.s2,
     },
+    avatarWrap: { width: 96, height: 96 },
     avatarLg: {
       width: 96,
       height: 96,
@@ -30,6 +31,20 @@ export function createStyles(colors: CompassPalette) {
       overflow: 'hidden',
     },
     avatarImage: { width: 96, height: 96, borderRadius: 48 },
+    camBadge: {
+      position: 'absolute',
+      bottom: -2,
+      right: -2,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: colors.actionPrimary,
+      borderWidth: 3,
+      borderColor: colors.bgCanvas,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    camGlyph: { fontSize: 15 },
     avatarInitials: {
       color: '#FFFFFF',
       fontSize: 38,

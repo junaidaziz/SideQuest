@@ -35,6 +35,7 @@ export const CompassColorsLight = {
   brandCoral: '#FF6B5E',
   brandGold: '#F5B82E',
   brandTeal: '#18A999',
+  brandTealDark: '#0E7A6E',
 } as const;
 
 export const CompassColorsDark = {
@@ -60,6 +61,7 @@ export const CompassColorsDark = {
   brandCoral: '#FF8177',
   brandGold: '#FFD166',
   brandTeal: '#4ED6C5',
+  brandTealDark: '#18A999',
 } as const;
 
 /**
