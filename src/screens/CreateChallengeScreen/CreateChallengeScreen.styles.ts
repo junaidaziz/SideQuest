@@ -23,7 +23,7 @@ export function makeStyles(c: CompassPalette) {
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -52,7 +52,7 @@ export function makeStyles(c: CompassPalette) {
     stepBody: { flex: 1 },
     stepGap: { gap: CompassSpacing.s3 },
     stepHeading: {
-      fontFamily: 'Syne_700Bold',
+      fontFamily: 'PlusJakartaSans_700Bold',
       fontSize: CompassType.h2.size,
       fontWeight: '700',
       color: c.textPrimary,
@@ -69,7 +69,7 @@ export function makeStyles(c: CompassPalette) {
       minHeight: 48,
     },
     selectCardSelected: { borderColor: c.actionPrimary },
-    selectTitle: { fontFamily: 'Syne_700Bold', fontWeight: '700', fontSize: 17, color: c.textPrimary },
+    selectTitle: { fontFamily: 'PlusJakartaSans_700Bold', fontWeight: '700', fontSize: 17, color: c.textPrimary },
     selectSub: { fontSize: CompassType.bodyS.size, color: c.textSecondary, marginTop: 2 },
 
     fieldLabel: { fontSize: CompassType.labelM.size, fontWeight: '600', color: c.textPrimary },
@@ -188,7 +188,7 @@ export function makeStyles(c: CompassPalette) {
     },
     sentGlyph: { fontSize: 48 },
     sentTitle: {
-      fontFamily: 'Syne_700Bold',
+      fontFamily: 'PlusJakartaSans_700Bold',
       fontSize: CompassType.h1.size,
       fontWeight: '700',
       color: c.textPrimary,
