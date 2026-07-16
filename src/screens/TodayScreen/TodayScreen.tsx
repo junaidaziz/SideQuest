@@ -120,7 +120,9 @@ export default function TodayScreen({
           >
             <Text style={styles.iconGlyph}>{'\u{1F514}'}</Text>
             {unreadCount > 0 ? (
-              <View style={styles.unreadDot} accessibilityElementsHidden importantForAccessibility="no" />
+              <View style={styles.unreadBadge} accessibilityElementsHidden importantForAccessibility="no">
+                <Text style={styles.unreadBadgeText}>{unreadCount > 9 ? '9+' : String(unreadCount)}</Text>
+              </View>
             ) : null}
           </Pressable>
           <Pressable

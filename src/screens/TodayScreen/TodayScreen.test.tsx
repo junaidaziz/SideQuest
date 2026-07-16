@@ -179,6 +179,22 @@ describe('TodayScreen', () => {
       expect(screen.queryByLabelText(/Notifications, \d+ unread/)).toBeNull();
     });
 
+    it('shows the actual unread count on the bell badge, not just a dot', async () => {
+      await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText('Notifications, 2 unread')).toBeTruthy());
+      // The badge digit is accessibilityElementsHidden (decorative — the real
+      // announcement is the button's own "2 unread" label above), so it must
+      // be queried with includeHiddenElements to be found at all.
+      expect(screen.getByText('2', { includeHiddenElements: true })).toBeTruthy();
+    });
+
+    it('caps the bell badge at "9+" for double-digit unread counts', async () => {
+      mockGetUnreadCount.mockResolvedValue({ unreadCount: 42 });
+      await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText('Notifications, 42 unread')).toBeTruthy());
+      expect(screen.getByText('9+', { includeHiddenElements: true })).toBeTruthy();
+    });
+
     it('calls onOpenExplore from the explore row', async () => {
       const { onOpenExplore } = await renderScreen();
       await waitFor(() => expect(screen.getByLabelText(/Explore more quests/)).toBeTruthy());

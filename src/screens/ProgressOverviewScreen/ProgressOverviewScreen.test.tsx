@@ -175,6 +175,28 @@ describe('ProgressOverviewScreen', () => {
       await waitFor(() => expect(screen.getByLabelText('Notifications, 4 unread')).toBeTruthy());
       expect(screen.queryByLabelText('Open notifications')).toBeNull();
     });
+
+    it('shows the actual count on the badge, not just a dot', async () => {
+      // 6 is deliberately not one of HOME's own numbers (7/70/30/720/12/20/
+      // 60/48/8/4/0), so this can't collide with an unrelated "6" elsewhere
+      // on the screen.
+      mockGetUnreadCount.mockResolvedValue({ unreadCount: 6 });
+      await renderScreen();
+      // The badge digit is accessibilityElementsHidden (decorative — the real
+      // announcement is the button's own "N unread" label), so it must be
+      // queried with includeHiddenElements to be found at all.
+      await waitFor(() =>
+        expect(screen.getByText('6', { includeHiddenElements: true })).toBeTruthy(),
+      );
+    });
+
+    it('caps the bell badge at "9+" for double-digit unread counts', async () => {
+      mockGetUnreadCount.mockResolvedValue({ unreadCount: 15 });
+      await renderScreen();
+      await waitFor(() =>
+        expect(screen.getByText('9+', { includeHiddenElements: true })).toBeTruthy(),
+      );
+    });
   });
 
   describe('accessibility', () => {
