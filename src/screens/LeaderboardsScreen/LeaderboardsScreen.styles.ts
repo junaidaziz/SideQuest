@@ -31,7 +31,7 @@ export function makeStyles(c: CompassPalette) {
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -100,7 +100,12 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     rankTop: { backgroundColor: c.rewardXp },
-    rankText: { fontFamily: 'Syne_800ExtraBold', fontSize: 13, fontWeight: '800', color: c.textPrimary },
+    // "You" row sits on a solid actionPrimary background — the default
+    // bgSubtle/textPrimary pairing (tuned for the plain card background)
+    // reads as a mismatched grey badge on top of it.
+    rankMe: { backgroundColor: 'rgba(255,255,255,0.22)' },
+    rankText: { fontFamily: 'Inter_800ExtraBold', fontSize: 13, fontWeight: '800', color: c.textPrimary },
+    rankTextMe: { color: '#FFFFFF' },
     avatar: {
       width: 40,
       height: 40,
@@ -112,7 +117,7 @@ export function makeStyles(c: CompassPalette) {
     avatarText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
     rowName: { flex: 1, fontSize: CompassType.bodyM.size, fontWeight: '600', color: c.textPrimary },
     rowXp: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'Inter_800ExtraBold',
       fontSize: 15,
       fontWeight: '800',
       color: c.textPrimary,
@@ -135,7 +140,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s4,
     },
     stateHeading: {
-      fontFamily: 'Syne_700Bold',
+      fontFamily: 'PlusJakartaSans_700Bold',
       fontSize: CompassType.h3.size,
       fontWeight: '700',
       color: c.textPrimary,
