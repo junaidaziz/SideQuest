@@ -12,6 +12,7 @@ async function renderScreen(
   const props = {
     onBack: jest.fn(),
     onChange: jest.fn(),
+    onThemeChange: jest.fn(),
     onOpenTextSettings: jest.fn(),
     ...overrides,
   };
@@ -53,23 +54,26 @@ describe('AppearanceAccessibilityScreen', () => {
   });
 
   describe('interactions', () => {
-    it('selects a theme and reports the change', async () => {
+    it('selects a theme and reports the change via onThemeChange, not onChange', async () => {
       const props = await renderScreen();
       await fireEvent.press(screen.getByLabelText('Dark theme'));
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ theme: 'dark' }),
-      );
+      expect(props.onThemeChange).toHaveBeenCalledWith('dark');
+      // Deliberately not routed through onChange — see the prop's doc: that
+      // coupling previously let an unrelated toggle re-persist a stale local
+      // theme value and silently revert a real theme choice.
+      expect(props.onChange).not.toHaveBeenCalled();
       expect(screen.getByLabelText('Dark theme').props.accessibilityState).toMatchObject({
         selected: true,
       });
     });
 
-    it('toggles reduce motion', async () => {
+    it('toggles reduce motion without touching the theme callback', async () => {
       const props = await renderScreen();
       await fireEvent.press(screen.getByLabelText('Reduce motion'));
       expect(props.onChange).toHaveBeenCalledWith(
         expect.objectContaining({ reduceMotion: true }),
       );
+      expect(props.onThemeChange).not.toHaveBeenCalled();
     });
 
     it('toggles haptics off', async () => {
