@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -16,8 +16,8 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '../../store/authStore';
-import { Colors } from '../../constants/design';
-import { styles } from './LoginScreen.styles';
+import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { makeStyles } from './LoginScreen.styles';
 
 /**
  * The returning-user log in screen. Like every other screen in this codebase
@@ -110,6 +110,8 @@ export default function LoginScreen({
 }: LoginScreenProps) {
   const login = useAuthStore((s) => s.login);
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+  const { colors } = useCompassTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -310,7 +312,7 @@ export default function LoginScreen({
               onChangeText={handleEmailChange}
               editable={!locked}
               placeholder="you@example.com"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textTertiary}
               keyboardType="email-address"
               inputMode="email"
               autoCapitalize="none"
@@ -343,7 +345,7 @@ export default function LoginScreen({
                 onChangeText={handlePasswordChange}
                 editable={!locked}
                 placeholder="Your password"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textTertiary}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
