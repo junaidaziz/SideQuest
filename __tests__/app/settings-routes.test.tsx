@@ -28,6 +28,13 @@ jest.mock('../../src/services/authApi', () => ({
   deleteAccount: (...args: unknown[]) => mockDeleteAccount(...args),
 }));
 
+let mockThemePreference: 'system' | 'light' | 'dark' | null = 'system';
+const mockSetPreference = jest.fn().mockResolvedValue(undefined);
+jest.mock('../../src/store/themeStore', () => ({
+  useThemeStore: (selector: (s: { preference: unknown; setPreference: unknown }) => unknown) =>
+    selector({ preference: mockThemePreference, setPreference: mockSetPreference }),
+}));
+
 jest.mock('../../src/screens/SettingsScreen', () =>
   jest.fn((props: Record<string, () => void>) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -94,13 +101,41 @@ jest.mock('../../src/screens/AccountSecurityScreen', () =>
     },
   ),
 );
-jest.mock('../../src/screens/AppearanceAccessibilityScreen', () =>
-  jest.fn(({ onBack }: { onBack: () => void }) => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Pressable, Text } = require('react-native');
-    return <Pressable accessibilityRole="button" accessibilityLabel="onBack" onPress={onBack}><Text>b</Text></Pressable>;
-  }),
-);
+jest.mock('../../src/screens/AppearanceAccessibilityScreen', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const actual = jest.requireActual('../../src/screens/AppearanceAccessibilityScreen');
+  return {
+    __esModule: true,
+    DEFAULT_APPEARANCE_SETTINGS: actual.DEFAULT_APPEARANCE_SETTINGS,
+    default: jest.fn(
+      ({
+        onBack,
+        initialSettings,
+        onThemeChange,
+      }: {
+        onBack: () => void;
+        initialSettings: { theme: string };
+        onThemeChange: (theme: string) => void;
+      }) => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { Pressable, Text } = require('react-native');
+        return (
+          <>
+            <Pressable accessibilityRole="button" accessibilityLabel="onBack" onPress={onBack}><Text>b</Text></Pressable>
+            <Text accessibilityLabel="currentTheme">{initialSettings.theme}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="chooseDark"
+              onPress={() => onThemeChange('dark')}
+            >
+              <Text>dark</Text>
+            </Pressable>
+          </>
+        );
+      },
+    ),
+  };
+});
 jest.mock('../../src/screens/NotificationPreferencesScreen', () =>
   jest.fn(({ onBack }: { onBack: () => void }) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -187,12 +222,35 @@ describe('AccountSecurityRoute', () => {
 });
 
 describe('Appearance & Notification routes', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockThemePreference = 'system';
+  });
+
   it('appearance goes back', async () => {
     const { getByLabelText } = await render(<AppearanceRoute />);
     await fireEvent.press(getByLabelText('onBack'));
     expect(router.back).toHaveBeenCalledTimes(1);
   });
+
+  it('passes the persisted theme preference through as the initial selection', async () => {
+    mockThemePreference = 'dark';
+    const { getByLabelText } = await render(<AppearanceRoute />);
+    expect(getByLabelText('currentTheme').props.children).toBe('dark');
+  });
+
+  it('falls back to system while the preference is still null (pre-hydrate)', async () => {
+    mockThemePreference = null;
+    const { getByLabelText } = await render(<AppearanceRoute />);
+    expect(getByLabelText('currentTheme').props.children).toBe('system');
+  });
+
+  it('persists a theme change via the real setPreference action', async () => {
+    const { getByLabelText } = await render(<AppearanceRoute />);
+    await fireEvent.press(getByLabelText('chooseDark'));
+    expect(mockSetPreference).toHaveBeenCalledWith('dark');
+  });
+
   it('notifications goes back', async () => {
     const { getByLabelText } = await render(<NotificationPreferencesRoute />);
     await fireEvent.press(getByLabelText('onBack'));
