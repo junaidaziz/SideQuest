@@ -31,6 +31,12 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        // Bottom-tab switches default to an instant, unanimated swap — this
+        // is what actually read as "abrupt", since Today/Explore/Progress/You
+        // is the navigation path used constantly. 'shift' cross-fades with a
+        // slight horizontal shift, matching the polish of the native stack
+        // push animation used everywhere else in the app.
+        animation: 'shift',
         tabBarActiveTintColor: colors.actionPrimary,
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
