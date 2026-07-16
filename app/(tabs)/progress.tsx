@@ -28,6 +28,10 @@ export default function ProgressTab() {
     router.push('/statistics');
   }, []);
 
+  const handleOpenNotifications = useCallback(() => {
+    router.push('/notifications');
+  }, []);
+
   return (
     <ProgressOverviewScreen
       onOpenLevelDetail={handleOpenLevelDetail}
@@ -36,8 +40,7 @@ export default function ProgressTab() {
       onOpenAchievements={handleOpenAchievements}
       onOpenAchievement={handleOpenAchievement}
       onOpenStatistics={handleOpenStatistics}
-      // onOpenNotifications intentionally left unwired: no notification
-      // inbox/feed screen exists in this migration (see today.tsx).
+      onOpenNotifications={handleOpenNotifications}
     />
   );
 }
