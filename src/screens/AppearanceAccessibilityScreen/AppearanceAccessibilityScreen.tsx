@@ -40,12 +40,20 @@ const THEME_OPTIONS: { value: ThemeChoice; label: string }[] = [
 export interface AppearanceAccessibilityScreenProps {
   onBack?: () => void;
   initialSettings?: AppearanceSettings;
-  /**
-   * Fired on any change.
-   * TODO(persistence): persist to secure store / a settings store once the
-   * app-wide theme controller lands — this screen owns local state for now.
-   */
+  /** Fired when a non-theme setting changes (motion/haptics/sound/contrast).
+   * These aren't persisted anywhere yet — this screen owns local state for
+   * them. Theme changes go through `onThemeChange` instead, not this. */
   onChange?: (next: AppearanceSettings) => void;
+  /**
+   * Fired directly when the user picks a theme option — kept separate from
+   * `onChange` so a theme pick is never re-derived from (and can't be
+   * clobbered by) whatever this screen's local `settings` state happens to
+   * hold when an unrelated toggle fires later. That coupling previously let
+   * a stale local `theme` value get silently re-persisted by an unrelated
+   * toggle, reverting a real theme choice back to the last value this
+   * screen's local state happened to have.
+   */
+  onThemeChange?: (theme: ThemeChoice) => void;
   /** Deep-link to the OS text-size settings. */
   onOpenTextSettings?: () => void;
 }
@@ -60,6 +68,7 @@ export default function AppearanceAccessibilityScreen({
   onBack,
   initialSettings = DEFAULT_APPEARANCE_SETTINGS,
   onChange,
+  onThemeChange,
   onOpenTextSettings,
 }: AppearanceAccessibilityScreenProps) {
   const { colors } = useCompassTheme();
@@ -67,8 +76,10 @@ export default function AppearanceAccessibilityScreen({
   const local = useMemo(() => createLocalStyles(colors), [colors]);
   const [settings, setSettings] = useState<AppearanceSettings>(initialSettings);
 
+  // Non-theme settings only — theme goes through handleSelectTheme below,
+  // never through this generic path (see the onThemeChange prop doc).
   const update = useCallback(
-    <K extends keyof AppearanceSettings>(key: K, value: AppearanceSettings[K]) => {
+    <K extends Exclude<keyof AppearanceSettings, 'theme'>>(key: K, value: AppearanceSettings[K]) => {
       setSettings((prev) => {
         const next = { ...prev, [key]: value };
         onChange?.(next);
@@ -76,6 +87,14 @@ export default function AppearanceAccessibilityScreen({
       });
     },
     [onChange],
+  );
+
+  const handleSelectTheme = useCallback(
+    (theme: ThemeChoice) => {
+      setSettings((prev) => ({ ...prev, theme }));
+      onThemeChange?.(theme);
+    },
+    [onThemeChange],
   );
 
   const hapticsOn = settings.haptics;
@@ -98,7 +117,7 @@ export default function AppearanceAccessibilityScreen({
               return (
                 <Pressable
                   key={opt.value}
-                  onPress={() => update('theme', opt.value)}
+                  onPress={() => handleSelectTheme(opt.value)}
                   accessibilityRole="radio"
                   accessibilityLabel={`${opt.label} theme`}
                   accessibilityState={{ selected, checked: selected }}
