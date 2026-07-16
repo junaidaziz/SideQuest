@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Pressable,
@@ -8,8 +8,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Duration } from '../../constants/design';
-import { styles } from './OnboardingScreen.styles';
+import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { CompassMotion } from '../../constants/compassDesign';
+import { makeStyles, type OnboardingStyles } from './OnboardingScreen.styles';
 
 /** A single selectable answer within a step. */
 interface OptionItem {
@@ -95,6 +96,8 @@ const LOADING_MS = 2800;
 
 export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const { width } = useWindowDimensions();
+  const { colors } = useCompassTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [currentStep, setCurrentStep] = useState(0);
   const [selections, setSelections] = useState<OnboardingSelections>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -120,7 +123,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
       setCurrentStep(stepIndex);
       Animated.timing(trackAnim, {
         toValue: -stepIndex * width,
-        duration: Duration.screen,
+        duration: CompassMotion.durationExpressive,
         useNativeDriver: true,
       }).start();
     },
@@ -132,7 +135,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
       setIsLoading(true);
       Animated.timing(overlayAnim, {
         toValue: 1,
-        duration: Duration.screen,
+        duration: CompassMotion.durationExpressive,
         useNativeDriver: true,
       }).start();
       completeTimer.current = setTimeout(() => {
@@ -180,7 +183,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
               accessibilityElementsHidden={!isActive || isLoading}
               importantForAccessibility={isActive && !isLoading ? 'auto' : 'no-hide-descendants'}
             >
-              <ProgressBar activeIndex={stepIndex} total={STEPS.length} />
+              <ProgressBar activeIndex={stepIndex} total={STEPS.length} styles={styles} />
 
               <ScrollView
                 style={styles.scroll}
@@ -304,9 +307,10 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
 interface ProgressBarProps {
   activeIndex: number;
   total: number;
+  styles: OnboardingStyles;
 }
 
-function ProgressBar({ activeIndex, total }: ProgressBarProps) {
+function ProgressBar({ activeIndex, total, styles }: ProgressBarProps) {
   return (
     <View
       style={styles.progress}
