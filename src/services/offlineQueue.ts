@@ -22,7 +22,7 @@ import type { CreateTaskRequest, ReviewSubmissionRequest } from '../types/api';
  * one code path for both, not two to keep in sync.
  *
  * The queue holds at most a handful of items on a phone, so a serialized array
- * in AsyncStorage is sufficient — no `expo-sqlite` needed (per the plan). Each
+ * in AsyncStorage is sufficient — no SQLite dependency needed. Each
  * item's `id` doubles as its `Idempotency-Key`: a UUID minted once at enqueue
  * and reused on every retry, so a mutation the server already processed (but
  * whose response never reached us) returns its original result instead of
