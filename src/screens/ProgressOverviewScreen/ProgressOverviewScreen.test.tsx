@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProgressOverviewScreen, { whenPressed } from './ProgressOverviewScreen';
 import { getHome } from '../../services/homeApi';
+import { getUnreadCount } from '../../services/notificationsApi';
 import type { HomeResponse } from '../../types/api';
 
 jest.mock('react-native-reanimated', () => {
@@ -17,8 +18,10 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 jest.mock('../../services/homeApi');
+jest.mock('../../services/notificationsApi');
 
 const mockGetHome = getHome as jest.MockedFunction<typeof getHome>;
+const mockGetUnreadCount = getUnreadCount as jest.MockedFunction<typeof getUnreadCount>;
 
 const HOME: HomeResponse = {
   level: { level: 7, xpIntoLevel: 70, xpToNextLevel: 30, totalXp: 720 },
@@ -62,6 +65,7 @@ describe('ProgressOverviewScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetHome.mockResolvedValue(HOME);
+    mockGetUnreadCount.mockResolvedValue({ unreadCount: 0 });
   });
 
   describe('rendering', () => {
@@ -163,6 +167,13 @@ describe('ProgressOverviewScreen', () => {
       await waitFor(() => expect(screen.getByLabelText('Open notifications')).toBeTruthy());
       fireEvent.press(screen.getByLabelText('Open notifications'));
       expect(handlers.onOpenNotifications).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows the unread count on the bell when there are unread notifications', async () => {
+      mockGetUnreadCount.mockResolvedValue({ unreadCount: 4 });
+      await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText('Notifications, 4 unread')).toBeTruthy());
+      expect(screen.queryByLabelText('Open notifications')).toBeNull();
     });
   });
 
