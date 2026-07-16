@@ -56,7 +56,9 @@ function AchievementCard({ ach, styles, color, trackColor, onPress }: CardProps)
         <Text style={styles.hexGlyph}>{ach.icon}</Text>
       </View>
       <Text style={[styles.achName, !ach.unlocked && styles.achNameLocked]}>{ach.name}</Text>
-      <Text style={styles.achRule}>{ach.description}</Text>
+      <Text style={styles.achRule} numberOfLines={2}>
+        {ach.description}
+      </Text>
       {status === 'inProgress' ? (
         <View style={styles.progWrap}>
           <AnimatedBar
@@ -147,8 +149,10 @@ export default function AchievementsScreen({ onBack, onOpenAchievement }: Achiev
             </View>
           </View>
 
-          <View
-            style={styles.filterRow}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
             accessibilityRole="tablist"
             accessibilityLabel="Filter achievements"
           >
@@ -163,11 +167,13 @@ export default function AchievementsScreen({ onBack, onOpenAchievement }: Achiev
                   accessibilityLabel={`${f.label} filter`}
                   style={[styles.chip, selected && styles.chipSelected]}
                 >
-                  <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{f.label}</Text>
+                  <Text style={[styles.chipText, selected && styles.chipTextSelected]} numberOfLines={1}>
+                    {f.label}
+                  </Text>
                 </Pressable>
               );
             })}
-          </View>
+          </ScrollView>
 
           {visible.length > 0 ? (
             <View style={styles.grid}>
