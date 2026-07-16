@@ -1,6 +1,8 @@
 import { apiRequest } from './apiClient';
 import {
   bootstrapGuest,
+  changePassword,
+  deleteAccount,
   getCurrentUser,
   googleAuth,
   login,
@@ -63,5 +65,29 @@ describe('authApi', () => {
     await logoutRequest();
 
     expect(apiRequest).toHaveBeenCalledWith('/auth/logout', { method: 'POST' });
+  });
+
+  it('changePassword patches /auth/password with the current and new password', async () => {
+    const payload = { currentPassword: 'old-hunter2', newPassword: 'new-hunter2' };
+
+    await changePassword(payload);
+
+    expect(apiRequest).toHaveBeenCalledWith('/auth/password', { method: 'PATCH', body: payload });
+  });
+
+  it('deleteAccount sends currentPassword for a password account', async () => {
+    const payload = { currentPassword: 'hunter2' };
+
+    await deleteAccount(payload);
+
+    expect(apiRequest).toHaveBeenCalledWith('/auth/me', { method: 'DELETE', body: payload });
+  });
+
+  it('deleteAccount sends confirm:true for a guest/Google-only account with no password', async () => {
+    const payload = { confirm: true };
+
+    await deleteAccount(payload);
+
+    expect(apiRequest).toHaveBeenCalledWith('/auth/me', { method: 'DELETE', body: payload });
   });
 });
