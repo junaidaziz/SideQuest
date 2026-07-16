@@ -27,11 +27,12 @@ import QuestResultsScreen, {
   buildFitReason,
   categoryLabel,
 } from './QuestResultsScreen';
-import { generateMissions } from '../../services/missionsApi';
+import { generateMissions, listSavedMissions } from '../../services/missionsApi';
 import { enqueueSaveToggle } from '../../services/queuedActions';
 import type { GenerateMissionsRequest, Mission } from '../../types/api';
 
 const mockGenerate = generateMissions as jest.Mock;
+const mockListSaved = listSavedMissions as jest.Mock;
 const mockEnqueueSave = enqueueSaveToggle as jest.Mock;
 
 const FILTERS: GenerateMissionsRequest = { crew: 'Solo', time: '30 min', setting: 'Outdoors', budget: 'Free' };
@@ -56,6 +57,7 @@ describe('QuestResultsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGenerate.mockResolvedValue({ missions: MISSIONS });
+    mockListSaved.mockResolvedValue({ items: [], total: 0, limit: 100, offset: 0 });
     mockEnqueueSave.mockResolvedValue({ id: 'q-1' });
   });
 
@@ -120,6 +122,37 @@ describe('QuestResultsScreen', () => {
       await fireEvent.press(screen.getByLabelText('Save Street Type Safari'));
       expect(screen.getByLabelText('Saved Street Type Safari')).toBeTruthy();
       await waitFor(() => expect(mockEnqueueSave).toHaveBeenCalledWith('m-1', true));
+      await fireEvent.press(screen.getByLabelText('Saved Street Type Safari'));
+      expect(screen.getByLabelText('Save Street Type Safari')).toBeTruthy();
+      await waitFor(() => expect(mockEnqueueSave).toHaveBeenCalledWith('m-1', false));
+    });
+
+    it('shows a quest as already saved on first render, from GET /missions/saved — not just after a tap', async () => {
+      // Regression test: /missions/generate has no per-mission saved status,
+      // so without cross-referencing GET /missions/saved a re-visit of this
+      // screen showed every card as unsaved even for missions the user had
+      // already bookmarked, indistinguishable from "not saved yet".
+      mockListSaved.mockResolvedValue({
+        items: [{ ...MISSIONS[0], savedAt: '2026-07-16T10:00:00.000Z' }],
+        total: 1,
+        limit: 100,
+        offset: 0,
+      });
+      await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText('Saved Street Type Safari')).toBeTruthy());
+      // The other mission was never saved, so it still reads as unsaved.
+      expect(screen.getByLabelText('Save Green Corner Hunt')).toBeTruthy();
+    });
+
+    it('unsaves a mission the server already had saved (starts from the real, not default, state)', async () => {
+      mockListSaved.mockResolvedValue({
+        items: [{ ...MISSIONS[0], savedAt: '2026-07-16T10:00:00.000Z' }],
+        total: 1,
+        limit: 100,
+        offset: 0,
+      });
+      await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText('Saved Street Type Safari')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Saved Street Type Safari'));
       expect(screen.getByLabelText('Save Street Type Safari')).toBeTruthy();
       await waitFor(() => expect(mockEnqueueSave).toHaveBeenCalledWith('m-1', false));

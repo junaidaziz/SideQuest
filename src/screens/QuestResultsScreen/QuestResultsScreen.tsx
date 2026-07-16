@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
-import { generateMissions } from '../../services/missionsApi';
+import { generateMissions, listSavedMissions } from '../../services/missionsApi';
 import { enqueueSaveToggle } from '../../services/queuedActions';
 import type { GenerateMissionsRequest, Mission, MissionCategory } from '../../types/api';
 import { makeStyles } from './QuestResultsScreen.styles';
@@ -138,6 +138,8 @@ export default function QuestResultsScreen({
 }: QuestResultsScreenProps) {
   const { colors } = useCompassTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  // Only holds *this session's* toggles — see savedMissionIds below for why
+  // an empty entry here does not mean "not saved".
   const [savedIds, setSavedIds] = useState<Record<string, boolean>>({});
 
   const query = useQuery({
@@ -146,6 +148,25 @@ export default function QuestResultsScreen({
   });
   const { data, isLoading, isError, isFetching } = query;
   const missions = data?.missions ?? [];
+
+  // /missions/generate never returns per-mission saved status, so without
+  // this a freshly (re-)mounted screen showed every card as unsaved even for
+  // missions the user had already bookmarked — indistinguishable from "not
+  // saved yet" and prone to redundant re-taps (harmless server-side, since
+  // saveMission is an idempotent upsert, but confusing). Shares its query key
+  // with SavedQuestsScreen so both stay in sync off one cache entry.
+  const savedQuery = useQuery({
+    queryKey: ['saved-missions'],
+    queryFn: () => listSavedMissions({ limit: 100 }),
+  });
+  const savedMissionIds = useMemo(
+    () => new Set((savedQuery.data?.items ?? []).map((m) => m.id)),
+    [savedQuery.data],
+  );
+  const isSaved = useCallback(
+    (missionId: string) => savedIds[missionId] ?? savedMissionIds.has(missionId),
+    [savedIds, savedMissionIds],
+  );
 
   const saveMutation = useMutation({
     // Queue-and-retry (M23.3): the toggle is durably enqueued and drained on
@@ -162,11 +183,11 @@ export default function QuestResultsScreen({
 
   const handleToggleSave = useCallback(
     (mission: Mission) => {
-      const nextSaved = !savedIds[mission.id];
+      const nextSaved = !isSaved(mission.id);
       setSavedIds((prev) => ({ ...prev, [mission.id]: nextSaved }));
       saveMutation.mutate({ mission, nextSaved });
     },
-    [savedIds, saveMutation],
+    [isSaved, saveMutation],
   );
 
   const handleReroll = useCallback(() => {
@@ -263,7 +284,7 @@ export default function QuestResultsScreen({
                 index={index}
                 total={missions.length}
                 styles={styles}
-                saved={!!savedIds[mission.id]}
+                saved={isSaved(mission.id)}
                 onToggleSave={handleToggleSave}
                 onViewDetails={onViewDetails}
               />
