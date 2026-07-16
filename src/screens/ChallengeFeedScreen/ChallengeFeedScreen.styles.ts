@@ -31,7 +31,7 @@ export function makeStyles(c: CompassPalette) {
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -99,7 +99,7 @@ export function makeStyles(c: CompassPalette) {
     cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: CompassSpacing.s2 },
     cardTitle: {
       flex: 1,
-      fontFamily: 'Syne_700Bold',
+      fontFamily: 'PlusJakartaSans_700Bold',
       fontWeight: '700',
       fontSize: 16,
       color: c.textPrimary,
@@ -129,7 +129,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s2,
     },
     emptyGlyph: { fontSize: 40 },
-    emptyTitle: { fontFamily: 'Syne_700Bold', fontSize: 18, fontWeight: '700', color: c.textPrimary },
+    emptyTitle: { fontFamily: 'PlusJakartaSans_700Bold', fontSize: 18, fontWeight: '700', color: c.textPrimary },
     emptyBody: {
       fontSize: CompassType.bodyM.size,
       color: c.textSecondary,
@@ -163,7 +163,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s4,
     },
     stateHeading: {
-      fontFamily: 'Syne_700Bold',
+      fontFamily: 'PlusJakartaSans_700Bold',
       fontSize: CompassType.h3.size,
       fontWeight: '700',
       color: c.textPrimary,
