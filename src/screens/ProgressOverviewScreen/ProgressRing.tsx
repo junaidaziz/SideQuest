@@ -216,7 +216,9 @@ function makeDims({ size, strokeWidth, trackColor, fillColor, holeColor }: DimAr
       justifyContent: 'center',
     },
     label: {
-      fontFamily: 'Syne_800ExtraBold',
+      // Inter, not Syne — this is always a numeric percentage ("60%"), and
+      // Syne's "0" renders visually identical to a lowercase "o" at this size.
+      fontFamily: 'Inter_800ExtraBold',
       fontWeight: '800',
       fontSize: Math.max(11, Math.round(size * 0.23)),
       color: fillColor,
