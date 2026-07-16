@@ -49,13 +49,22 @@ export function makeStyles(c: CompassPalette) {
     },
     h3: { fontSize: 18, lineHeight: 24, fontWeight: '600', color: c.textPrimary },
     modeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: CompassSpacing.s3 },
+    // Sizing lives on the outer (actual flex-item) wrapper; modeTileFill below
+    // is the LinearGradient's own style and must not repeat the percentage
+    // width — nesting the same percentage twice inside an unsized animated
+    // wrapper collapsed the tiles to slivers (width resolving against an
+    // undefined parent width).
     modeTile: {
       width: '47.5%',
       flexGrow: 1,
       borderRadius: CompassRadius.card,
+      overflow: 'hidden',
+    },
+    modeTileFill: {
+      flex: 1,
       padding: CompassSpacing.s4,
       minHeight: 92,
-      justifyContent: 'space-between',
+      gap: 6,
     },
     modeIcon: { fontSize: 22 },
     modeName: { fontFamily: undefined, fontWeight: '700', fontSize: 16, color: '#FFFFFF', letterSpacing: -0.24 },
