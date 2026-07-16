@@ -72,8 +72,8 @@ export const CompassColorsDark = {
 export type CompassPalette = { readonly [K in keyof typeof CompassColorsLight]: string };
 
 export const CompassFonts = {
-  display: 'Syne_800ExtraBold',
-  displayBold: 'Syne_700Bold',
+  display: 'PlusJakartaSans_800ExtraBold',
+  displayBold: 'PlusJakartaSans_700Bold',
   body: 'Inter_400Regular',
   bodyMedium: 'Inter_500Medium',
   bodySemiBold: 'Inter_600SemiBold',
