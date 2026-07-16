@@ -153,6 +153,25 @@ export interface SaveMissionResponse {
   saved: boolean;
 }
 
+/** A saved quest, as `Mission` plus when the caller bookmarked it. */
+export interface SavedMission extends Mission {
+  savedAt: string;
+}
+
+/** Paginated, newest-saved-first envelope for `GET /missions/saved`. */
+export interface PaginatedSavedMissions {
+  items: SavedMission[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/** Offset/limit pagination query for `GET /missions/saved`. */
+export interface ListSavedMissionsQuery {
+  limit?: number;
+  offset?: number;
+}
+
 /**
  * Mirrors sidequest-backend `src/payment/dto/payment-method.dto.ts`. A saved
  * card projected down to only display-safe fields — Stripe never exposes the

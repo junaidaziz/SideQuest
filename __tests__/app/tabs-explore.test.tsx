@@ -11,11 +11,13 @@ jest.mock('../../src/screens/ExploreScreen', () =>
       onSelectMode,
       onSeeAll,
       onOpenQuest,
+      onOpenSaved,
     }: {
       onSearch: () => void;
       onSelectMode: (id: string) => void;
       onSeeAll: (id: string) => void;
       onOpenQuest: (id: string) => void;
+      onOpenSaved: () => void;
     }) => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { Pressable, Text } = require('react-native');
@@ -32,6 +34,9 @@ jest.mock('../../src/screens/ExploreScreen', () =>
           </Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="quest" onPress={() => onOpenQuest('qw-1')}>
             <Text>quest</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="saved" onPress={onOpenSaved}>
+            <Text>saved</Text>
           </Pressable>
         </>
       );
@@ -57,5 +62,11 @@ describe('ExploreTab', () => {
     const { getByLabelText } = await render(<ExploreTab />);
     await fireEvent.press(getByLabelText('quest'));
     expect(router.push).toHaveBeenCalledWith({ pathname: '/quest/[id]', params: { id: 'qw-1' } });
+  });
+
+  it('opens saved quests', async () => {
+    const { getByLabelText } = await render(<ExploreTab />);
+    await fireEvent.press(getByLabelText('saved'));
+    expect(router.push).toHaveBeenCalledWith('/saved-quests');
   });
 });

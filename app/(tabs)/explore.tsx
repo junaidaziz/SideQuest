@@ -47,15 +47,20 @@ export default function ExploreTab() {
     router.push({ pathname: '/quest/[id]', params: { id: questId } });
   }, []);
 
+  const handleOpenSaved = useCallback(() => {
+    router.push('/saved-quests');
+  }, []);
+
   return (
     <ExploreScreen
       onSearch={handleSearch}
       onSelectMode={handleSelectMode}
       onSeeAll={handleSeeAll}
       onOpenQuest={handleOpenQuest}
-      // onOpenSaved / onEditContext intentionally left unwired: there is no
-      // saved-quests screen or context-editor screen in this migration.
-      // Documented no-ops rather than routed somewhere unrelated.
+      onOpenSaved={handleOpenSaved}
+      // onEditContext intentionally left unwired: there is no context-editor
+      // screen in this migration. Documented no-op rather than routed
+      // somewhere unrelated.
     />
   );
 }

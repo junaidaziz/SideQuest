@@ -1,6 +1,6 @@
 import { apiRequest } from './apiClient';
-import { generateMissions, saveMission, unsaveMission } from './missionsApi';
-import type { GenerateMissionsRequest } from '../types/api';
+import { generateMissions, listSavedMissions, saveMission, unsaveMission } from './missionsApi';
+import type { GenerateMissionsRequest, PaginatedSavedMissions } from '../types/api';
 
 jest.mock('./apiClient');
 
@@ -50,6 +50,36 @@ describe('missionsApi', () => {
         method: 'DELETE',
       });
       expect(result).toEqual({ saved: false });
+    });
+  });
+
+  describe('listSavedMissions', () => {
+    it('GETs /missions/saved with no query when called empty', async () => {
+      const page: PaginatedSavedMissions = { items: [], total: 0, limit: 20, offset: 0 };
+      (apiRequest as jest.Mock).mockResolvedValue(page);
+
+      const result = await listSavedMissions();
+
+      expect(apiRequest).toHaveBeenCalledWith('/missions/saved');
+      expect(result).toBe(page);
+    });
+
+    it('appends limit and offset params', async () => {
+      const page: PaginatedSavedMissions = { items: [], total: 0, limit: 5, offset: 10 };
+      (apiRequest as jest.Mock).mockResolvedValue(page);
+
+      await listSavedMissions({ limit: 5, offset: 10 });
+
+      expect(apiRequest).toHaveBeenCalledWith('/missions/saved?limit=5&offset=10');
+    });
+
+    it('includes a zero offset (0 is a valid value, not omitted)', async () => {
+      const page: PaginatedSavedMissions = { items: [], total: 0, limit: 20, offset: 0 };
+      (apiRequest as jest.Mock).mockResolvedValue(page);
+
+      await listSavedMissions({ offset: 0 });
+
+      expect(apiRequest).toHaveBeenCalledWith('/missions/saved?offset=0');
     });
   });
 });
