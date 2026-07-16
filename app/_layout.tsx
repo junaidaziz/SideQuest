@@ -7,10 +7,19 @@ import * as Sentry from '@sentry/react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { useFonts } from 'expo-font';
-import { Syne_700Bold, Syne_800ExtraBold } from '@expo-google-fonts/syne';
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import {
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from '@expo-google-fonts/plus-jakarta-sans';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_800ExtraBold,
+} from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '../src/store/authStore';
+import { useThemeStore } from '../src/store/themeStore';
 import { buildPersistOptions, queryClient } from '../src/services/queryPersistence';
 import { OfflineChrome } from '../src/components/offline';
 
@@ -81,10 +90,12 @@ const stripePublishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '
 
 function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);
+  const hydrateTheme = useThemeStore((state) => state.hydrate);
   const navigationRef = useNavigationContainerRef();
   const [fontsLoaded, fontError] = useFonts({
-    Syne_800ExtraBold,
-    Syne_700Bold,
+    PlusJakartaSans_800ExtraBold,
+    PlusJakartaSans_700Bold,
+    Inter_800ExtraBold,
     Inter_600SemiBold,
     Inter_500Medium,
     Inter_400Regular,
@@ -95,6 +106,12 @@ function RootLayout() {
     // when none exists — guest mode requires zero account per v1 spec.
     hydrate();
   }, [hydrate]);
+
+  useEffect(() => {
+    // Restores the user's Appearance > Theme choice so it survives a cold
+    // start, rather than always booting back to 'system'.
+    hydrateTheme();
+  }, [hydrateTheme]);
 
   useEffect(() => {
     navigationIntegration.registerNavigationContainer(navigationRef);
@@ -126,7 +143,16 @@ function RootLayout() {
             Stack down persistently while offline (M23.1). */}
         <View style={{ flex: 1 }}>
           <OfflineChrome />
-          <Stack screenOptions={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+            {/* SignupPromptScreen already animates its own bottom-sheet
+                slide-up internally — presenting it as a transparent modal with
+                no stack-level animation avoids double-animating (the screen
+                sliding in from the right AND the sheet sliding up inside it). */}
+            <Stack.Screen
+              name="signup-prompt"
+              options={{ presentation: 'transparentModal', animation: 'none' }}
+            />
+          </Stack>
         </View>
         <StatusBar style="auto" />
       </PersistQueryClientProvider>
