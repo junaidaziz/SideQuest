@@ -36,13 +36,16 @@ jest.mock('expo-linear-gradient', () => {
 });
 
 jest.mock('../../services/homeApi');
+jest.mock('../../services/notificationsApi');
 
 import * as Haptics from 'expo-haptics';
 import TodayScreen, { avatarInitial, computeGoalProgress } from './TodayScreen';
 import { getHome } from '../../services/homeApi';
+import { getUnreadCount } from '../../services/notificationsApi';
 import type { HomeResponse } from '../../types/api';
 
 const mockGetHome = getHome as jest.Mock;
+const mockGetUnreadCount = getUnreadCount as jest.Mock;
 
 const HOME: HomeResponse = {
   level: { level: 7, xpIntoLevel: 40, xpToNextLevel: 60, totalXp: 640 },
@@ -75,6 +78,7 @@ describe('TodayScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetHome.mockResolvedValue(HOME);
+    mockGetUnreadCount.mockResolvedValue({ unreadCount: 2 });
   });
 
   afterEach(() => {
@@ -160,11 +164,19 @@ describe('TodayScreen', () => {
 
     it('calls onOpenNotifications and onOpenProfile from the header', async () => {
       const { onOpenNotifications, onOpenProfile } = await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText('Notifications, 2 unread')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Notifications, 2 unread'));
       await fireEvent.press(screen.getByLabelText('Open your profile'));
       expect(onOpenNotifications).toHaveBeenCalledTimes(1);
       expect(onOpenProfile).toHaveBeenCalledTimes(1);
       await waitFor(() => expect(mockGetHome).toHaveBeenCalled());
+    });
+
+    it('shows no unread badge/count when there are no unread notifications', async () => {
+      mockGetUnreadCount.mockResolvedValue({ unreadCount: 0 });
+      await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText('Notifications')).toBeTruthy());
+      expect(screen.queryByLabelText(/Notifications, \d+ unread/)).toBeNull();
     });
 
     it('calls onOpenExplore from the explore row', async () => {
