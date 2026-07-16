@@ -109,4 +109,26 @@ describe('requestProofPhoto', () => {
     pressAlertButton(2);
     await expect(promise).resolves.toBeNull();
   });
+
+  it('resolves null (rather than hanging forever) when the camera throws', async () => {
+    // Regression test: launchCameraAsync throws — rather than resolving a
+    // canceled result — when no camera is available (every iOS Simulator).
+    // Before the fix, that rejection was uncaught and resolve() was never
+    // called, so this promise hung forever instead of resolving null.
+    jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    picker.requestCameraPermissionsAsync.mockResolvedValue({ granted: true } as never);
+    picker.launchCameraAsync.mockRejectedValue(new Error('Camera not available on simulator'));
+    const promise = requestProofPhoto();
+    pressAlertButton(0);
+    await expect(promise).resolves.toBeNull();
+  });
+
+  it('resolves null (rather than hanging forever) when the library picker throws', async () => {
+    jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    picker.requestMediaLibraryPermissionsAsync.mockResolvedValue({ granted: true } as never);
+    picker.launchImageLibraryAsync.mockRejectedValue(new Error('boom'));
+    const promise = requestProofPhoto();
+    pressAlertButton(1);
+    await expect(promise).resolves.toBeNull();
+  });
 });

@@ -113,7 +113,16 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
       setAvatarError('Camera access is off. Enable it in Settings to take a photo.');
       return;
     }
-    applyPickerResult(await ImagePicker.launchCameraAsync({ quality: 0.8 }));
+    // launchCameraAsync throws (not rejects-to-a-result) when no camera is
+    // available — e.g. every iOS Simulator — rather than returning a
+    // canceled result. Without this catch that becomes an unhandled promise
+    // rejection instead of the same friendly, retryable error every other
+    // failure path here already uses.
+    try {
+      applyPickerResult(await ImagePicker.launchCameraAsync({ quality: 0.8 }));
+    } catch {
+      setAvatarError("Couldn't open the camera. Please try again.");
+    }
   }, [applyPickerResult]);
 
   const launchLibrary = useCallback(async () => {
@@ -123,7 +132,11 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
       setAvatarError('Photo access is off. Enable it in Settings to choose a photo.');
       return;
     }
-    applyPickerResult(await ImagePicker.launchImageLibraryAsync({ quality: 0.8 }));
+    try {
+      applyPickerResult(await ImagePicker.launchImageLibraryAsync({ quality: 0.8 }));
+    } catch {
+      setAvatarError("Couldn't open your photo library. Please try again.");
+    }
   }, [applyPickerResult]);
 
   const presentPhotoOptions = useCallback(() => {

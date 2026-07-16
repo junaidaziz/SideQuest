@@ -207,6 +207,37 @@ describe('EditProfileScreen', () => {
       expect(mockUpload).not.toHaveBeenCalled();
     });
 
+    it('shows a friendly error when the camera throws (e.g. no camera on the Simulator)', async () => {
+      // launchCameraAsync throws rather than resolving a canceled result when
+      // no camera is available — the exact failure mode on every iOS
+      // Simulator. Regression test for an unhandled-rejection bug.
+      mockLaunchCamera.mockRejectedValueOnce(new Error('Camera not available on simulator'));
+      (Alert.alert as jest.Mock).mockImplementation((_t, _m, buttons) => {
+        buttons[0].onPress();
+      });
+      await renderScreen();
+      await fireEvent.press(screen.getByLabelText('Change photo'));
+      await waitFor(() =>
+        expect(screen.getByText("Couldn't open the camera. Please try again.")).toBeTruthy(),
+      );
+      expect(mockUpload).not.toHaveBeenCalled();
+    });
+
+    it('shows a friendly error when the photo library throws', async () => {
+      mockLaunchLibrary.mockRejectedValueOnce(new Error('boom'));
+      (Alert.alert as jest.Mock).mockImplementation((_t, _m, buttons) => {
+        buttons[1].onPress();
+      });
+      await renderScreen();
+      await fireEvent.press(screen.getByLabelText('Change photo'));
+      await waitFor(() =>
+        expect(
+          screen.getByText("Couldn't open your photo library. Please try again."),
+        ).toBeTruthy(),
+      );
+      expect(mockUpload).not.toHaveBeenCalled();
+    });
+
     it('ignores a canceled picker result', async () => {
       mockLaunchLibrary.mockResolvedValueOnce({ canceled: true });
       (Alert.alert as jest.Mock).mockImplementation((_t, _m, buttons) => {

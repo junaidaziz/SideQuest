@@ -23,11 +23,20 @@ export function requestProofPhoto(): Promise<string | null> {
         resolve(null);
         return;
       }
-      const result =
-        source === 'camera'
-          ? await ImagePicker.launchCameraAsync({ quality: 0.8 })
-          : await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
-      resolve(result.canceled ? null : (result.assets?.[0]?.uri ?? null));
+      try {
+        const result =
+          source === 'camera'
+            ? await ImagePicker.launchCameraAsync({ quality: 0.8 })
+            : await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
+        resolve(result.canceled ? null : (result.assets?.[0]?.uri ?? null));
+      } catch {
+        // launchCameraAsync throws (not a canceled result) when no camera is
+        // available — every iOS Simulator, notably — rather than resolving
+        // like a normal cancellation. Without this catch, resolve() is never
+        // called and the caller's `await onRequestAddPhoto()` hangs forever,
+        // leaving the screen looking like Submit silently does nothing.
+        resolve(null);
+      }
     };
 
     Alert.alert('Add proof photo', 'Take a new photo or choose one from your library.', [
