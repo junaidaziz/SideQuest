@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
+import { getUnreadCount } from '../../services/notificationsApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import ProgressRing from './ProgressRing';
 import AnimatedBar from './AnimatedBar';
@@ -125,6 +126,8 @@ export default function ProgressOverviewScreen({
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const query = useQuery<HomeResponse>({ queryKey: ['home'], queryFn: getHome });
   const { data, isLoading, isError } = query;
+  const unreadQuery = useQuery({ queryKey: ['notifications', 'unread-count'], queryFn: getUnreadCount });
+  const unreadCount = unreadQuery.data?.unreadCount ?? 0;
 
   const handleRetry = useCallback(() => {
     query.refetch();
@@ -146,10 +149,15 @@ export default function ProgressOverviewScreen({
         <Pressable
           onPress={() => onOpenNotifications?.()}
           accessibilityRole="button"
-          accessibilityLabel="Open notifications"
+          accessibilityLabel={
+            unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Open notifications'
+          }
           style={({ pressed }) => [styles.iconBtn, whenPressed(pressed, styles.iconBtnPressed)]}
         >
           <Text style={styles.iconGlyph}>{'\u{1F514}'}</Text>
+          {unreadCount > 0 ? (
+            <View style={styles.unreadDot} accessibilityElementsHidden importantForAccessibility="no" />
+          ) : null}
         </Pressable>
       </View>
 
