@@ -431,3 +431,54 @@ export interface ReferralHistoryQuery {
   limit?: number;
   offset?: number;
 }
+
+export type NotificationType =
+  | 'task_assigned'
+  | 'task_accepted'
+  | 'task_declined'
+  | 'task_submitted'
+  | 'task_approved'
+  | 'task_rejected'
+  | 'referral_registered'
+  | 'referral_reward_earned'
+  | 'account_event';
+
+/** A single in-app notification (`GET /notifications`). */
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  /** Deep-link target, e.g. `{ screen: 'task-detail', taskId: '...' }` — the
+   * backend documents the shape as an open record; the mobile client only
+   * reads it when it recognizes a screen key, so no full type is modeled. */
+  data: Record<string, unknown> | null;
+  /** Null while unread — mirrors the backend's `readAt IS NULL` convention. */
+  readAt: string | null;
+  createdAt: string;
+}
+
+/** Paginated, newest-first envelope for `GET /notifications`. */
+export interface PaginatedNotifications {
+  items: AppNotification[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/** Offset/limit + unread filter for `GET /notifications`. */
+export interface ListNotificationsQuery {
+  limit?: number;
+  offset?: number;
+  unreadOnly?: boolean;
+}
+
+/** Badge count for `GET /notifications/unread-count`. */
+export interface UnreadCount {
+  unreadCount: number;
+}
+
+/** Result of a mark-read / mark-all-read mutation. */
+export interface MarkReadResult {
+  updated: number;
+}
