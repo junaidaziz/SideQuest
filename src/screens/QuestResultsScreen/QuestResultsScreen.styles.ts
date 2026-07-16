@@ -28,6 +28,8 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.bgSurface,
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
+      borderWidth: 1,
+      borderColor: c.borderDefault,
     },
     rcTop: { flexDirection: 'row', gap: CompassSpacing.s3 },
     thumb: {
