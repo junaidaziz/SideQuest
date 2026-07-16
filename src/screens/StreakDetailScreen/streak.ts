@@ -27,3 +27,15 @@ export function buildDayStrip(currentStreak: number, windowSize = 14): StreakDay
 export function streakHeadline(days: number): string {
   return `${days}-day streak`;
 }
+
+/** Splits a flat day strip into fixed-width rows (7 per row, calendar-week
+ * style) so the grid renders as explicit rows rather than relying on
+ * flex-wrap to guess how many 30px cells fit per line — the latter produces a
+ * different (and wrong) column count per device width. */
+export function chunkIntoWeeks(days: StreakDay[], columns = 7): StreakDay[][] {
+  const rows: StreakDay[][] = [];
+  for (let i = 0; i < days.length; i += columns) {
+    rows.push(days.slice(i, i + columns));
+  }
+  return rows;
+}
