@@ -22,7 +22,7 @@ export function makeStyles(c: CompassPalette) {
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'PlusJakartaSans_800ExtraBold',
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -42,7 +42,7 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.brandVioletDark,
     },
     heroTotal: {
-      fontFamily: 'Syne_800ExtraBold',
+      fontFamily: 'Inter_800ExtraBold',
       fontWeight: '800',
       fontSize: 40,
       color: '#FFFFFF',
@@ -78,7 +78,7 @@ export function makeStyles(c: CompassPalette) {
 
     // states
     stateArea: { flex: 1, paddingHorizontal: CompassSpacing.gutterPhone, justifyContent: 'center' },
-    stateHeading: { fontFamily: 'Syne_700Bold', fontSize: CompassType.h3.size, fontWeight: '700', color: c.textPrimary, textAlign: 'center', marginBottom: CompassSpacing.s2 },
+    stateHeading: { fontFamily: 'PlusJakartaSans_700Bold', fontSize: CompassType.h3.size, fontWeight: '700', color: c.textPrimary, textAlign: 'center', marginBottom: CompassSpacing.s2 },
     stateBody: { fontSize: CompassType.bodyM.size, color: c.textSecondary, textAlign: 'center', marginBottom: CompassSpacing.s5 },
     retryBtn: { alignSelf: 'center', height: 48, paddingHorizontal: CompassSpacing.s6, borderRadius: CompassRadius.btn, backgroundColor: c.actionPrimary, alignItems: 'center', justifyContent: 'center' },
     retryBtnPressed: { backgroundColor: c.actionPressed },
