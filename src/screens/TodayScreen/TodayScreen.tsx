@@ -13,6 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
 import { getHome } from '../../services/homeApi';
+import { getUnreadCount } from '../../services/notificationsApi';
 import type { HomeResponse } from '../../types/api';
 import { makeStyles } from './TodayScreen.styles';
 
@@ -26,7 +27,7 @@ export interface WeeklyGoal {
 }
 
 interface TodayScreenProps {
-  /** Bell tap — routed to a notifications screen once nav is wired. */
+  /** Bell tap — opens the notification inbox. */
   onOpenNotifications?: () => void;
   /** Avatar tap — routed to the profile/You tab once nav is wired. */
   onOpenProfile?: () => void;
@@ -90,6 +91,8 @@ export default function TodayScreen({
 
   const homeQuery = useQuery({ queryKey: ['home'], queryFn: getHome });
   const { data, isLoading, isError } = homeQuery;
+  const unreadQuery = useQuery({ queryKey: ['notifications', 'unread-count'], queryFn: getUnreadCount });
+  const unreadCount = unreadQuery.data?.unreadCount ?? 0;
 
   const handleGetInspired = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -110,11 +113,15 @@ export default function TodayScreen({
           <Pressable
             onPress={onOpenNotifications}
             accessibilityRole="button"
-            accessibilityLabel="Notifications, 2 unread"
+            accessibilityLabel={
+              unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'
+            }
             style={({ pressed }) => [styles.iconBtn, whenPressed(pressed, styles.iconBtnPressed)]}
           >
             <Text style={styles.iconGlyph}>{'\u{1F514}'}</Text>
-            <View style={styles.unreadDot} accessibilityElementsHidden importantForAccessibility="no" />
+            {unreadCount > 0 ? (
+              <View style={styles.unreadDot} accessibilityElementsHidden importantForAccessibility="no" />
+            ) : null}
           </Pressable>
           <Pressable
             onPress={onOpenProfile}
@@ -193,12 +200,9 @@ export default function TodayScreen({
 
             <View style={styles.secondaryRow}>
               <View style={[styles.card, styles.goalCard]}>
-                <View style={styles.goalTop}>
-                  <Text style={styles.label}>{"This week's goal"}</Text>
-                  <Text style={styles.caption}>
-                    {`${weeklyGoal.completed} of ${weeklyGoal.target} quests`}
-                  </Text>
-                </View>
+                <Text style={styles.label} numberOfLines={1}>
+                  {"This week's goal"}
+                </Text>
                 <View
                   style={styles.track}
                   accessibilityRole="progressbar"
@@ -207,6 +211,9 @@ export default function TodayScreen({
                 >
                   <View style={[styles.fill, { width: `${computeGoalProgress(weeklyGoal)}%` }]} />
                 </View>
+                <Text style={styles.caption}>
+                  {`${weeklyGoal.completed} of ${weeklyGoal.target} quests`}
+                </Text>
               </View>
               <View
                 style={[styles.card, styles.streakCard]}
