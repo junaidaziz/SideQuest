@@ -32,13 +32,14 @@ export function makeStyles(c: CompassPalette) {
     segActive: { backgroundColor: c.bgSurface },
     segText: { fontSize: 14, fontWeight: '600', color: c.textSecondary },
     segTextActive: { color: c.textPrimary },
-    // Single-slot layout (MAX_PHOTOS = 1, see the screen component) — full
-    // width with a photo-preview aspect ratio, not a small grid tile sized
-    // for a 3-photo set that no longer exists.
-    photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: CompassSpacing.s2 },
+    // Single-slot layout (MAX_PHOTOS = 1, see the screen component). A square
+    // ratio (not the old grid's 4:3) keeps this from dominating the form —
+    // the box kept its old full-width-landscape sizing from a 3-photo grid
+    // after the slot count dropped to 1, leaving a large near-empty area.
+    photoGrid: { gap: CompassSpacing.s2 },
     photoTile: {
       width: '100%',
-      aspectRatio: 4 / 3,
+      aspectRatio: 1,
       borderRadius: CompassRadius.md,
       overflow: 'hidden',
       position: 'relative',
@@ -59,7 +60,7 @@ export function makeStyles(c: CompassPalette) {
     removeGlyph: { color: '#FFFFFF', fontSize: 13 },
     addTile: {
       width: '100%',
-      aspectRatio: 4 / 3,
+      aspectRatio: 1,
       borderRadius: CompassRadius.md,
       borderWidth: 2,
       borderColor: c.borderDefault,
@@ -67,10 +68,10 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.bgSurface,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 4,
+      gap: 6,
     },
-    addIcon: { fontSize: 22, color: c.actionPrimary },
-    addLabel: { fontSize: 13, fontWeight: '600', color: c.actionPrimary },
+    addIcon: { fontSize: 28, color: c.actionPrimary },
+    addLabel: { fontSize: 14, fontWeight: '600', color: c.actionPrimary },
     textInput: {
       minHeight: 120,
       borderWidth: 1.5,
