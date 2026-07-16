@@ -110,14 +110,13 @@ export function makeStyles(c: CompassPalette) {
       padding: CompassSpacing.s4,
     },
     goalCard: { flex: 1.3 },
-    goalTop: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'baseline',
-      marginBottom: CompassSpacing.s2,
-    },
-    label: { fontSize: 14, fontWeight: '600', color: c.textPrimary },
-    caption: { fontSize: 12, fontWeight: '500', color: c.textSecondary },
+    // Stacked (label / bar / count), not the mockup's single-line row — at
+    // this card's real half-width on device, "This week's goal" (17 chars)
+    // and "3 of 5 quests" (13 chars) don't both fit on one line at a legible
+    // size, no matter how the row's gap/space-between is tuned. Stacking
+    // gives each line the card's full width instead of fighting over it.
+    label: { fontSize: 14, fontWeight: '600', color: c.textPrimary, marginBottom: CompassSpacing.s2 },
+    caption: { fontSize: 12, fontWeight: '500', color: c.textSecondary, marginTop: CompassSpacing.s2 },
     track: {
       width: '100%',
       height: 10,
