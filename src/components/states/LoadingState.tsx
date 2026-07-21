@@ -1,6 +1,5 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassSpacing } from '../../constants/compassDesign';
 import { Skeleton, SkeletonRow } from './Skeleton';
 

@@ -21,4 +21,13 @@ module.exports = defineConfig([
       "react-hooks/refs": "off",
     },
   },
+  {
+    files: ["**/*.test.{ts,tsx}", "**/__tests__/**/*.{ts,tsx}"],
+    rules: {
+      // Jest native-module mocks intentionally load the real module from
+      // inside a mock factory; static imports are hoisted and cannot express
+      // that pattern safely.
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);

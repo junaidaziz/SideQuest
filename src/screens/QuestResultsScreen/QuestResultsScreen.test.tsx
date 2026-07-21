@@ -2,6 +2,15 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import QuestResultsScreen, {
+  buildFilterChips,
+  buildFitReason,
+  categoryLabel,
+} from './QuestResultsScreen';
+import { generateMissions, listSavedMissions } from '../../services/missionsApi';
+import { enqueueSaveToggle } from '../../services/queuedActions';
+import type { GenerateMissionsRequest, Mission } from '../../types/api';
+
 jest.mock('react-native-reanimated', () => {
   const R = require('react');
   const { View, Text, ScrollView } = require('react-native');
@@ -21,15 +30,6 @@ jest.mock('react-native-reanimated', () => {
 
 jest.mock('../../services/missionsApi');
 jest.mock('../../services/queuedActions');
-
-import QuestResultsScreen, {
-  buildFilterChips,
-  buildFitReason,
-  categoryLabel,
-} from './QuestResultsScreen';
-import { generateMissions, listSavedMissions } from '../../services/missionsApi';
-import { enqueueSaveToggle } from '../../services/queuedActions';
-import type { GenerateMissionsRequest, Mission } from '../../types/api';
 
 const mockGenerate = generateMissions as jest.Mock;
 const mockListSaved = listSavedMissions as jest.Mock;

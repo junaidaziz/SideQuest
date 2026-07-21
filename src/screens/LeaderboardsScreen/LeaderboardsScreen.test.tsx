@@ -2,8 +2,6 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-jest.mock('../../services/homeApi');
-
 import LeaderboardsScreen, {
   buildRows,
   meInitial,
@@ -12,6 +10,8 @@ import LeaderboardsScreen, {
 } from './LeaderboardsScreen';
 import { getHome } from '../../services/homeApi';
 import type { HomeResponse } from '../../types/api';
+
+jest.mock('../../services/homeApi');
 
 const mockGetHome = getHome as jest.MockedFunction<typeof getHome>;
 

@@ -2,6 +2,15 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import ExploreScreen, {
+  EXPLORE_MODES,
+  EXPLORE_SHELVES,
+  countSavedQuests,
+  savedCountLabel,
+} from './ExploreScreen';
+import { getHome } from '../../services/homeApi';
+import type { HomeResponse } from '../../types/api';
+
 jest.mock('react-native-reanimated', () => {
   const R = require('react');
   const { View, Text, ScrollView } = require('react-native');
@@ -28,15 +37,6 @@ jest.mock('expo-linear-gradient', () => {
 });
 
 jest.mock('../../services/homeApi');
-
-import ExploreScreen, {
-  EXPLORE_MODES,
-  EXPLORE_SHELVES,
-  countSavedQuests,
-  savedCountLabel,
-} from './ExploreScreen';
-import { getHome } from '../../services/homeApi';
-import type { HomeResponse } from '../../types/api';
 
 const mockGetHome = getHome as jest.Mock;
 

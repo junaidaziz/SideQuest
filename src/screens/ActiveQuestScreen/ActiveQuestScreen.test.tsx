@@ -1,6 +1,9 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native';
 
+import ActiveQuestScreen, { stepCountLabel, stepProgress, type QuestStep } from './ActiveQuestScreen';
+import type { Mission } from '../../types/api';
+
 jest.mock('react-native-reanimated', () => {
   const R = require('react');
   const { View, Text, ScrollView } = require('react-native');
@@ -20,9 +23,6 @@ jest.mock('react-native-reanimated', () => {
     withSpring: (v: unknown) => v,
   };
 });
-
-import ActiveQuestScreen, { stepCountLabel, stepProgress, type QuestStep } from './ActiveQuestScreen';
-import type { Mission } from '../../types/api';
 
 const MISSION: Mission = {
   id: 'm-1',

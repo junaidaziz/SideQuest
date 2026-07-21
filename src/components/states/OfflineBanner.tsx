@@ -7,8 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { CompassColorsLight } from '../../constants/compassDesign';
-import { CompassSpacing } from '../../constants/compassDesign';
+import { CompassColorsLight , CompassSpacing } from '../../constants/compassDesign';
 import { textStyle } from '../compass/typography';
 
 export interface OfflineBannerProps {

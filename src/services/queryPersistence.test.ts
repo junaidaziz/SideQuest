@@ -1,11 +1,6 @@
 import type { Query } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  __esModule: true,
-  default: { getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn() },
-}));
-
 import {
   PERSISTED_QUERY_KEYS,
   PERSIST_MAX_AGE,
@@ -16,6 +11,11 @@ import {
   queryClient,
   shouldDehydrateQuery,
 } from './queryPersistence';
+
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  __esModule: true,
+  default: { getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn() },
+}));
 
 function fakeQuery(status: string, key: unknown[]): Query {
   return { state: { status }, queryKey: key } as unknown as Query;

@@ -1,6 +1,12 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native';
 
+import VerificationDetailScreen, {
+  buildTimeline,
+  type HistoryEntry,
+  type VerificationDetail,
+} from './VerificationDetailScreen';
+
 jest.mock('react-native-reanimated', () => {
   const R = require('react');
   const { View, Text, ScrollView } = require('react-native');
@@ -17,12 +23,6 @@ jest.mock('react-native-reanimated', () => {
     FadeInDown: chain(),
   };
 });
-
-import VerificationDetailScreen, {
-  buildTimeline,
-  type HistoryEntry,
-  type VerificationDetail,
-} from './VerificationDetailScreen';
 
 const DETAIL: VerificationDetail = {
   missionTitle: 'Street Type Safari',

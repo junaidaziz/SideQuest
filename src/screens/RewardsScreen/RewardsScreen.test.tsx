@@ -2,13 +2,6 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-jest.mock('expo-linear-gradient', () => {
-  const { View } = require('react-native');
-  return { LinearGradient: View };
-});
-jest.mock('../../services/homeApi');
-jest.mock('../../services/referralsApi');
-
 import RewardsScreen, {
   formatShortDate,
   toRewards,
@@ -17,6 +10,13 @@ import RewardsScreen, {
 import { getHome } from '../../services/homeApi';
 import { getReferralHistory, getReferralMe } from '../../services/referralsApi';
 import type { HomeResponse, PaginatedReferralHistory, ReferralMe } from '../../types/api';
+
+jest.mock('expo-linear-gradient', () => {
+  const { View } = require('react-native');
+  return { LinearGradient: View };
+});
+jest.mock('../../services/homeApi');
+jest.mock('../../services/referralsApi');
 
 const mockGetHome = getHome as jest.MockedFunction<typeof getHome>;
 const mockGetMe = getReferralMe as jest.MockedFunction<typeof getReferralMe>;

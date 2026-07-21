@@ -2,6 +2,19 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import * as Haptics from 'expo-haptics';
+import CreateChallengeScreen, { whenPressed } from './CreateChallengeScreen';
+import {
+  buildCreateRequest,
+  canProceed,
+  deadlineLabel,
+  deadlineToIso,
+  EMPTY_DRAFT,
+} from './createUtils';
+import { getHome } from '../../services/homeApi';
+import { createTask, generateTaskInvite } from '../../services/tasksApi';
+import type { HomeResponse, Task } from '../../types/api';
+
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(() => Promise.resolve()),
   notificationAsync: jest.fn(() => Promise.resolve()),
@@ -15,19 +28,6 @@ jest.mock('react-native-reanimated', () => {
 });
 jest.mock('../../services/homeApi');
 jest.mock('../../services/tasksApi');
-
-import * as Haptics from 'expo-haptics';
-import CreateChallengeScreen, { whenPressed } from './CreateChallengeScreen';
-import {
-  buildCreateRequest,
-  canProceed,
-  deadlineLabel,
-  deadlineToIso,
-  EMPTY_DRAFT,
-} from './createUtils';
-import { getHome } from '../../services/homeApi';
-import { createTask, generateTaskInvite } from '../../services/tasksApi';
-import type { HomeResponse, Task } from '../../types/api';
 
 const mockGetHome = getHome as jest.MockedFunction<typeof getHome>;
 const mockCreate = createTask as jest.MockedFunction<typeof createTask>;

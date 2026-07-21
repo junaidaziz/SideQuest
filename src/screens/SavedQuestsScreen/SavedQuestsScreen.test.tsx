@@ -2,13 +2,13 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-jest.mock('../../services/missionsApi');
-jest.mock('../../services/queuedActions');
-
 import SavedQuestsScreen from './SavedQuestsScreen';
 import { listSavedMissions } from '../../services/missionsApi';
 import { enqueueSaveToggle } from '../../services/queuedActions';
 import type { PaginatedSavedMissions } from '../../types/api';
+
+jest.mock('../../services/missionsApi');
+jest.mock('../../services/queuedActions');
 
 const mockListSaved = listSavedMissions as jest.Mock;
 const mockEnqueueSave = enqueueSaveToggle as jest.Mock;

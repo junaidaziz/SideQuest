@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import {
   COMPASS_TOUCH_MIN,
-  CompassRadius,
   CompassSpacing,
 } from '../../constants/compassDesign';
 import { textStyle } from './typography';

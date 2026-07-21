@@ -2,17 +2,6 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-jest.mock('react-native-reanimated', () => {
-  const { View } = require('react-native');
-  const chain = (): unknown => new Proxy(function () {}, { get: () => chain(), apply: () => chain() });
-  return {
-    __esModule: true,
-    default: { View, createAnimatedComponent: (comp: unknown) => comp },
-    FadeInDown: chain(),
-  };
-});
-jest.mock('../../services/tasksApi');
-
 import ChallengeFeedScreen, { whenPressed } from './ChallengeFeedScreen';
 import {
   bucketTasks,
@@ -24,6 +13,17 @@ import {
 } from './challengeUtils';
 import { listTasks } from '../../services/tasksApi';
 import type { PaginatedTasks, Task } from '../../types/api';
+
+jest.mock('react-native-reanimated', () => {
+  const { View } = require('react-native');
+  const chain = (): unknown => new Proxy(function () {}, { get: () => chain(), apply: () => chain() });
+  return {
+    __esModule: true,
+    default: { View, createAnimatedComponent: (comp: unknown) => comp },
+    FadeInDown: chain(),
+  };
+});
+jest.mock('../../services/tasksApi');
 
 const mockListTasks = listTasks as jest.MockedFunction<typeof listTasks>;
 

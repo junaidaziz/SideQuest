@@ -2,14 +2,6 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-jest.mock('expo-haptics', () => ({
-  impactAsync: jest.fn(() => Promise.resolve()),
-  notificationAsync: jest.fn(() => Promise.resolve()),
-  ImpactFeedbackStyle: { Light: 'light' },
-  NotificationFeedbackType: { Success: 'success' },
-}));
-jest.mock('../../services/tasksApi');
-
 import ChallengeDetailScreen, { whenPressed } from './ChallengeDetailScreen';
 import {
   buildTimeline,
@@ -20,6 +12,14 @@ import {
 } from './detailUtils';
 import { generateTaskInvite, getTask, reviewTaskSubmission } from '../../services/tasksApi';
 import type { TaskDetail, TaskSubmission } from '../../types/api';
+
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(() => Promise.resolve()),
+  notificationAsync: jest.fn(() => Promise.resolve()),
+  ImpactFeedbackStyle: { Light: 'light' },
+  NotificationFeedbackType: { Success: 'success' },
+}));
+jest.mock('../../services/tasksApi');
 
 const mockGetTask = getTask as jest.MockedFunction<typeof getTask>;
 const mockReview = reviewTaskSubmission as jest.MockedFunction<typeof reviewTaskSubmission>;

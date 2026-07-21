@@ -2,6 +2,13 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import * as Haptics from 'expo-haptics';
+import ProofSubmissionScreenV2, { canSubmit, submitLabel } from './ProofSubmissionScreenV2';
+import { submitPhotoProof, submitTextProof } from '../../services/proofApi';
+import { enqueueProofSubmission } from '../../services/queuedActions';
+import { useOfflineStatus } from '../../components/states/useOfflineStatus';
+import type { ProofSubmissionResponse } from '../../types/api';
+
 jest.mock('expo-haptics', () => ({
   notificationAsync: jest.fn(() => Promise.resolve()),
   NotificationFeedbackType: { Success: 'success' },
@@ -32,13 +39,6 @@ jest.mock('../../services/queuedActions');
 jest.mock('../../components/states/useOfflineStatus', () => ({
   useOfflineStatus: jest.fn(() => false),
 }));
-
-import * as Haptics from 'expo-haptics';
-import ProofSubmissionScreenV2, { canSubmit, submitLabel } from './ProofSubmissionScreenV2';
-import { submitPhotoProof, submitTextProof } from '../../services/proofApi';
-import { enqueueProofSubmission } from '../../services/queuedActions';
-import { useOfflineStatus } from '../../components/states/useOfflineStatus';
-import type { ProofSubmissionResponse } from '../../types/api';
 
 const mockPhoto = submitPhotoProof as jest.Mock;
 const mockText = submitTextProof as jest.Mock;

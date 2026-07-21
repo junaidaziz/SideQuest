@@ -1,6 +1,10 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native';
 
+import * as Haptics from 'expo-haptics';
+import CompletionScreenV2, { computeLevel, formatStreak } from './CompletionScreenV2';
+import type { ProofSubmissionResponse } from '../../types/api';
+
 jest.mock('expo-haptics', () => ({
   notificationAsync: jest.fn(() => Promise.resolve()),
   NotificationFeedbackType: { Success: 'success' },
@@ -27,10 +31,6 @@ jest.mock('react-native-reanimated', () => {
     withSequence: (...vs: unknown[]) => vs[vs.length - 1],
   };
 });
-
-import * as Haptics from 'expo-haptics';
-import CompletionScreenV2, { computeLevel, formatStreak } from './CompletionScreenV2';
-import type { ProofSubmissionResponse } from '../../types/api';
 
 const RESULT: ProofSubmissionResponse = {
   completionId: 'c-1',

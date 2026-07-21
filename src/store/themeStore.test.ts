@@ -1,11 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { useThemeStore } from './themeStore';
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
   default: { getItem: jest.fn(), setItem: jest.fn() },
 }));
-
-import { useThemeStore } from './themeStore';
 
 const STORAGE_KEY = 'sidequest.themePreference';
 

@@ -2,8 +2,6 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-jest.mock('../../services/notificationsApi');
-
 import NotificationsScreen from './NotificationsScreen';
 import {
   getUnreadCount,
@@ -12,6 +10,8 @@ import {
   markNotificationRead,
 } from '../../services/notificationsApi';
 import type { AppNotification, PaginatedNotifications } from '../../types/api';
+
+jest.mock('../../services/notificationsApi');
 
 const mockListNotifications = listNotifications as jest.MockedFunction<typeof listNotifications>;
 const mockGetUnreadCount = getUnreadCount as jest.MockedFunction<typeof getUnreadCount>;

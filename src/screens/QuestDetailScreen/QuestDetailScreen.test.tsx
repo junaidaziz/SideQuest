@@ -1,6 +1,10 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native';
 
+import * as Haptics from 'expo-haptics';
+import QuestDetailScreen, { buildCriteria, heroGlyph } from './QuestDetailScreen';
+import type { Mission } from '../../types/api';
+
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(() => Promise.resolve()),
   ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
@@ -30,10 +34,6 @@ jest.mock('expo-linear-gradient', () => {
   const { View } = require('react-native');
   return { LinearGradient: View };
 });
-
-import * as Haptics from 'expo-haptics';
-import QuestDetailScreen, { buildCriteria, heroGlyph } from './QuestDetailScreen';
-import type { Mission } from '../../types/api';
 
 const MISSION: Mission = {
   id: 'm-1',

@@ -14,7 +14,6 @@ import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
 import { getHome } from '../../services/homeApi';
 import { getUnreadCount } from '../../services/notificationsApi';
-import type { HomeResponse } from '../../types/api';
 import { makeStyles } from './TodayScreen.styles';
 
 export type { HomeResponse } from '../../types/api';

@@ -1,12 +1,12 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
+import CommunityScreen, { PREVIEW_DISCOVERIES, whenPressed } from './CommunityScreen';
+
 jest.mock('expo-linear-gradient', () => {
   const { View } = require('react-native');
   return { LinearGradient: View };
 });
-
-import CommunityScreen, { PREVIEW_DISCOVERIES, whenPressed } from './CommunityScreen';
 
 async function renderScreen(overrides: Partial<React.ComponentProps<typeof CommunityScreen>> = {}) {
   const onBack = jest.fn();

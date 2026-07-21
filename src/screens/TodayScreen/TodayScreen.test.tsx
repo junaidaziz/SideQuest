@@ -2,6 +2,12 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import * as Haptics from 'expo-haptics';
+import TodayScreen, { avatarInitial, computeGoalProgress } from './TodayScreen';
+import { getHome } from '../../services/homeApi';
+import { getUnreadCount } from '../../services/notificationsApi';
+import type { HomeResponse } from '../../types/api';
+
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(() => Promise.resolve()),
   notificationAsync: jest.fn(() => Promise.resolve()),
@@ -37,12 +43,6 @@ jest.mock('expo-linear-gradient', () => {
 
 jest.mock('../../services/homeApi');
 jest.mock('../../services/notificationsApi');
-
-import * as Haptics from 'expo-haptics';
-import TodayScreen, { avatarInitial, computeGoalProgress } from './TodayScreen';
-import { getHome } from '../../services/homeApi';
-import { getUnreadCount } from '../../services/notificationsApi';
-import type { HomeResponse } from '../../types/api';
 
 const mockGetHome = getHome as jest.Mock;
 const mockGetUnreadCount = getUnreadCount as jest.Mock;
