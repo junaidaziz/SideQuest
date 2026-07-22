@@ -21,6 +21,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Production dependency audit
+        run: npm run audit:prod
+
+      - name: Generate CycloneDX SBOM
+        run: npm sbom --omit=dev --sbom-format=cyclonedx > sbom.cdx.json
+
       - name: Type check
         run: npx tsc --noEmit
 
@@ -29,3 +35,9 @@ jobs:
 
       - name: Unit tests (with coverage gate)
         run: npm test -- --coverage
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-sbom
+          path: sbom.cdx.json

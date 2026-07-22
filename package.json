@@ -62,7 +62,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest",
-    "lint": "expo lint --max-warnings 0"
+    "lint": "expo lint --max-warnings 0",
+    "audit:prod": "node scripts/audit-production.mjs"
   },
   "private": true,
   "jest": {
