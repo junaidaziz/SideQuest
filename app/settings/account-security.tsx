@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useCallback, useEffect } from 'react';
 import AccountSecurityScreen from '../../src/screens/AccountSecurityScreen';
 import { changePassword, deleteAccount } from '../../src/services/authApi';
+import { ApiError } from '../../src/services/apiClient';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function AccountSecurityRoute() {
@@ -25,7 +26,12 @@ export default function AccountSecurityRoute() {
 
   const handleChangePassword = useCallback(async (currentPassword: string, newPassword: string) => {
     await changePassword({ currentPassword, newPassword });
-  }, []);
+    // The backend revokes the refresh token on password change. Clear every
+    // local auth/cache artifact immediately instead of leaving a session that
+    // fails unexpectedly only when its access token later expires.
+    await logout();
+    router.replace('/today');
+  }, [logout]);
 
   const handleDeleteAccount = useCallback(async (password: string) => {
     // This route's guest guard above means every account reaching here has
@@ -34,7 +40,18 @@ export default function AccountSecurityRoute() {
     // confirm:true path this screen's UI doesn't yet expose — a known,
     // pre-existing gap in the screen's own form (not introduced by this
     // wiring), left for a follow-up UI pass rather than reworked here.
-    await deleteAccount({ currentPassword: password });
+    try {
+      await deleteAccount({ currentPassword: password });
+    } catch (error) {
+      // Google-only accounts have no password. The destructive checkbox is
+      // already checked before this callback can run; retry with the backend's
+      // explicit confirmation shape only when it identifies that exact case.
+      if (error instanceof ApiError && error.status === 400 && error.message.includes('confirm=true')) {
+        await deleteAccount({ confirm: true });
+        return;
+      }
+      throw error;
+    }
   }, []);
 
   const handleDeleted = useCallback(async () => {

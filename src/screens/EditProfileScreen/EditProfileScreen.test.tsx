@@ -3,7 +3,7 @@ import { Alert } from 'react-native';
 import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import EditProfileScreen, { validateDisplayName, BIO_MAX_LENGTH } from './EditProfileScreen';
+import EditProfileScreen, { validateDisplayName } from './EditProfileScreen';
 import { updateDisplayName } from '../../services/profileApi';
 import { removeAvatar, uploadAvatar } from '../../services/avatarApi';
 import type { UserProfile } from '../../types/api';
@@ -78,17 +78,11 @@ describe('EditProfileScreen', () => {
       expect(screen.getByLabelText('Display name').props.value).toBe('Alex Rivera');
     });
 
-    it('shows the bio character counter and updates it as the user types', async () => {
+    it('honestly explains which profile fields can be saved', async () => {
       await renderScreen();
-      expect(screen.getByText(`0 / ${BIO_MAX_LENGTH}`)).toBeTruthy();
-      await fireEvent.changeText(screen.getByLabelText('Bio'), 'Hello world');
-      expect(screen.getByText(`11 / ${BIO_MAX_LENGTH}`)).toBeTruthy();
-    });
-
-    it('captures the optional pronouns field', async () => {
-      await renderScreen();
-      await fireEvent.changeText(screen.getByLabelText('Pronouns'), 'they/them');
-      expect(screen.getByLabelText('Pronouns').props.value).toBe('they/them');
+      expect(screen.getByText(/Pronouns and bio are not supported yet/)).toBeTruthy();
+      expect(screen.queryByLabelText('Bio')).toBeNull();
+      expect(screen.queryByLabelText('Pronouns')).toBeNull();
     });
 
     it('starts with an empty name field when the profile has no display name', async () => {

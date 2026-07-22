@@ -23,17 +23,17 @@ export interface AccountSecurityScreenProps {
   onSignOutOtherDevices?: () => void;
   /**
    * Persists a password change.
-   * TODO(backend M22): wire to PATCH /auth/password — endpoint does not exist
-   * yet. Defaults to a resolved no-op so the UI/flow is fully testable now.
+   * The route supplies the real PATCH /auth/password implementation; injection
+   * keeps this presentational screen independently testable.
    */
   onChangePassword?: (currentPassword: string, newPassword: string) => Promise<void>;
   /**
    * Permanently deletes the account.
-   * TODO(backend M22): wire to DELETE /auth/me — endpoint does not exist yet.
+   * The route supplies the real DELETE /auth/me implementation.
    */
   onDeleteAccount?: (password: string) => Promise<void>;
   /** Fired after a successful account deletion. */
-  onDeleted?: () => void;
+  onDeleted?: () => void | Promise<void>;
 }
 
 /** Validates a change-password submission. Returns an error message or null. */
@@ -119,7 +119,7 @@ export default function AccountSecurityScreen({
     setDeleteError(null);
     try {
       await onDeleteAccount(deletePassword);
-      onDeleted?.();
+      await onDeleted?.();
     } catch {
       setDeleteError("Couldn't delete your account. Check your password and try again.");
     } finally {
@@ -141,7 +141,7 @@ export default function AccountSecurityScreen({
             icon="✉️"
             label="Email"
             sub={email}
-            accessory={
+            accessory={onChangeEmail ? (
               <Pressable
                 onPress={onChangeEmail}
                 accessibilityRole="button"
@@ -150,12 +150,7 @@ export default function AccountSecurityScreen({
               >
                 <Text style={styles.linkText}>Change</Text>
               </Pressable>
-            }
-          />
-          <SettingsRow
-            icon="🔗"
-            label="Connected accounts"
-            sub="Google · Connected"
+            ) : <Text style={styles.linkText}>Unavailable</Text>}
           />
           <SettingsRow
             icon="🔑"
@@ -175,23 +170,23 @@ export default function AccountSecurityScreen({
         <SettingsSection title="Devices" index={1} animate={false}>
           <SettingsRow icon="📱" label="This device" sub="Active now" />
         </SettingsSection>
-        <Pressable
+        {onSignOutOtherDevices ? <Pressable
           onPress={onSignOutOtherDevices}
           accessibilityRole="button"
           accessibilityLabel="Sign out other devices"
           style={({ pressed }) => [shell.secondaryBtn, pressedStyle(pressed)]}
         >
           <Text style={shell.secondaryBtnText}>Sign out other devices</Text>
-        </Pressable>
+        </Pressable> : null}
 
         <SettingsSection title="Your data" index={2} animate={false}>
-          <SettingsRow
+          {onDownloadData ? <SettingsRow
             icon="⬇️"
             label="Download your data"
             sub="We'll email a link when it's ready"
             onPress={onDownloadData}
             showChevron
-          />
+          /> : <SettingsRow icon="⬇️" label="Download your data" sub="Not available yet" />}
         </SettingsSection>
 
         {/* ── Delete account ── kept animation-free and explicit. */}

@@ -26,9 +26,6 @@ import { CompassHeader, textStyle, pressedStyle } from '../../components/compass
 import { initialsFromName } from '../YouScreen/YouScreen';
 import { createStyles } from './EditProfileScreen.styles';
 
-/** Max length for the (currently local-only) bio field, mirroring the mockup. */
-export const BIO_MAX_LENGTH = 140;
-
 export interface EditProfileScreenProps {
   onBack?: () => void;
   /** Fired once a save round-trip completes successfully. */
@@ -54,12 +51,6 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [nameError, setNameError] = useState<string | null>(null);
-  // Pronouns and bio have no backend field yet (UpdateProfileDto only accepts
-  // displayName). They are captured locally so the UI is complete; wire them to
-  // a real PATCH /auth/me payload once the backend adds the columns.
-  // TODO(backend M22): persist pronouns + bio.
-  const [pronouns, setPronouns] = useState('');
-  const [bio, setBio] = useState('');
   const [avatarError, setAvatarError] = useState<string | null>(null);
 
   const nameMutation = useMutation({
@@ -303,41 +294,10 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
           )}
         </View>
 
-        <View style={styles.field}>
-          <Text style={[textStyle('labelM'), styles.label]}>
-            Pronouns <Text style={styles.optional}>(optional)</Text>
-          </Text>
-          <TextInput
-            value={pronouns}
-            onChangeText={setPronouns}
-            editable={!saving}
-            placeholder="Add your pronouns"
-            placeholderTextColor={colors.textTertiary}
-            style={styles.input}
-            accessibilityLabel="Pronouns"
-          />
-        </View>
-
-        <View style={styles.field}>
-          <Text style={[textStyle('labelM'), styles.label]}>
-            Bio <Text style={styles.optional}>(optional)</Text>
-          </Text>
-          <TextInput
-            value={bio}
-            onChangeText={setBio}
-            editable={!saving}
-            multiline
-            maxLength={BIO_MAX_LENGTH}
-            placeholder="Chasing small adventures between meetings."
-            placeholderTextColor={colors.textTertiary}
-            style={[styles.input, styles.textarea]}
-            accessibilityLabel="Bio"
-          />
-          <Text
-            style={[textStyle('bodyS'), styles.count]}
-            accessibilityLabel={`${bio.length} of ${BIO_MAX_LENGTH} characters used`}
-          >
-            {`${bio.length} / ${BIO_MAX_LENGTH}`}
+        <View style={styles.uploadNote} accessibilityRole="text">
+          <Text importantForAccessibility="no">{'ℹ️'}</Text>
+          <Text style={[textStyle('bodyS'), styles.uploadNoteText]}>
+            Pronouns and bio are not supported yet. This screen saves only your display name and photo.
           </Text>
         </View>
 
