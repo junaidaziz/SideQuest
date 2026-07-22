@@ -7,6 +7,8 @@ import type {
   PushTokenResult,
   RegisterPushTokenRequest,
   UnreadCount,
+  NotificationPreferencesDto,
+  UpdateNotificationPreferencesRequest,
 } from '../types/api';
 
 /** Serializes defined params into a `?a=b&c=d` suffix (empty when none). */
@@ -32,6 +34,19 @@ export function listNotifications(query: ListNotificationsQuery = {}): Promise<P
 /** Badge count for the bell icon. */
 export function getUnreadCount(): Promise<UnreadCount> {
   return apiRequest<UnreadCount>('/notifications/unread-count');
+}
+
+export function getNotificationPreferences(): Promise<NotificationPreferencesDto> {
+  return apiRequest<NotificationPreferencesDto>('/notifications/preferences');
+}
+
+export function updateNotificationPreferences(
+  body: UpdateNotificationPreferencesRequest,
+): Promise<NotificationPreferencesDto> {
+  return apiRequest<NotificationPreferencesDto>('/notifications/preferences', {
+    method: 'PATCH',
+    body,
+  });
 }
 
 /** Marks a single notification read (idempotent — re-marking an already-read

@@ -16,11 +16,11 @@ async function renderScreen(
 
 describe('NotificationPreferencesScreen', () => {
   describe('rendering', () => {
-    it('renders the grouped sections and quiet-hours range', async () => {
+    it('renders only the backend-supported preference groups', async () => {
       await renderScreen();
       expect(screen.getByText('PUSH NOTIFICATIONS')).toBeTruthy();
       expect(screen.getByText('WHAT YOU HEAR ABOUT')).toBeTruthy();
-      expect(screen.getByLabelText('Quiet hours from 10:00 PM to 7:00 AM')).toBeTruthy();
+      expect(screen.queryByText('QUIET HOURS')).toBeNull();
     });
 
     it('reflects the default preference switch states', async () => {
@@ -29,16 +29,16 @@ describe('NotificationPreferencesScreen', () => {
         screen.getByLabelText('Allow push notifications').props.accessibilityState,
       ).toMatchObject({ checked: true });
       expect(
-        screen.getByLabelText('Group notifications').props.accessibilityState,
-      ).toMatchObject({ checked: false });
+        screen.getByLabelText('Account activity notifications').props.accessibilityState,
+      ).toMatchObject({ checked: true });
     });
 
     it('accepts injected initial preferences', async () => {
       await renderScreen({
-        initialPreferences: { ...DEFAULT_NOTIFICATION_PREFERENCES, challenges: false },
+        initialPreferences: { ...DEFAULT_NOTIFICATION_PREFERENCES, taskEventsEnabled: false },
       });
       expect(
-        screen.getByLabelText('Challenge notifications').props.accessibilityState,
+        screen.getByLabelText('Task and challenge notifications').props.accessibilityState,
       ).toMatchObject({ checked: false });
     });
   });
@@ -46,13 +46,13 @@ describe('NotificationPreferencesScreen', () => {
   describe('interactions', () => {
     it('toggles a category and reports the change', async () => {
       const props = await renderScreen();
-      await fireEvent.press(screen.getByLabelText('Group notifications'));
+      await fireEvent.press(screen.getByLabelText('Referral notifications'));
       expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ groups: true }),
+        expect.objectContaining({ referralEventsEnabled: false }),
       );
       expect(
-        screen.getByLabelText('Group notifications').props.accessibilityState,
-      ).toMatchObject({ checked: true });
+        screen.getByLabelText('Referral notifications').props.accessibilityState,
+      ).toMatchObject({ checked: false });
     });
 
     it('disables and blanks category switches when push is turned off', async () => {
@@ -61,7 +61,7 @@ describe('NotificationPreferencesScreen', () => {
       expect(props.onChange).toHaveBeenCalledWith(
         expect.objectContaining({ pushEnabled: false }),
       );
-      const verification = screen.getByLabelText('Quest verification notifications');
+      const verification = screen.getByLabelText('Task and challenge notifications');
       expect(verification.props.accessibilityState).toMatchObject({
         checked: false,
         disabled: true,
@@ -72,16 +72,8 @@ describe('NotificationPreferencesScreen', () => {
       const props = await renderScreen();
       await fireEvent.press(screen.getByLabelText('Allow push notifications'));
       (props.onChange as jest.Mock).mockClear();
-      await fireEvent.press(screen.getByLabelText('Challenge notifications'));
+      await fireEvent.press(screen.getByLabelText('Task and challenge notifications'));
       expect(props.onChange).not.toHaveBeenCalled();
-    });
-
-    it('toggles the quiet-hours mute switch', async () => {
-      const props = await renderScreen();
-      await fireEvent.press(screen.getByLabelText('Mute during quiet hours'));
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ quietHours: false }),
-      );
     });
 
     it('fires back navigation', async () => {

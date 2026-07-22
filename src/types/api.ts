@@ -56,6 +56,16 @@ export interface DeleteAccountResponse {
   success: boolean;
 }
 
+/** Mirrors backend NotificationPreferencesDto. */
+export interface NotificationPreferencesDto {
+  pushEnabled: boolean;
+  taskEventsEnabled: boolean;
+  referralEventsEnabled: boolean;
+  accountEventsEnabled: boolean;
+}
+
+export type UpdateNotificationPreferencesRequest = Partial<NotificationPreferencesDto>;
+
 export interface SignupRequest {
   email: string;
   password: string;

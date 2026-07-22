@@ -2,10 +2,12 @@ import { apiRequest } from './apiClient';
 import {
   deregisterPushToken,
   getUnreadCount,
+  getNotificationPreferences,
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
   registerPushToken,
+  updateNotificationPreferences,
 } from './notificationsApi';
 import type {
   AppNotification,
@@ -76,6 +78,30 @@ describe('notificationsApi', () => {
       const result = await getUnreadCount();
       expect(mockApiRequest).toHaveBeenCalledWith('/notifications/unread-count');
       expect(result).toBe(count);
+    });
+  });
+
+  describe('notification preferences', () => {
+    const preferences = {
+      pushEnabled: true,
+      taskEventsEnabled: true,
+      referralEventsEnabled: false,
+      accountEventsEnabled: true,
+    };
+
+    it('GETs the persisted preferences', async () => {
+      mockApiRequest.mockResolvedValue(preferences);
+      expect(await getNotificationPreferences()).toBe(preferences);
+      expect(mockApiRequest).toHaveBeenCalledWith('/notifications/preferences');
+    });
+
+    it('PATCHes a partial preference update', async () => {
+      mockApiRequest.mockResolvedValue({ ...preferences, referralEventsEnabled: true });
+      await updateNotificationPreferences({ referralEventsEnabled: true });
+      expect(mockApiRequest).toHaveBeenCalledWith('/notifications/preferences', {
+        method: 'PATCH',
+        body: { referralEventsEnabled: true },
+      });
     });
   });
 
