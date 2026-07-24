@@ -145,6 +145,16 @@ describe('EditProfileScreen', () => {
       expect(Alert.alert).toHaveBeenCalledTimes(1);
     });
 
+    it('has no separate "Change photo" text pill — the camera badge on the avatar is the only trigger', async () => {
+      await renderScreen();
+      // A dedicated pill button used to sit next to Remove; it's gone now
+      // that the camera badge itself opens the picker.
+      expect(screen.queryByText('Change photo')).toBeNull();
+      // Exactly one element carries the "Change photo" accessibility label —
+      // the camera badge — not two competing triggers.
+      expect(screen.getAllByLabelText('Change photo')).toHaveLength(1);
+    });
+
     it('uploads a chosen library photo', async () => {
       mockLaunchLibrary.mockResolvedValueOnce({
         canceled: false,
