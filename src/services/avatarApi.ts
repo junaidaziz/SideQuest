@@ -1,5 +1,5 @@
 import { apiRequest } from './apiClient';
-import { localFileToBlob } from './localFileBlob';
+import { localFilePart } from './localFilePart';
 import type { UserProfile } from '../types/api';
 
 /**
@@ -8,20 +8,20 @@ import type { UserProfile } from '../types/api';
  *
  * `photoUri` is a local file URI from expo-image-picker (e.g. `file:///...`).
  *
- * The multipart body is built with the exact same `localFileToBlob` helper as
- * `proofApi.submitPhotoProof` — see `localFileBlob.ts` for why a `fetch()`-based
- * Blob is used instead of `expo-file-system`'s `File.slice()` (a duck-typed
- * `{ uri, name, type }` object fails FormData's New Architecture `instanceof
- * Blob` check; `File.slice()` itself hits a separate, confirmed upstream bug,
- * expo/expo#40144).
+ * The multipart body is built with the exact same `localFilePart` helper as
+ * `proofApi.submitPhotoProof` — see `localFilePart.ts` for why a plain
+ * `{ uri, name, type }` object (React Native's own native multipart-file
+ * mechanism) is used instead of a `Blob`.
  *
  * The multipart field name is `avatar` (not `photo`) — it must match the
  * backend's `FileInterceptor('avatar', …)`.
  */
-export async function uploadAvatar(photoUri: string): Promise<UserProfile> {
+export function uploadAvatar(photoUri: string): Promise<UserProfile> {
   const form = new FormData();
-  const { blob, name } = await localFileToBlob(photoUri);
-  form.append('avatar', blob, name);
+  // TypeScript's ambient FormData type is the DOM spec (string | Blob) and
+  // doesn't know about React Native's actual runtime FormData, which also
+  // accepts a plain { uri, name, type } object — see localFilePart.ts.
+  form.append('avatar', localFilePart(photoUri) as unknown as Blob);
 
   return apiRequest<UserProfile>('/users/me/avatar', {
     method: 'POST',
