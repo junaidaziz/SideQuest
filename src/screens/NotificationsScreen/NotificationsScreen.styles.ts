@@ -19,7 +19,6 @@ export function makeStyles(c: CompassPalette) {
     },
     backBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
     backBtnPressed: { opacity: 0.5 },
-    backGlyph: { fontSize: 26, color: c.textPrimary },
     title: {
       flex: 1,
       textAlign: 'center',
@@ -80,12 +79,11 @@ export function makeStyles(c: CompassPalette) {
       width: 96,
       height: 96,
       borderRadius: 48,
-      backgroundColor: `${c.actionPrimary}1F`,
+      backgroundColor: c.bgSubtle,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: CompassSpacing.s4,
     },
-    emptyGlyph: { fontSize: 44 },
     emptyTitle: {
       fontFamily: CompassFonts.display,
       fontSize: CompassType.h2.size,
@@ -109,7 +107,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     emptyCtaPressed: { backgroundColor: c.actionPressed },
-    emptyCtaText: { color: '#FFFFFF', fontWeight: '600', fontSize: CompassType.labelL.size },
+    emptyCtaText: { color: c.onPrimary, fontWeight: '600', fontSize: CompassType.labelL.size },
 
     // ── Loading / error ──
     stateArea: { flex: 1, paddingHorizontal: CompassSpacing.gutterPhone, justifyContent: 'center' },
@@ -132,7 +130,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: CompassType.labelL.size },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: CompassType.labelL.size },
     skel: { backgroundColor: c.bgSubtle, borderRadius: CompassRadius.card },
     skelRow: { height: 80 },
     skeletonWrap: { paddingHorizontal: CompassSpacing.gutterPhone, paddingTop: CompassSpacing.s2, gap: CompassSpacing.s3 },
