@@ -1,6 +1,16 @@
 import { StyleSheet } from 'react-native';
 import { CompassRadius, CompassSpacing, type CompassPalette } from '../../constants/compassDesign';
 
+/**
+ * Intentional theme-invariant exceptions: the remove-photo control floats over
+ * an arbitrary user photo, not a themed surface, so its scrim + glyph must stay
+ * fixed and legible in both light and dark. Named here (rather than left as a
+ * bare hex in the stylesheet) so they read as a deliberate exception, not a
+ * missed token.
+ */
+const PHOTO_OVERLAY_SCRIM = 'rgba(0,0,0,0.55)' as const;
+const PHOTO_OVERLAY_GLYPH_COLOR = '#FFFFFF' as const;
+
 export function makeStyles(c: CompassPalette) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.bgCanvas },
@@ -29,7 +39,15 @@ export function makeStyles(c: CompassPalette) {
     reqText: { fontSize: 14, lineHeight: 20, color: c.textPrimary, flex: 1 },
     segmented: { flexDirection: 'row', backgroundColor: c.bgSubtle, borderRadius: CompassRadius.md, padding: 4, gap: 4 },
     seg: { flex: 1, height: 48, borderRadius: CompassRadius.sm, alignItems: 'center', justifyContent: 'center' },
-    segActive: { backgroundColor: c.bgSurface },
+    // Selected segment = surface pill lifted on shadow-1 (design § 5 segmented).
+    segActive: {
+      backgroundColor: c.bgSurface,
+      shadowColor: c.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+      elevation: 2,
+    },
     segText: { fontSize: 14, fontWeight: '600', color: c.textSecondary },
     segTextActive: { color: c.textPrimary },
     // Single-slot layout (MAX_PHOTOS = 1, see the screen component). A square
@@ -46,6 +64,7 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.bgSubtle,
     },
     photoImage: { width: '100%', height: '100%' },
+    // See PHOTO_OVERLAY_* above — intentional theme-invariant photo overlay.
     removeBtn: {
       position: 'absolute',
       top: 4,
@@ -53,11 +72,11 @@ export function makeStyles(c: CompassPalette) {
       width: 26,
       height: 26,
       borderRadius: 13,
-      backgroundColor: 'rgba(0,0,0,0.55)',
+      backgroundColor: PHOTO_OVERLAY_SCRIM,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    removeGlyph: { color: '#FFFFFF', fontSize: 13 },
+    removeGlyph: { color: PHOTO_OVERLAY_GLYPH_COLOR, fontSize: 13 },
     addTile: {
       width: '100%',
       aspectRatio: 1,
@@ -87,7 +106,7 @@ export function makeStyles(c: CompassPalette) {
     tip: {
       flexDirection: 'row',
       gap: 10,
-      backgroundColor: 'rgba(245,184,46,0.1)',
+      backgroundColor: c.xpTint,
       borderRadius: CompassRadius.md,
       padding: CompassSpacing.s3,
     },
@@ -105,7 +124,7 @@ export function makeStyles(c: CompassPalette) {
     },
     primaryBtn: { height: 52, borderRadius: CompassRadius.btn, backgroundColor: c.actionPrimary, alignItems: 'center', justifyContent: 'center' },
     primaryBtnDisabled: { opacity: 0.45 },
-    primaryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    primaryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
     draftNote: { textAlign: 'center', fontSize: 12, color: c.textTertiary },
   });
 }
