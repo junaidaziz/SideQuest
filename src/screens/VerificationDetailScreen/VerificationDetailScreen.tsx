@@ -1,12 +1,19 @@
 import React, { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import { CompassMotion } from '../../constants/compassDesign';
 import { makeStyles } from './VerificationDetailScreen.styles';
 
 type Styles = ReturnType<typeof makeStyles>;
+
+/** Returns `style` only while a Pressable is pressed, else null — local copy of
+ * the pressed-feedback helper every migrated sibling screen defines. */
+export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): StyleProp<ViewStyle> {
+  return pressed ? style : null;
+}
 
 export type VerificationStatus = 'pending' | 'approved' | 'rejected';
 
@@ -98,13 +105,21 @@ function TimelineRow({ step, isLast, styles }: { step: TimelineStep; isLast: boo
         : step.state === 'rejected'
           ? styles.tlNodeRejected
           : null;
+  const glyphStyle =
+    step.state === 'done'
+      ? styles.tlGlyphDone
+      : step.state === 'current'
+        ? styles.tlGlyphCurrent
+        : step.state === 'rejected'
+          ? styles.tlGlyphRejected
+          : null;
   const glyph = step.state === 'done' ? '✓' : step.state === 'current' ? '⏳' : step.state === 'rejected' ? '✕' : '';
   return (
     <View style={styles.tlItem} accessible accessibilityLabel={`${step.title}. ${step.time}`}>
       <View style={styles.tlRail}>
         <View style={[styles.tlNode, nodeStyle]}>
           {glyph ? (
-            <Text style={styles.tlNodeGlyph} accessibilityElementsHidden importantForAccessibility="no">
+            <Text style={[styles.tlNodeGlyph, glyphStyle]} accessibilityElementsHidden importantForAccessibility="no">
               {glyph}
             </Text>
           ) : null}
@@ -160,11 +175,23 @@ export default function VerificationDetailScreen({
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
-        <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to progress" style={styles.iconBtn}>
-          <Text style={styles.iconGlyph}>{'‹'}</Text>
+        <Pressable
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="Back to progress"
+          style={({ pressed }) => [styles.iconBtn, whenPressed(pressed, styles.iconBtnPressed)]}
+        >
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
-        <Text style={styles.topTitle}>Verification</Text>
-        <Pressable onPress={onHelp} accessibilityRole="button" accessibilityLabel="Help with verification" style={styles.iconBtn}>
+        <Text accessibilityRole="header" style={styles.topTitle}>
+          Verification
+        </Text>
+        <Pressable
+          onPress={onHelp}
+          accessibilityRole="button"
+          accessibilityLabel="Help with verification"
+          style={({ pressed }) => [styles.iconBtn, whenPressed(pressed, styles.iconBtnPressed)]}
+        >
           <Text style={styles.iconGlyph}>{'?'}</Text>
         </Pressable>
       </View>
@@ -181,7 +208,12 @@ export default function VerificationDetailScreen({
             Nothing to verify yet
           </Text>
           <Text style={styles.stateBody}>Submit a quest&apos;s proof and its review status will appear here.</Text>
-          <Pressable onPress={handleRetry} accessibilityRole="button" accessibilityLabel="Back to progress from empty state" style={styles.retryBtn}>
+          <Pressable
+            onPress={handleRetry}
+            accessibilityRole="button"
+            accessibilityLabel="Back to progress from empty state"
+            style={({ pressed }) => [styles.retryBtn, whenPressed(pressed, styles.retryBtnPressed)]}
+          >
             <Text style={styles.retryBtnText}>Back to progress</Text>
           </Pressable>
         </View>
@@ -209,7 +241,7 @@ export default function VerificationDetailScreen({
                 ))}
               </View>
               <View style={styles.audienceNote}>
-                <Text accessibilityElementsHidden importantForAccessibility="no">{'\u{1F512}'}</Text>
+                <Icon name="lock" size={16} color={colors.textSecondary} />
                 <Text style={styles.audienceText}>Visible to you and reviewers only. Media links refresh each time you open this.</Text>
               </View>
             </View>
@@ -231,10 +263,20 @@ export default function VerificationDetailScreen({
             </View>
 
             <View style={styles.actionsRow}>
-              <Pressable onPress={onRequestUpdate} accessibilityRole="button" accessibilityLabel="Request review update" style={styles.secondaryBtn}>
+              <Pressable
+                onPress={onRequestUpdate}
+                accessibilityRole="button"
+                accessibilityLabel="Request review update"
+                style={({ pressed }) => [styles.secondaryBtn, whenPressed(pressed, styles.secondaryBtnPressed)]}
+              >
                 <Text style={styles.secondaryBtnText}>Request review update</Text>
               </Pressable>
-              <Pressable onPress={onDelete} accessibilityRole="button" accessibilityLabel="Delete this proof" style={styles.deleteBtn}>
+              <Pressable
+                onPress={onDelete}
+                accessibilityRole="button"
+                accessibilityLabel="Delete this proof"
+                style={({ pressed }) => [styles.deleteBtn, whenPressed(pressed, styles.deleteBtnPressed)]}
+              >
                 <Text style={styles.deleteGlyph} accessibilityElementsHidden importantForAccessibility="no">{'\u{1F5D1}\u{FE0F}'}</Text>
               </Pressable>
             </View>
@@ -246,7 +288,12 @@ export default function VerificationDetailScreen({
                   <Text style={styles.rejectBold}>Why it bounced: </Text>
                   {detail.rejectionReason}{' '}
                 </Text>
-                <Pressable onPress={onResubmit} accessibilityRole="button" accessibilityLabel="Resubmit proof">
+                <Pressable
+                  onPress={onResubmit}
+                  accessibilityRole="button"
+                  accessibilityLabel="Resubmit proof"
+                  style={({ pressed }) => [styles.resubmitBtn, whenPressed(pressed, styles.resubmitBtnPressed)]}
+                >
                   <Text style={styles.link}>Resubmit</Text>
                 </Pressable>
               </View>
