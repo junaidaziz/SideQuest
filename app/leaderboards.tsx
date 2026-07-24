@@ -10,6 +10,7 @@ import { useAuthStore } from '../src/store/authStore';
  */
 export default function LeaderboardsRoute() {
   const displayName = useAuthStore((s) => s.user?.displayName ?? null);
+  const avatarUrl = useAuthStore((s) => s.user?.avatarUrl ?? null);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -18,6 +19,7 @@ export default function LeaderboardsRoute() {
   return (
     <LeaderboardsScreen
       displayName={displayName}
+      avatarUrl={avatarUrl}
       onBack={handleBack}
       // onOpenWeekPicker intentionally left unwired: no week-picker screen
       // exists in this migration. Documented no-op.
