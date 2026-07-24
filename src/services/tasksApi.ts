@@ -1,5 +1,5 @@
 import { apiRequest } from './apiClient';
-import { localFileToBlob } from './localFileBlob';
+import { localFilePart } from './localFilePart';
 import type {
   CreateTaskRequest,
   InviteResponse,
@@ -86,22 +86,21 @@ export interface SubmitEvidenceInput {
 
 /**
  * Submits evidence for a task. Multipart, following the exact `proofApi`
- * convention: a real `Blob` (via `localFileToBlob`, backed by `fetch()`) is
- * appended rather than a duck-typed `{ uri, name, type }` object — the latter
- * fails FormData's strict `instanceof Blob` check under React Native's New
- * Architecture. `expo-file-system`'s `File.slice()` was tried first but hits
- * a separate, confirmed upstream bug (expo/expo#40144) — see
- * `localFileBlob.ts`.
+ * convention: a plain `{ uri, name, type }` object (React Native's own
+ * native multipart-file mechanism) is appended rather than a `Blob` — see
+ * `localFilePart.ts` for why.
  */
-export async function submitTaskEvidence(
+export function submitTaskEvidence(
   taskId: string,
   input: SubmitEvidenceInput,
   idempotencyKey?: string,
 ): Promise<TaskDetail> {
   const form = new FormData();
   if (input.photoUri) {
-    const { blob, name } = await localFileToBlob(input.photoUri);
-    form.append('photo', blob, name);
+    // TypeScript's ambient FormData type is the DOM spec (string | Blob) and
+    // doesn't know about React Native's actual runtime FormData, which also
+    // accepts a plain { uri, name, type } object — see localFilePart.ts.
+    form.append('photo', localFilePart(input.photoUri) as unknown as Blob);
   }
   if (input.notes !== undefined) {
     form.append('notes', input.notes);
