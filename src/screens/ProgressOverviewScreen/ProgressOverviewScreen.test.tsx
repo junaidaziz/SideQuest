@@ -199,6 +199,20 @@ describe('ProgressOverviewScreen', () => {
     });
   });
 
+  describe('Halcyon+ iconography', () => {
+    it('renders vector icons for the bell, level chevron and streak flames', async () => {
+      await renderScreen();
+      await waitFor(() => expect(screen.getByText('Trailblazer')).toBeTruthy());
+      const q = (id: string) => screen.getByTestId(id, { includeHiddenElements: true });
+      expect(q('progress-bell-icon')).toBeTruthy();
+      expect(q('progress-level-chevron')).toBeTruthy();
+      // Streak surfaces (stat tile + streak card) carry the Ember flame icon.
+      expect(q('progress-streak-tile-flame')).toBeTruthy();
+      expect(q('progress-streak-card-flame')).toBeTruthy();
+      expect(q('progress-streak-card-chevron')).toBeTruthy();
+    });
+  });
+
   describe('accessibility', () => {
     it('gives every interactive Pressable a role and label', async () => {
       await renderScreen();
