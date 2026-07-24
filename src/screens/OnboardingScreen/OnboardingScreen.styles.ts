@@ -110,27 +110,24 @@ export function makeStyles(c: CompassPalette) {
       color: c.textPrimary,
     },
     optionLabelSelected: {
-      color: '#FFFFFF',
+      color: c.onPrimary,
     },
     check: {
       width: 22,
       height: 22,
       borderRadius: 11,
       borderWidth: 2,
-      borderColor: c.borderDefault,
+      borderColor: c.borderStrong,
       alignItems: 'center',
       justifyContent: 'center',
     },
     checkSelected: {
-      // Translucent white — this circle sits on the actionPrimary-filled
-      // selected option regardless of theme, so it doesn't need to flip.
-      borderColor: 'rgba(255, 255, 255, 0.4)',
-      backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    },
-    checkMark: {
-      color: '#FFFFFF',
-      fontSize: 12,
-      fontWeight: '700',
+      // Derived from the on-primary ink (translucent) so the circle stays
+      // legible on the actionPrimary fill in BOTH themes — in dark mode
+      // actionPrimary is a light powder-blue, so a fixed translucent *white*
+      // (the old value) vanished. on-primary flips with the theme.
+      borderColor: `${c.onPrimary}66`,
+      backgroundColor: `${c.onPrimary}2E`,
     },
     ctaArea: {
       paddingTop: CompassSpacing.s4,
@@ -148,20 +145,16 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.actionPressed,
     },
     nextButtonDisabled: {
-      backgroundColor: c.borderDefault,
+      backgroundColor: c.disabledBg,
     },
     nextButtonLabel: {
       fontFamily: CompassFonts.bodySemiBold,
       fontSize: CompassType.labelL.size,
-      color: '#FFFFFF',
+      color: c.onPrimary,
       letterSpacing: 0.2,
     },
     nextButtonLabelDisabled: {
-      color: c.textSecondary,
-    },
-    nextButtonArrow: {
-      fontSize: CompassType.labelL.size,
-      color: '#FFFFFF',
+      color: c.disabledText,
     },
     loading: {
       position: 'absolute',
