@@ -12,6 +12,17 @@ import {
  * (memoised in the component) rather than a single static Colors import.
  */
 export function makeStyles(c: CompassPalette) {
+  // Halcyon+ shadow-first elevation (design § 3, `--shadow-1`) tinted with the
+  // `shadowColor` token — the primary card boundary on the low-contrast lavender
+  // canvas. Borders drop to the decorative `borderSubtle` hairline where a
+  // shadow already does the separating.
+  const shadow1 = {
+    shadowColor: c.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 3,
+  } as const;
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.bgCanvas },
     topBar: {
@@ -39,7 +50,6 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     iconBtnPressed: { backgroundColor: c.borderDefault },
-    iconGlyph: { fontSize: 20 },
     unreadBadge: {
       position: 'absolute',
       top: -2,
@@ -48,14 +58,18 @@ export function makeStyles(c: CompassPalette) {
       height: 18,
       paddingHorizontal: 4,
       borderRadius: 9,
-      backgroundColor: c.socialCoral,
+      // Curated status tint/text pair — the app's standard badge language
+      // (matches VerificationDetailScreen). The prior solid `socialCoral` fill
+      // with white text was not AA in either theme (white-on-socialCoral is
+      // 4.14:1 light / 2.07:1 dark); this pair is 5.90:1 light / 7.23:1 dark.
+      backgroundColor: c.statusErrorTint,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
       borderColor: c.bgCanvas,
     },
     unreadBadgeText: {
-      color: '#FFFFFF',
+      color: c.statusErrorText,
       fontSize: 10,
       fontWeight: '700',
       lineHeight: 12,
@@ -67,6 +81,11 @@ export function makeStyles(c: CompassPalette) {
       paddingBottom: CompassSpacing.s9,
       gap: CompassSpacing.s6,
     },
+    // Generic single-child flex fill (row meta columns) + the loading
+    // skeleton's gutter-padded wrapper — named entries rather than inline
+    // constant objects.
+    flex1: { flex: 1 },
+    loadingArea: { flex: 1, paddingHorizontal: CompassSpacing.gutterPhone },
 
     // ── State areas ──
     stateArea: { flex: 1, paddingHorizontal: CompassSpacing.gutterPhone, justifyContent: 'center' },
@@ -95,7 +114,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: CompassType.labelL.size },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: CompassType.labelL.size },
 
     skeletonWrap: { gap: CompassSpacing.s4, paddingTop: CompassSpacing.s4 },
     skel: { backgroundColor: c.bgSubtle, borderRadius: CompassRadius.card },
@@ -118,7 +137,7 @@ export function makeStyles(c: CompassPalette) {
       fontWeight: '800',
       fontSize: 30,
       letterSpacing: -0.45,
-      color: '#FFFFFF',
+      color: c.onPrimary,
     },
     lvlLabel: { fontSize: 13, color: c.actionPrimary, fontWeight: '700' },
     lvlName: {
@@ -130,7 +149,6 @@ export function makeStyles(c: CompassPalette) {
       marginTop: 2,
     },
     caption: { fontSize: CompassType.caption.size, color: c.textSecondary, marginTop: 2 },
-    chevron: { color: c.textTertiary, fontSize: 20 },
 
     xpRow: {
       flexDirection: 'row',
@@ -139,7 +157,8 @@ export function makeStyles(c: CompassPalette) {
       marginTop: CompassSpacing.s3,
       marginBottom: CompassSpacing.s2,
     },
-    xpLabel: { fontSize: CompassType.labelM.size, fontWeight: '600', color: c.textPrimary },
+    // XP total carries the XP identity (design § 2.3), pairing with the amber bar.
+    xpLabel: { fontSize: CompassType.labelM.size, fontWeight: '700', color: c.xpText },
 
     // ── Section headers ──
     rowHead: {
@@ -160,7 +179,8 @@ export function makeStyles(c: CompassPalette) {
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
       borderWidth: 1,
-      borderColor: c.borderDefault,
+      borderColor: c.borderSubtle,
+      ...shadow1,
     },
     tilePressed: { backgroundColor: c.bgSubtle, transform: [{ scale: 0.98 }] },
     tileTop: { flexDirection: 'row', alignItems: 'center', gap: CompassSpacing.s2 },
@@ -174,6 +194,8 @@ export function makeStyles(c: CompassPalette) {
       color: c.textPrimary,
       marginTop: CompassSpacing.s2,
     },
+    // Ember streak identity override for the streak stat tile / streak card.
+    tileBigStreak: { color: c.streakText },
     tileSub: { fontSize: CompassType.caption.size, color: c.textTertiary, marginTop: 2 },
 
     ringTile: { flexBasis: '100%' },
@@ -185,6 +207,7 @@ export function makeStyles(c: CompassPalette) {
       fontSize: 24,
       color: c.textPrimary,
     },
+    ringValueStreak: { color: c.streakText },
     ringSub: { fontSize: CompassType.caption.size, color: c.textSecondary, marginTop: 2 },
 
     // ── Achievements strip ──
@@ -209,7 +232,8 @@ export function makeStyles(c: CompassPalette) {
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
       borderWidth: 1,
-      borderColor: c.borderDefault,
+      borderColor: c.borderSubtle,
+      ...shadow1,
     },
     cardLabel: { fontSize: CompassType.labelL.size, fontWeight: '600', color: c.textPrimary },
     breakdownRow: {
