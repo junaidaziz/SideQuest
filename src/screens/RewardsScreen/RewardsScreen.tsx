@@ -7,6 +7,7 @@ import type { HomeResponse, PaginatedReferralHistory, ReferralMe } from '../../t
 import { getHome } from '../../services/homeApi';
 import { getReferralHistory, getReferralMe } from '../../services/referralsApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import { makeStyles } from './RewardsScreen.styles';
 
 export interface RewardsScreenProps {
@@ -68,7 +69,7 @@ interface HeroProps {
 function RewardsHero({ me, home, colors, styles }: HeroProps) {
   return (
     <LinearGradient
-      colors={[colors.brandGold, '#E08A1E']}
+      colors={[colors.heroGradStart, colors.heroGradEnd]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.hero}
@@ -120,7 +121,7 @@ export default function RewardsScreen({ onBack, onShareInvite }: RewardsScreenPr
           accessibilityLabel="Back to profile"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Rewards
