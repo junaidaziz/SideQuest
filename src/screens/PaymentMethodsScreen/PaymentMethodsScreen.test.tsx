@@ -6,6 +6,7 @@ import PaymentMethodsScreen, {
   cardAccessibilityLabel,
   formatBrand,
   formatExpiry,
+  whenPressed,
 } from './PaymentMethodsScreen';
 import {
   createSetupIntent,
@@ -394,6 +395,14 @@ describe('PaymentMethodsScreen', () => {
 
     it('handles a two-digit month', () => {
       expect(formatExpiry(12, 2028)).toBe('12/28');
+    });
+  });
+
+  describe('whenPressed', () => {
+    it('returns the given style only while pressed', () => {
+      const s = { opacity: 0.5 };
+      expect(whenPressed(true, s)).toBe(s);
+      expect(whenPressed(false, s)).toBeNull();
     });
   });
 
