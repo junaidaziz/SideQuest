@@ -23,6 +23,7 @@ import {
 import { removeAvatar, uploadAvatar } from '../../services/avatarApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassHeader, textStyle, pressedStyle } from '../../components/compass';
+import { Icon } from '../../components/icons';
 import { initialsFromName } from '../YouScreen/YouScreen';
 import { createStyles } from './EditProfileScreen.styles';
 
@@ -208,7 +209,7 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
               )}
               {avatarBusy ? (
                 <View style={styles.avatarBusy} importantForAccessibility="no">
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={colors.alwaysWhite} />
                 </View>
               ) : null}
             </LinearGradient>
@@ -305,9 +306,9 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
           <Text style={[textStyle('labelM'), styles.sectionLabel]}>Who can see this</Text>
           <View style={styles.visCard} accessible accessibilityLabel="Your profile is private. Only you can see it.">
             <View style={styles.visIcon} importantForAccessibility="no">
-              <Text>{'\u{1F512}'}</Text>
+              <Icon name="lock" size={18} color={colors.textPrimary} />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={styles.visBody}>
               <Text style={[textStyle('labelM'), styles.visTitle]}>Private</Text>
               <Text style={[textStyle('caption'), styles.visSub]}>
                 Only you can see your profile and history.
