@@ -242,6 +242,15 @@ describe('YouScreen', () => {
     });
   });
 
+  describe('Halcyon+ iconography', () => {
+    it('renders the settings and streak-flame vector icons', async () => {
+      await renderScreen();
+      await waitFor(() => expect(screen.getByText('Level 7 · Trailblazer')).toBeTruthy());
+      expect(screen.getByTestId('you-settings-icon', { includeHiddenElements: true })).toBeTruthy();
+      expect(screen.getByTestId('you-streak-flame', { includeHiddenElements: true })).toBeTruthy();
+    });
+  });
+
   describe('pure helpers', () => {
     it('initialsFromName handles two-word, single-word, email and empty', () => {
       expect(initialsFromName('Alex Rivera', null)).toBe('AR');
