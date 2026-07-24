@@ -17,6 +17,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '../../store/authStore';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import { makeStyles } from './LoginScreen.styles';
 
 /**
@@ -259,7 +260,7 @@ export default function LoginScreen({
             whenPressed(pressed, styles.iconBtnPressed),
           ]}
         >
-          <Text style={styles.iconGlyph}>{'‹'}</Text>
+          <Icon name="back" size={20} color={colors.textPrimary} />
         </Pressable>
 
         <Text accessibilityRole="header" style={styles.headerTitle}>
@@ -283,7 +284,7 @@ export default function LoginScreen({
             importantForAccessibility="no"
             accessibilityElementsHidden
           >
-            <Text style={styles.lockupGlyph}>{'\u{1F512}'}</Text>
+            <Icon name="lock" size={26} color={colors.actionPrimary} />
           </View>
 
           <Text accessibilityRole="header" style={styles.leadTitle}>
