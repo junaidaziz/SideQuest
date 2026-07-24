@@ -3,9 +3,9 @@
  * native module can't load under Jest). Mirrors just enough of the real
  * `File` class's URI-derived behavior — `.name` (basename), `.extension`
  * (with leading dot), `.type` (extension-derived MIME guess, standing in for
- * native detection), and `.slice(start, end, contentType)` — for code that
- * constructs `new File(uri)` to inspect the picked file without touching the
- * real filesystem.
+ * native detection), `.slice(start, end, contentType)`, and `.bytes()` — for
+ * code that constructs `new File(uri)` to inspect the picked file without
+ * touching the real filesystem.
  *
  * `slice()` deliberately does NOT default a missing `contentType` to
  * anything sensible — it passes whatever it's given straight to `Blob`,
@@ -14,6 +14,14 @@
  * arguments, which made it impossible for a test to catch production code
  * that forgets to pass the file's real MIME type through (a real bug this
  * mock previously masked — see proofApi.ts's submitPhotoProof for the fix).
+ *
+ * `bytes()` mirrors the real `File.prototype.bytes()` — a genuine native
+ * module method (`NativeFileSystem.types.ts`'s `bytes(): Promise<Uint8Array>`)
+ * that Expo's own "Winter" fetch runtime (`expo/src/winter/fetch/convertFormData.ts`)
+ * calls directly when serializing a FormData part whose value isn't a string
+ * or a real `Blob` but does have a `.bytes` member — see
+ * `localUploadFile.ts` for why appending the raw `File` instance (not
+ * `.slice()`'d into a Blob) is what actually works with this app's fetch.
  */
 class File {
   constructor(uri) {
@@ -29,6 +37,14 @@ class File {
 
   slice(start, end, contentType) {
     return new Blob([], { type: contentType });
+  }
+
+  async bytes() {
+    return new Uint8Array([1, 2, 3]);
+  }
+
+  bytesSync() {
+    return new Uint8Array([1, 2, 3]);
   }
 }
 
