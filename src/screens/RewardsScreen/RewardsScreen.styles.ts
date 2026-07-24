@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import {
+  CompassFonts,
   CompassRadius,
   CompassSpacing,
   CompassType,
@@ -18,11 +19,10 @@ export function makeStyles(c: CompassPalette) {
     },
     backBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
     backBtnPressed: { opacity: 0.5 },
-    backGlyph: { fontSize: 26, color: c.textPrimary },
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'PlusJakartaSans_800ExtraBold',
+      fontFamily: CompassFonts.fallbackHeavy,
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -37,15 +37,16 @@ export function makeStyles(c: CompassPalette) {
     },
 
     hero: { borderRadius: CompassRadius.hero, padding: CompassSpacing.s6 },
-    heroEyebrow: { fontSize: CompassType.bodyS.size, fontWeight: '700', color: '#FFFFFF', opacity: 0.95 },
+    heroEyebrow: { fontSize: CompassType.bodyS.size, fontWeight: '700', color: c.onHero, opacity: 0.9 },
     heroTotal: {
-      fontFamily: 'Inter_800ExtraBold',
+      fontFamily: CompassFonts.numeric,
       fontSize: 36,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: c.onHero,
       marginVertical: 4,
+      fontVariant: ['tabular-nums'],
     },
-    heroSub: { fontSize: CompassType.bodyS.size, color: '#FFFFFF', opacity: 0.95 },
+    heroSub: { fontSize: CompassType.bodyS.size, color: c.onHero, opacity: 0.9 },
 
     card: {
       backgroundColor: c.bgSurface,
@@ -86,9 +87,9 @@ export function makeStyles(c: CompassPalette) {
       paddingHorizontal: CompassSpacing.s3,
       paddingVertical: 4,
       borderRadius: CompassRadius.pill,
-      backgroundColor: `${c.rewardXp}1F`,
+      backgroundColor: c.xpTint,
     },
-    xpBadgeText: { fontSize: CompassType.caption.size, fontWeight: '700', color: c.rewardXp },
+    xpBadgeText: { fontSize: CompassType.caption.size, fontWeight: '700', color: c.xpText },
     emptyText: { fontSize: CompassType.bodyM.size, color: c.textSecondary },
 
     footnote: {
@@ -107,7 +108,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s4,
     },
     stateHeading: {
-      fontFamily: 'PlusJakartaSans_700Bold',
+      fontFamily: CompassFonts.fallbackBold,
       fontSize: CompassType.h3.size,
       fontWeight: '700',
       color: c.textPrimary,
@@ -124,7 +125,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: CompassType.labelL.size },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: CompassType.labelL.size },
     skel: { backgroundColor: c.bgSubtle, borderRadius: CompassRadius.card },
     skelHero: { height: 120 },
     skelCard: { height: 160 },
