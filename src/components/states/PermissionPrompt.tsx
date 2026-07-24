@@ -8,6 +8,15 @@ import {
 } from '../../constants/compassDesign';
 import { textStyle } from '../compass/typography';
 
+/**
+ * Theme-invariant modal backdrop scrim. The design system has no dedicated
+ * scrim token (a dim over arbitrary content is intentionally the same deep-ink
+ * wash in both themes), so it's a named constant rather than a bare literal
+ * inside the stylesheet — mirrors `ProofSubmissionScreenV2`'s
+ * `PHOTO_OVERLAY_SCRIM`.
+ */
+const MODAL_SCRIM = 'rgba(23,21,39,0.55)' as const;
+
 export interface PermissionPromptProps {
   visible: boolean;
   /** Leading glyph in the rounded icon tile. */
@@ -98,7 +107,7 @@ export function PermissionPrompt({
                 pressed ? { backgroundColor: colors.actionPressed } : null,
               ]}
             >
-              <Text style={[textStyle('labelL'), styles.primaryText]}>{allowLabel}</Text>
+              <Text style={[textStyle('labelL'), { color: colors.onPrimary }]}>{allowLabel}</Text>
             </Pressable>
             {fallbackLabel && onFallback ? (
               <Pressable
@@ -134,7 +143,7 @@ const styles = StyleSheet.create({
   },
   scrim: {
     position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
-    backgroundColor: 'rgba(23,21,39,0.55)',
+    backgroundColor: MODAL_SCRIM,
   },
   sheet: {
     borderTopLeftRadius: CompassRadius.sheet,
@@ -177,9 +186,6 @@ const styles = StyleSheet.create({
     borderRadius: CompassRadius.btn,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  primaryText: {
-    color: '#FFFFFF',
   },
   tertiaryBtn: {
     minHeight: COMPASS_TOUCH_MIN,
