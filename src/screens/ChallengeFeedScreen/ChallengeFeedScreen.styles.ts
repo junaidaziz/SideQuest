@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import {
+  CompassFonts,
   CompassRadius,
   CompassSpacing,
   CompassType,
@@ -8,6 +9,16 @@ import {
 
 /** Theme-aware styles for the challenge feed (mockup 26). */
 export function makeStyles(c: CompassPalette) {
+  // Halcyon+ shadow-first elevation (design § 3, `--shadow-1`) tinted with the
+  // `shadowColor` token — a white card is only ~1.12:1 on the lavender canvas,
+  // so the shadow, not a border, carries the separation.
+  const shadow1 = {
+    shadowColor: c.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 3,
+  } as const;
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.bgCanvas },
     topBar: {
@@ -18,20 +29,18 @@ export function makeStyles(c: CompassPalette) {
     },
     backBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
     backBtnPressed: { opacity: 0.5 },
-    backGlyph: { fontSize: 26, color: c.textPrimary },
     iconBtn: {
       width: 48,
       height: 48,
       borderRadius: CompassRadius.pill,
-      backgroundColor: c.bgSubtle,
+      backgroundColor: c.communityTint,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    iconGlyph: { fontSize: 22, color: c.actionPrimary, fontWeight: '700' },
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'PlusJakartaSans_800ExtraBold',
+      fontFamily: CompassFonts.fallbackHeavy,
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -54,19 +63,23 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
       gap: 6,
     },
-    segSelected: { backgroundColor: c.bgSurface },
+    segSelected: { backgroundColor: c.bgSurface, ...shadow1 },
     segText: { fontSize: 13, fontWeight: '600', color: c.textSecondary },
     segTextSelected: { color: c.textPrimary },
+    // Count badge = Community identity (challenges are the peer-to-peer social
+    // surface): `communityTint` fill + `communityText` label. This is the
+    // semantically-correct pairing — an earlier version used `--on-primary`
+    // (white) on a solid community/coral fill, a contrast + meaning mismatch.
     count: {
       minWidth: 18,
       height: 18,
       paddingHorizontal: 5,
       borderRadius: CompassRadius.pill,
-      backgroundColor: c.socialCoral,
+      backgroundColor: c.communityTint,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    countText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+    countText: { color: c.communityText, fontSize: 11, fontWeight: '700' },
 
     scroll: { flex: 1 },
     scrollContent: {
@@ -76,21 +89,23 @@ export function makeStyles(c: CompassPalette) {
     },
     list: { gap: CompassSpacing.s3 },
 
+    // Shadow-first elevation (design § 3): the card is separated from the
+    // lavender canvas by `shadow1`, not a load-bearing outline.
     card: {
       flexDirection: 'row',
       gap: CompassSpacing.s3,
       backgroundColor: c.bgSurface,
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s3,
-      borderWidth: 1,
-      borderColor: c.borderDefault,
+      ...shadow1,
     },
     cardPressed: { backgroundColor: c.bgSubtle },
+    // Challenge thumbnail well carries the Community identity tint.
     hex: {
       width: 52,
       height: 52,
       borderRadius: 16,
-      backgroundColor: `${c.actionPrimary}26`,
+      backgroundColor: c.communityTint,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -99,7 +114,7 @@ export function makeStyles(c: CompassPalette) {
     cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: CompassSpacing.s2 },
     cardTitle: {
       flex: 1,
-      fontFamily: 'PlusJakartaSans_700Bold',
+      fontFamily: CompassFonts.fallbackBold,
       fontWeight: '700',
       fontSize: 16,
       color: c.textPrimary,
@@ -114,13 +129,14 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.bgSubtle,
     },
     statusChipText: { fontSize: 12, fontWeight: '600', color: c.textSecondary },
+    // XP identity chip: `xpTint` fill + `xpText` label (design § 2.3).
     xpChip: {
       paddingHorizontal: CompassSpacing.s3,
       paddingVertical: 4,
       borderRadius: CompassRadius.pill,
-      backgroundColor: `${c.rewardXp}1F`,
+      backgroundColor: c.xpTint,
     },
-    xpChipText: { fontSize: 12, fontWeight: '700', color: c.rewardXp },
+    xpChipText: { fontSize: 12, fontWeight: '700', color: c.xpText },
 
     empty: {
       alignItems: 'center',
@@ -129,7 +145,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s2,
     },
     emptyGlyph: { fontSize: 40 },
-    emptyTitle: { fontFamily: 'PlusJakartaSans_700Bold', fontSize: 18, fontWeight: '700', color: c.textPrimary },
+    emptyTitle: { fontFamily: CompassFonts.fallbackBold, fontSize: 18, fontWeight: '700', color: c.textPrimary },
     emptyBody: {
       fontSize: CompassType.bodyM.size,
       color: c.textSecondary,
@@ -146,7 +162,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     emptyCtaPressed: { backgroundColor: c.actionPressed },
-    emptyCtaText: { color: '#FFFFFF', fontWeight: '600', fontSize: CompassType.labelL.size },
+    emptyCtaText: { color: c.onPrimary, fontWeight: '600', fontSize: CompassType.labelL.size },
 
     footnote: {
       fontSize: CompassType.caption.size,
@@ -163,7 +179,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s4,
     },
     stateHeading: {
-      fontFamily: 'PlusJakartaSans_700Bold',
+      fontFamily: CompassFonts.fallbackBold,
       fontSize: CompassType.h3.size,
       fontWeight: '700',
       color: c.textPrimary,
@@ -180,8 +196,8 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: CompassType.labelL.size },
-    skel: { backgroundColor: c.bgSubtle, borderRadius: CompassRadius.card },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: CompassType.labelL.size },
+    skel: { backgroundColor: c.skeletonBase, borderRadius: CompassRadius.card },
     skelCard: { height: 96 },
   });
 }
