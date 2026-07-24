@@ -30,7 +30,9 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
       position: 'relative',
     },
-    heroGlyph: { fontSize: 88, fontWeight: '800', color: 'rgba(255,255,255,0.92)' },
+    // Aurora hero: dark on-hero ink (design § 2.2), never white — so it reads
+    // premium on the light dawn gradient and survives the theme switch.
+    heroGlyph: { fontSize: 88, fontWeight: '800', color: `${c.onHero}E6` },
     xpTag: {
       position: 'absolute',
       bottom: 14,
@@ -38,9 +40,9 @@ export function makeStyles(c: CompassPalette) {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: CompassRadius.pill,
-      backgroundColor: 'rgba(199,133,0,0.9)',
+      backgroundColor: c.xp,
     },
-    xpTagText: { fontSize: 12, fontWeight: '700', color: '#FFFFFF' },
+    xpTagText: { fontSize: 12, fontWeight: '700', color: c.onHero },
     body: { paddingHorizontal: CompassSpacing.gutterPhone, paddingTop: CompassSpacing.s5, gap: CompassSpacing.s5 },
     title: { fontSize: 26, fontWeight: '800', color: c.textPrimary, letterSpacing: -0.39 },
     subRow: { flexDirection: 'row', gap: CompassSpacing.s2, marginTop: CompassSpacing.s2, flexWrap: 'wrap' },
@@ -76,7 +78,7 @@ export function makeStyles(c: CompassPalette) {
       width: 40,
       height: 40,
       borderRadius: CompassRadius.sm,
-      backgroundColor: 'rgba(101,71,245,0.14)',
+      backgroundColor: `${c.actionPrimary}24`,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -87,7 +89,7 @@ export function makeStyles(c: CompassPalette) {
     note: {
       flexDirection: 'row',
       gap: 10,
-      backgroundColor: 'rgba(36,107,206,0.08)',
+      backgroundColor: `${c.statusInfo}14`,
       borderRadius: CompassRadius.md,
       padding: CompassSpacing.s3,
     },
@@ -108,7 +110,7 @@ export function makeStyles(c: CompassPalette) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    acceptBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    acceptBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
     acceptedBtn: { backgroundColor: c.statusSuccess },
     // States
     stateArea: { flex: 1, justifyContent: 'center', paddingHorizontal: CompassSpacing.gutterPhone, gap: CompassSpacing.s4 },
@@ -127,6 +129,6 @@ export function makeStyles(c: CompassPalette) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
   });
 }
