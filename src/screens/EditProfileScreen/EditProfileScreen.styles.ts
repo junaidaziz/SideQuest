@@ -31,6 +31,9 @@ export function createStyles(colors: CompassPalette) {
       overflow: 'hidden',
     },
     avatarImage: { width: 96, height: 96, borderRadius: 48 },
+    // The tap target for changing the photo — kept visually compact to sit
+    // as a badge on the avatar's corner; actual hit area is padded to
+    // COMPASS_TOUCH_MIN via hitSlop at the call site, not by this size.
     camBadge: {
       position: 'absolute',
       bottom: -2,
@@ -64,15 +67,6 @@ export function createStyles(colors: CompassPalette) {
       flexDirection: 'row',
       gap: CompassSpacing.s3,
     },
-    smallBtn: {
-      minHeight: COMPASS_TOUCH_MIN,
-      borderRadius: CompassRadius.btn,
-      paddingHorizontal: CompassSpacing.s5,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.bgSubtle,
-    },
-    smallBtnText: { color: colors.actionPrimary, fontWeight: '600' },
     tertiaryBtn: {
       minHeight: COMPASS_TOUCH_MIN,
       paddingHorizontal: CompassSpacing.s3,
