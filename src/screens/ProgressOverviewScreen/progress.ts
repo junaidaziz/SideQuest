@@ -158,7 +158,13 @@ export function filterAchievements(
   return defs.filter((d) => achievementStatus(d) === filter);
 }
 
-/** Resolve a Compass palette colour for an achievement tint. */
+/**
+ * Resolve a Halcyon+ palette colour for an achievement tint. The `gold` and
+ * `coral` arms now read the dedicated gamification identities (XP amber / Ember
+ * streak, design § 2.3) instead of the legacy single-purpose `rewardXp` /
+ * `socialCoral` aliases — so an XP-earning or streak achievement badge carries
+ * the same hue as that concept everywhere else in the app.
+ */
 export function tintColor(tint: AchievementTint, colors: CompassPalette): string {
   switch (tint) {
     case 'teal':
@@ -166,11 +172,35 @@ export function tintColor(tint: AchievementTint, colors: CompassPalette): string
     case 'violet':
       return colors.actionPrimary;
     case 'gold':
-      return colors.rewardXp;
+      return colors.xp;
     case 'coral':
-      return colors.socialCoral;
+      return colors.streak;
     default:
       return colors.actionPrimary;
+  }
+}
+
+/**
+ * Opaque, theme-aware badge-fill for an achievement tint — the curated identity
+ * `*Tint` counterpart of {@link tintColor}. Replaces the former runtime
+ * `${color}26` alpha blend over the lavender canvas (which is theme-fragile and,
+ * for any text-on-fill, the exact low-contrast pattern flagged twice in this
+ * project). Each achievement tint maps to the identity whose hue it already
+ * carries, matching the four-identity tint rotation in `22-achievements.html`:
+ * teal→Community · violet→Achievement · gold→XP · coral→Streak.
+ */
+export function tintSurface(tint: AchievementTint, colors: CompassPalette): string {
+  switch (tint) {
+    case 'teal':
+      return colors.communityTint;
+    case 'violet':
+      return colors.achievementTint;
+    case 'gold':
+      return colors.xpTint;
+    case 'coral':
+      return colors.streakTint;
+    default:
+      return colors.achievementTint;
   }
 }
 
