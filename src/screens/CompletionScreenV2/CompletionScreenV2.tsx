@@ -12,18 +12,23 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import type { ProofSubmissionResponse } from '../../types/api';
 import { makeStyles } from './CompletionScreenV2.styles';
 
 export type { ProofSubmissionResponse } from '../../types/api';
 
-const CONFETTI = [
-  { left: '14%', top: '10%', color: '#6547F5' },
-  { left: '32%', top: '4%', color: '#FF6B5E' },
-  { left: '54%', top: '8%', color: '#18A999' },
-  { left: '74%', top: '5%', color: '#F5B82E' },
-  { left: '88%', top: '12%', color: '#6547F5' },
-] as const;
+// Confetti is coloured from the four gamification identities + the primary
+// (design § 6 completion key frame) — resolved from the live theme at render,
+// never hardcoded hex, so it survives the light/dark switch.
+type ConfettiKey = 'actionPrimary' | 'streak' | 'community' | 'xp' | 'achievement';
+const CONFETTI: readonly { left: `${number}%`; top: `${number}%`; key: ConfettiKey }[] = [
+  { left: '14%', top: '10%', key: 'actionPrimary' },
+  { left: '32%', top: '4%', key: 'streak' },
+  { left: '54%', top: '8%', key: 'community' },
+  { left: '74%', top: '5%', key: 'xp' },
+  { left: '88%', top: '12%', key: 'achievement' },
+];
 
 /** Derived level from the flat 100-XP-per-level curve documented in types/api. */
 export function computeLevel(totalXp: number): {
@@ -109,11 +114,14 @@ export default function CompletionScreenV2({
           <View style={styles.celebrate} accessibilityLiveRegion="polite">
             <View style={styles.confetti} accessibilityElementsHidden importantForAccessibility="no">
               {CONFETTI.map((piece, idx) => (
-                <View key={idx} style={[styles.confettiPiece, { left: piece.left, top: piece.top, backgroundColor: piece.color }]} />
+                <View
+                  key={idx}
+                  style={[styles.confettiPiece, { left: piece.left, top: piece.top, backgroundColor: colors[piece.key] }]}
+                />
               ))}
             </View>
             <View style={styles.medal} accessibilityElementsHidden importantForAccessibility="no">
-              <Text style={styles.medalGlyph}>{'\u{2B50}'}</Text>
+              <Icon name="spark" size={52} color={colors.onHero} />
             </View>
             <Text accessibilityRole="header" style={styles.title}>
               Quest complete
@@ -158,9 +166,9 @@ export default function CompletionScreenV2({
 
             <View style={styles.card} accessibilityRole="text" accessibilityLabel={`${streakLabel}. Your longest yet.`}>
               <View style={styles.streakRow}>
-                <Text style={styles.streakGlyph} accessibilityElementsHidden importantForAccessibility="no">{'\u{1F525}'}</Text>
+                <Icon name="flame" size={24} color={colors.streak} />
                 <View style={styles.proofBody}>
-                  <Text style={styles.label}>{streakLabel}</Text>
+                  <Text style={[styles.label, { color: colors.streakText }]}>{streakLabel}</Text>
                   <Text style={styles.caption}>It stays whether or not tomorrow happens.</Text>
                 </View>
               </View>
@@ -182,14 +190,14 @@ export default function CompletionScreenV2({
                     <Text style={styles.label}>{nextIdea.title}</Text>
                     <Text style={styles.caption}>{nextIdea.meta}</Text>
                   </View>
-                  <Text style={styles.chevron} accessibilityElementsHidden importantForAccessibility="no">{'›'}</Text>
+                  <Icon name="chevronRight" size={18} color={colors.actionPrimary} />
                 </View>
               </Pressable>
             </View>
 
             {isGuest ? (
               <View style={styles.guestCard} accessibilityRole="text">
-                <Text accessibilityElementsHidden importantForAccessibility="no">{'\u{1F510}'}</Text>
+                <Icon name="lock" size={20} color={colors.actionPrimary} />
                 <View style={styles.guestBody}>
                   <Text style={styles.guestTitle}>Keep this progress</Text>
                   <Text style={styles.guestText}>
