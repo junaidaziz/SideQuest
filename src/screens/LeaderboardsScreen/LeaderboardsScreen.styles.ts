@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import {
+  CompassFonts,
   CompassRadius,
   CompassSpacing,
   CompassType,
@@ -18,7 +19,6 @@ export function makeStyles(c: CompassPalette) {
     },
     backBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
     backBtnPressed: { opacity: 0.5 },
-    backGlyph: { fontSize: 26, color: c.textPrimary },
     iconBtn: {
       width: 48,
       height: 48,
@@ -31,7 +31,7 @@ export function makeStyles(c: CompassPalette) {
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'PlusJakartaSans_800ExtraBold',
+      fontFamily: CompassFonts.fallbackHeavy,
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -48,9 +48,9 @@ export function makeStyles(c: CompassPalette) {
       flexDirection: 'row',
       gap: CompassSpacing.s3,
       alignItems: 'flex-start',
-      backgroundColor: `${c.brandViolet}1F`,
+      backgroundColor: c.communityTint,
       borderWidth: 1,
-      borderColor: `${c.brandViolet}59`,
+      borderColor: c.community,
       borderRadius: CompassRadius.md,
       padding: CompassSpacing.s3,
     },
@@ -99,30 +99,35 @@ export function makeStyles(c: CompassPalette) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    rankTop: { backgroundColor: c.rewardXp },
+    // Top-3 ranks get the XP identity as a curated tint (design's gamification
+    // identity), replacing the former solid `rewardXp` fill (which is the
+    // text-safe alias and read as a muddy badge behind `textPrimary`).
+    rankTop: { backgroundColor: c.xpTint },
     // "You" row sits on a solid actionPrimary background — the default
     // bgSubtle/textPrimary pairing (tuned for the plain card background)
-    // reads as a mismatched grey badge on top of it.
-    rankMe: { backgroundColor: 'rgba(255,255,255,0.22)' },
-    rankText: { fontFamily: 'Inter_800ExtraBold', fontSize: 13, fontWeight: '800', color: c.textPrimary },
-    rankTextMe: { color: '#FFFFFF' },
+    // reads as a mismatched grey badge on top of it. `actionPressed` keeps the
+    // badge in-family with the row while staying AA against `onPrimary` text.
+    rankMe: { backgroundColor: c.actionPressed },
+    rankText: { fontFamily: CompassFonts.numeric, fontSize: 13, fontWeight: '800', color: c.textPrimary },
+    rankTextMe: { color: c.onPrimary },
     avatar: {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: c.brandVioletDark,
+      backgroundColor: c.communityTint,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    avatarText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+    avatarText: { color: c.communityText, fontWeight: '700', fontSize: 15 },
     rowName: { flex: 1, fontSize: CompassType.bodyM.size, fontWeight: '600', color: c.textPrimary },
     rowXp: {
-      fontFamily: 'Inter_800ExtraBold',
+      fontFamily: CompassFonts.numeric,
       fontSize: 15,
       fontWeight: '800',
       color: c.textPrimary,
+      fontVariant: ['tabular-nums'],
     },
-    rowNameMe: { color: '#FFFFFF' },
+    rowNameMe: { color: c.onPrimary },
 
     footnote: {
       fontSize: CompassType.caption.size,
@@ -140,7 +145,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s4,
     },
     stateHeading: {
-      fontFamily: 'PlusJakartaSans_700Bold',
+      fontFamily: CompassFonts.fallbackBold,
       fontSize: CompassType.h3.size,
       fontWeight: '700',
       color: c.textPrimary,
@@ -157,7 +162,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: CompassType.labelL.size },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: CompassType.labelL.size },
     skel: { backgroundColor: c.bgSubtle, borderRadius: CompassRadius.card },
     skelCard: { height: 320 },
   });
