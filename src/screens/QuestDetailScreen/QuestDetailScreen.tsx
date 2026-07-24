@@ -11,6 +11,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import type { Mission, MissionCategory } from '../../types/api';
 import { makeStyles } from './QuestDetailScreen.styles';
 
@@ -91,11 +92,11 @@ export default function QuestDetailScreen({
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
         <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to results" style={styles.iconBtn}>
-          <Text style={styles.iconGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <View style={styles.spacer} />
         <Pressable onPress={onShare} accessibilityRole="button" accessibilityLabel="Share quest link" style={styles.iconBtn}>
-          <Text style={styles.iconGlyph}>{'↗'}</Text>
+          <Icon name="share" size={22} color={colors.textPrimary} />
         </Pressable>
       </View>
 
@@ -120,9 +121,9 @@ export default function QuestDetailScreen({
           <Animated.View style={styles.scroll} entering={FadeInDown.duration(CompassMotion.durationStandard)}>
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
               <LinearGradient
-                colors={['#18A999', '#1A4E9B']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                colors={[colors.heroGradStart, colors.heroGradEnd]}
+                start={{ x: 0.15, y: 0 }}
+                end={{ x: 0.85, y: 1 }}
                 style={styles.hero}
                 accessible
                 accessibilityRole="image"
