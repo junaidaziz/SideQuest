@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import { makeStyles } from './CommunityScreen.styles';
 
 /**
@@ -61,7 +62,7 @@ export default function CommunityScreen({ onBack, onOpenGuidelines, onOpenQuest 
           accessibilityLabel="Back to explore"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Community
@@ -111,7 +112,7 @@ export default function CommunityScreen({ onBack, onOpenGuidelines, onOpenQuest 
         <Text style={styles.hint}>Nearby appears only after you allow approximate location.</Text>
 
         <LinearGradient
-          colors={[colors.brandTeal, colors.brandTealDark]}
+          colors={[colors.heroGradStart, colors.heroGradEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.curateHero}
@@ -131,8 +132,8 @@ export default function CommunityScreen({ onBack, onOpenGuidelines, onOpenQuest 
             <LinearGradient
               colors={
                 d.accent === 'teal'
-                  ? [`${colors.brandTeal}29`, `${colors.brandViolet}1F`]
-                  : [`${colors.socialCoral}29`, `${colors.brandGold}1F`]
+                  ? [colors.communityTint, colors.bgSurface]
+                  : [colors.streakTint, colors.bgSurface]
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
