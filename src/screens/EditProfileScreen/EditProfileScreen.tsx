@@ -213,26 +213,26 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
                 </View>
               ) : null}
             </LinearGradient>
-            <View
-              style={styles.camBadge}
-              importantForAccessibility="no"
-              accessibilityElementsHidden
-            >
-              <Text style={styles.camGlyph}>{'\u{1F4F7}'}</Text>
-            </View>
-          </View>
-
-          <View style={styles.avatarActions}>
             <Pressable
               onPress={presentPhotoOptions}
               disabled={avatarBusy}
               accessibilityRole="button"
               accessibilityLabel="Change photo"
               accessibilityState={{ disabled: avatarBusy, busy: avatarBusy }}
-              style={({ pressed }) => [styles.smallBtn, pressedStyle(pressed)]}
+              // Visual badge stays compact (34x34, matches the avatar's
+              // knockout size) but the touch target is padded to
+              // COMPASS_TOUCH_MIN via hitSlop — same technique already used
+              // for ProofSubmissionScreenV2's small overlay controls.
+              hitSlop={{ top: 11, bottom: 11, left: 11, right: 11 }}
+              style={({ pressed }) => [styles.camBadge, pressedStyle(pressed)]}
             >
-              <Text style={styles.smallBtnText}>Change photo</Text>
+              <Text style={styles.camGlyph} importantForAccessibility="no">
+                {'\u{1F4F7}'}
+              </Text>
             </Pressable>
+          </View>
+
+          <View style={styles.avatarActions}>
             {hasAvatar ? (
               <Pressable
                 onPress={handleRemovePhoto}
