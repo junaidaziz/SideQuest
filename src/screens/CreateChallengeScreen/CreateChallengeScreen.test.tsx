@@ -260,6 +260,24 @@ describe('CreateChallengeScreen', () => {
     });
   });
 
+  describe('Halcyon+ tokens', () => {
+    it('renders the shared header icon and shows a check on completed steps', async () => {
+      await renderScreen();
+      // Step 1: header shows the close icon; no step is completed yet. Icons are
+      // decorative (hidden from assistive tech), so query hidden elements.
+      expect(await screen.findByTestId('create-header-icon', { includeHiddenElements: true })).toBeTruthy();
+      expect(screen.queryByTestId('step-done-1', { includeHiddenElements: true })).toBeNull();
+      // Advance to step 2 — step 1 is now completed and shows the check glyph.
+      fireEvent.press(await screen.findByLabelText(/Use today's mission/));
+      await pressContinueWhenReady();
+      await waitFor(() =>
+        expect(screen.getByTestId('step-done-1', { includeHiddenElements: true })).toBeTruthy(),
+      );
+      // The still-upcoming steps render their number, not a check.
+      expect(screen.queryByTestId('step-done-3', { includeHiddenElements: true })).toBeNull();
+    });
+  });
+
   describe('accessibility', () => {
     it('gives every interactive element a label', async () => {
       await renderScreen();
