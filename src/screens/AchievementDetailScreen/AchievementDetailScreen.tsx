@@ -5,11 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import AnimatedBar from '../ProgressOverviewScreen/AnimatedBar';
 import {
   achievementStatus,
   deriveAchievements,
   tintColor,
+  tintSurface,
   type AchievementDef,
 } from '../ProgressOverviewScreen/progress';
 import { makeStyles } from './AchievementDetailScreen.styles';
@@ -56,7 +58,7 @@ export default function AchievementDetailScreen({
   const renderBody = () => {
     if (isLoading) {
       return (
-        <View style={{ paddingHorizontal: 20, paddingTop: 8, gap: 20 }} accessibilityRole="progressbar" accessibilityLabel="Loading achievement">
+        <View style={styles.skelWrap} accessibilityRole="progressbar" accessibilityLabel="Loading achievement">
           <View style={[styles.skel, styles.skelHero]} />
           <View style={[styles.skel, styles.skelCard]} />
         </View>
@@ -88,11 +90,12 @@ export default function AchievementDetailScreen({
     }
 
     const color = tintColor(ach.tint, colors);
+    const surface = tintSurface(ach.tint, colors);
     const earned = ach.unlocked;
     return (
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.hero} accessible accessibilityRole="text" accessibilityLabel={`${ach.name}. ${ach.description} ${statusCopy(ach)}.`}>
-          <View style={[styles.bigBadge, { backgroundColor: `${color}26` }, !earned && styles.bigBadgeLocked]}>
+          <View style={[styles.bigBadge, { backgroundColor: earned ? surface : colors.bgSubtle }, !earned && styles.bigBadgeLocked]}>
             <Text style={styles.bigBadgeGlyph}>{ach.icon}</Text>
           </View>
           <Text style={styles.name}>{ach.name}</Text>
@@ -108,7 +111,7 @@ export default function AchievementDetailScreen({
 
         <View style={[styles.card, styles.ruleRow]} accessible accessibilityRole="text" accessibilityLabel={`How to unlock. ${ach.description}`}>
           <Text style={styles.ruleIcon}>{'\u{1F3AF}'}</Text>
-          <View style={{ flex: 1 }}>
+          <View style={styles.flex1}>
             <Text style={styles.ruleTitle}>How to unlock</Text>
             <Text style={styles.ruleBody}>{ach.description}</Text>
           </View>
@@ -133,7 +136,7 @@ export default function AchievementDetailScreen({
         <View>
           <Text style={styles.sectionLabel}>Share card preview</Text>
           <View style={styles.sharePreview} accessible accessibilityRole="text" accessibilityLabel={`Share preview: I earned ${ach.name} on SideQuest`}>
-            <View style={[styles.shareMini, { backgroundColor: `${color}26` }]}>
+            <View style={[styles.shareMini, { backgroundColor: earned ? surface : colors.bgSubtle }]}>
               <Text style={styles.shareMiniGlyph}>{ach.icon}</Text>
             </View>
             <Text style={styles.shareTitle}>{`I earned ${ach.name} on SideQuest`}</Text>
@@ -145,7 +148,7 @@ export default function AchievementDetailScreen({
             accessibilityState={{ disabled: !earned }}
             disabled={!earned}
             accessibilityLabel={earned ? `Share ${ach.name}` : `${ach.name} not earned yet`}
-            style={({ pressed }) => [styles.shareCta, whenPressed(pressed, styles.shareCtaPressed), !earned && { opacity: 0.45 }]}
+            style={({ pressed }) => [styles.shareCta, whenPressed(pressed, styles.shareCtaPressed), !earned && styles.shareCtaDisabled]}
           >
             <Text style={styles.shareCtaText}>{earned ? 'Share achievement' : 'Earn it to share'}</Text>
           </Pressable>
@@ -163,7 +166,7 @@ export default function AchievementDetailScreen({
           accessibilityLabel="Back to achievements"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Achievement
@@ -174,7 +177,7 @@ export default function AchievementDetailScreen({
           accessibilityLabel="Share achievement"
           style={({ pressed }) => [styles.shareBtn, whenPressed(pressed, styles.shareBtnPressed)]}
         >
-          <Text style={styles.shareGlyph}>{'↗'}</Text>
+          <Icon name="share" size={18} color={colors.actionPrimary} />
         </Pressable>
       </View>
       {renderBody()}
