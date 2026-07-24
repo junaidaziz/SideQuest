@@ -117,8 +117,10 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.communityTint,
       alignItems: 'center',
       justifyContent: 'center',
+      overflow: 'hidden',
     },
     avatarText: { color: c.communityText, fontWeight: '700', fontSize: 15 },
+    avatarImage: { width: 40, height: 40 },
     rowName: { flex: 1, fontSize: CompassType.bodyM.size, fontWeight: '600', color: c.textPrimary },
     rowXp: {
       fontFamily: CompassFonts.numeric,
