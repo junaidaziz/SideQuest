@@ -93,7 +93,13 @@ export function CompassToggle({
           },
         ]}
       >
-        <Animated.View style={[styles.thumb, thumbStyle]} />
+        <Animated.View
+          style={[
+            styles.thumb,
+            { backgroundColor: colors.alwaysWhite, shadowColor: colors.shadowColor },
+            thumbStyle,
+          ]}
+        />
       </View>
     </Pressable>
   );
@@ -116,8 +122,6 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#171527',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.14,
     shadowRadius: 4,
