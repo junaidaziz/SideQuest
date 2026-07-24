@@ -2,16 +2,32 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import ChallengeDetailScreen, { whenPressed } from './ChallengeDetailScreen';
+import ChallengeDetailScreen, { toneColors, whenPressed } from './ChallengeDetailScreen';
 import {
   buildTimeline,
   formatWhen,
   latestPendingSubmission,
   relationship,
+  statusTone,
   verificationSummary,
 } from './detailUtils';
 import { generateTaskInvite, getTask, reviewTaskSubmission } from '../../services/tasksApi';
-import type { TaskDetail, TaskSubmission } from '../../types/api';
+import { CompassColorsDark, CompassColorsLight } from '../../constants/compassDesign';
+import type { TaskDetail, TaskSubmission, UserTaskStatus } from '../../types/api';
+
+/** WCAG relative-luminance contrast ratio for two opaque #rrggbb colours. */
+function contrastRatio(a: string, b: string): number {
+  const lum = (hex: string): number => {
+    const h = hex.replace('#', '');
+    const chan = (i: number): number => {
+      const v = parseInt(h.slice(i, i + 2), 16) / 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * chan(0) + 0.7152 * chan(2) + 0.0722 * chan(4);
+  };
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
 
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(() => Promise.resolve()),
@@ -135,6 +151,47 @@ describe('ChallengeDetailScreen', () => {
       expect(whenPressed(true, s)).toBe(s);
       expect(whenPressed(false, s)).toBeNull();
     });
+
+    it('statusTone maps each lifecycle status to its semantic tone', () => {
+      const cases: [UserTaskStatus, ReturnType<typeof statusTone>][] = [
+        ['Approved', 'success'],
+        ['Rejected', 'error'],
+        ['Declined', 'error'],
+        ['Open', 'warning'],
+        ['Invited', 'community'],
+        ['Accepted', 'info'],
+        ['Submitted', 'info'],
+        ['Cancelled', 'neutral'],
+      ];
+      cases.forEach(([status, tone]) => expect(statusTone(status)).toBe(tone));
+    });
+
+    it('toneColors resolves every tone to a curated AA tint/text pairing', () => {
+      const c = CompassColorsLight;
+      // Curated opaque pairs — never a runtime `${status}1F` alpha blend, which
+      // failed AA for 12px badge text over the lavender canvas.
+      expect(toneColors('success', c)).toEqual({ bg: c.statusSuccessTint, fg: c.statusSuccessText });
+      expect(toneColors('error', c)).toEqual({ bg: c.statusErrorTint, fg: c.statusErrorText });
+      expect(toneColors('warning', c)).toEqual({ bg: c.statusWarningTint, fg: c.statusWarningText });
+      expect(toneColors('info', c)).toEqual({ bg: c.statusInfoTint, fg: c.statusInfoText });
+      // Community identity uses its dedicated tint/text tokens, never on-primary.
+      expect(toneColors('community', c)).toEqual({ bg: c.communityTint, fg: c.communityText });
+      expect(toneColors('neutral', c)).toEqual({ bg: c.bgSubtle, fg: c.textSecondary });
+      // No tone emits a raw alpha-suffixed hex.
+      (['success', 'error', 'warning', 'info', 'community', 'neutral'] as const).forEach((t) => {
+        expect(toneColors(t, c).bg).not.toMatch(/1F$/i);
+      });
+    });
+
+    it('every status-badge tone clears WCAG AA (4.5:1) in both themes', () => {
+      const tones = ['success', 'error', 'warning', 'info', 'community', 'neutral'] as const;
+      [CompassColorsLight, CompassColorsDark].forEach((palette) => {
+        tones.forEach((tone) => {
+          const { bg, fg } = toneColors(tone, palette);
+          expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(4.5);
+        });
+      });
+    });
   });
 
   describe('rendering', () => {
@@ -154,6 +211,19 @@ describe('ChallengeDetailScreen', () => {
       await waitFor(() => expect(screen.getByLabelText(/Peak Seeker\. Status: Awaiting review/)).toBeTruthy());
       expect(screen.getByText('Reward: 120 XP on approval')).toBeTruthy();
       expect(screen.getByLabelText(/Challenge created/)).toBeTruthy();
+      // Back button is now the shared Icon, not a unicode glyph. It is
+      // decorative (hidden from assistive tech), so query hidden elements.
+      expect(screen.getByTestId('detail-back-icon', { includeHiddenElements: true })).toBeTruthy();
+    });
+
+    it('tints the status badge by the task status (Completed → success green)', async () => {
+      await renderScreen(makeDetail({ status: 'Approved', submissions: [] }));
+      const badge = await screen.findByText('Completed');
+      const flat = Array.isArray(badge.props.style)
+        ? Object.assign({}, ...badge.props.style.flat())
+        : badge.props.style;
+      // Curated AA text token, not the base status colour or an alpha blend.
+      expect(flat.color).toBe(CompassColorsLight.statusSuccessText);
     });
 
     it('renders the error state and retries', async () => {
