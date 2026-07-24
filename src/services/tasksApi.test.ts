@@ -43,11 +43,6 @@ describe('tasksApi', () => {
     // RN's FormData polyfill doesn't reliably implement .get(), so assert on
     // what was appended rather than reading the form back.
     appendSpy = jest.spyOn(FormData.prototype, 'append');
-    // submitTaskEvidence now builds its Blob via localFileToBlob (fetch-based)
-    // rather than expo-file-system's File.slice() — see localFileBlob.ts.
-    globalThis.fetch = jest.fn().mockResolvedValue({
-      blob: () => Promise.resolve(new Blob([], { type: '' })),
-    });
   });
 
   afterEach(() => {
@@ -128,7 +123,7 @@ describe('tasksApi', () => {
   });
 
   describe('submitTaskEvidence', () => {
-    it('appends a real Blob for a photo plus notes', async () => {
+    it('appends a plain { uri, name, type } object for a photo plus notes', async () => {
       mockApiRequest.mockResolvedValue(DETAIL);
       await submitTaskEvidence('task-1', { photoUri: 'file:///tmp/proof.jpg', notes: 'Done!' });
 
@@ -136,10 +131,17 @@ describe('tasksApi', () => {
         '/tasks/task-1/submissions',
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) }),
       );
-      const [, blob] = appendSpy.mock.calls[0];
-      expect(blob).toBeInstanceOf(Blob);
-      expect(blob.type).toBe('image/jpeg');
-      expect(appendSpy).toHaveBeenCalledWith('photo', expect.any(Blob), 'proof.jpg');
+      // React Native's own native multipart-file mechanism — not a Blob. See
+      // localFilePart.ts for why: two separate Blob-based attempts each hit
+      // a real, unresolved React Native core bug.
+      const [field, part] = appendSpy.mock.calls[0];
+      expect(field).toBe('photo');
+      expect(part).not.toBeInstanceOf(Blob);
+      expect(part).toEqual({
+        uri: 'file:///tmp/proof.jpg',
+        name: 'proof.jpg',
+        type: 'image/jpeg',
+      });
       expect(appendSpy).toHaveBeenCalledWith('notes', 'Done!');
     });
 
@@ -147,7 +149,7 @@ describe('tasksApi', () => {
       mockApiRequest.mockResolvedValue(DETAIL);
       await submitTaskEvidence('task-1', { notes: 'No photo needed' });
       expect(appendSpy).toHaveBeenCalledWith('notes', 'No photo needed');
-      expect(appendSpy).not.toHaveBeenCalledWith('photo', expect.anything(), expect.anything());
+      expect(appendSpy).not.toHaveBeenCalledWith('photo', expect.anything());
     });
 
     it('submits an empty form when neither photo nor notes given', async () => {
