@@ -162,6 +162,18 @@ describe('TodayScreen', () => {
       expect(onGetInspired).toHaveBeenCalledTimes(1);
     });
 
+    it('shows the profile photo instead of the initial when avatarUrl is set', async () => {
+      await renderScreen({ displayName: 'Ada', avatarUrl: 'https://cdn.example.test/avatar.jpg' });
+      const image = await screen.findByTestId('today-avatar-image', { includeHiddenElements: true });
+      expect(image.props.source).toEqual({ uri: 'https://cdn.example.test/avatar.jpg' });
+      expect(screen.queryByText('A')).toBeNull();
+    });
+
+    it('falls back to the initial when no avatarUrl is set', async () => {
+      await renderScreen({ displayName: 'Ada', avatarUrl: null });
+      await waitFor(() => expect(screen.getByText('A')).toBeTruthy());
+    });
+
     it('calls onOpenNotifications and onOpenProfile from the header', async () => {
       const { onOpenNotifications, onOpenProfile } = await renderScreen();
       await waitFor(() => expect(screen.getByLabelText('Notifications, 2 unread')).toBeTruthy());
