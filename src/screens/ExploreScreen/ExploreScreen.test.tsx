@@ -200,4 +200,23 @@ describe('ExploreScreen', () => {
       expect(savedCountLabel(6)).toBe('6 quests you bookmarked');
     });
   });
+
+  describe('Halcyon+ identity tints', () => {
+    const VALID_IDENTITIES = ['community', 'streak', 'achievement', 'xp'];
+
+    it('every mode tile carries a valid gamification identity (not a hardcoded hex)', () => {
+      EXPLORE_MODES.forEach((mode) => {
+        expect(VALID_IDENTITIES).toContain(mode.identity);
+        // Guard against a regression back to the old hardcoded gradient pair.
+        expect((mode as unknown as { colors?: unknown }).colors).toBeUndefined();
+      });
+    });
+
+    it('every shelf item carries a valid identity instead of a hardcoded art rgba', () => {
+      EXPLORE_SHELVES.flatMap((shelf) => shelf.items).forEach((item) => {
+        expect(VALID_IDENTITIES).toContain(item.identity);
+        expect((item as unknown as { art?: unknown }).art).toBeUndefined();
+      });
+    });
+  });
 });
