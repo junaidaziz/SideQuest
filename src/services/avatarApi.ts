@@ -1,5 +1,5 @@
 import { apiRequest } from './apiClient';
-import { localFilePart } from './localFilePart';
+import { localUploadFile } from './localUploadFile';
 import type { UserProfile } from '../types/api';
 
 /**
@@ -8,20 +8,17 @@ import type { UserProfile } from '../types/api';
  *
  * `photoUri` is a local file URI from expo-image-picker (e.g. `file:///...`).
  *
- * The multipart body is built with the exact same `localFilePart` helper as
- * `proofApi.submitPhotoProof` — see `localFilePart.ts` for why a plain
- * `{ uri, name, type }` object (React Native's own native multipart-file
- * mechanism) is used instead of a `Blob`.
+ * The multipart body is built with the exact same `localUploadFile` helper
+ * as `proofApi.submitPhotoProof` — see `localUploadFile.ts` for why the raw
+ * `File` instance is appended directly (this app's actual `fetch` runtime,
+ * Expo's "Winter" fetch, requires it).
  *
  * The multipart field name is `avatar` (not `photo`) — it must match the
  * backend's `FileInterceptor('avatar', …)`.
  */
 export function uploadAvatar(photoUri: string): Promise<UserProfile> {
   const form = new FormData();
-  // TypeScript's ambient FormData type is the DOM spec (string | Blob) and
-  // doesn't know about React Native's actual runtime FormData, which also
-  // accepts a plain { uri, name, type } object — see localFilePart.ts.
-  form.append('avatar', localFilePart(photoUri) as unknown as Blob);
+  form.append('avatar', localUploadFile(photoUri));
 
   return apiRequest<UserProfile>('/users/me/avatar', {
     method: 'POST',
