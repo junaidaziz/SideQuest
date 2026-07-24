@@ -11,6 +11,7 @@ import {
   createSettingsScreenStyles,
   textStyle,
 } from '../../components/compass';
+import { Icon } from '../../components/icons';
 import type { NotificationPreferencesDto } from '../../types/api';
 
 export type NotificationPreferences = NotificationPreferencesDto;
@@ -82,8 +83,8 @@ export default function NotificationPreferencesScreen({
         showsVerticalScrollIndicator={false}
       >
         <View style={local.osBanner} accessibilityRole="text">
-          <Text importantForAccessibility="no" style={local.osIcon}>{'🔔'}</Text>
-          <View style={{ flex: 1 }}>
+          <Icon name="bell" size={20} color={colors.textSecondary} />
+          <View style={local.osBannerBody}>
             <Text style={[textStyle('labelM'), { color: colors.textPrimary }]}>
               System notifications are on
             </Text>
@@ -142,6 +143,6 @@ function createLocalStyles(colors: ReturnType<typeof useCompassTheme>['colors'])
       borderRadius: CompassRadius.md,
       padding: CompassSpacing.s4,
     },
-    osIcon: { fontSize: 20 },
+    osBannerBody: { flex: 1 },
   });
 }
