@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import AnimatedBar from '../ProgressOverviewScreen/AnimatedBar';
 import { makeStyles } from './StatisticsScreen.styles';
 
@@ -29,6 +30,16 @@ export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): Styl
  * plausible-looking numbers — the exact class of dishonesty two prior board
  * reviews flagged elsewhere in this app. A short, truthful note stands in for
  * them.
+ *
+ * CHART TOKENS: the Halcyon+ `chart1`–`chart6` categorical series exist for a
+ * neutral multi-series chart (the omitted bar/donut/heatmap). This screen renders
+ * no such chart, so those tokens have nothing to colour here without first
+ * fabricating the very data the data-honesty convention forbids. The one
+ * categorical-looking element — the proof-review breakdown — is genuinely
+ * *status*-semantic (approved = success, rejected = error), so it keeps the
+ * `statusSuccess`/`statusWarning`/`statusError` tokens (paired with text labels,
+ * so colour is never the sole channel). Swapping those for neutral chart hues
+ * would strip meaning for no accessibility gain.
  */
 export interface Stat {
   key: string;
@@ -82,7 +93,7 @@ export default function StatisticsScreen({ onBack }: StatisticsScreenProps) {
           accessibilityLabel="Back to progress"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Statistics
@@ -173,7 +184,7 @@ export default function StatisticsScreen({ onBack }: StatisticsScreenProps) {
               accessibilityRole="text"
               accessibilityLabel={`Approved: ${data.taskStats.approved}`}
             >
-              <View style={[styles.dot, { backgroundColor: colors.statusSuccess }]} />
+              <View style={[styles.dot, styles.dotSuccess]} />
               <Text style={styles.statusName}>Approved</Text>
               <Text style={styles.statusVal}>{data.taskStats.approved}</Text>
             </View>
@@ -183,7 +194,7 @@ export default function StatisticsScreen({ onBack }: StatisticsScreenProps) {
               accessibilityRole="text"
               accessibilityLabel={`Pending review: ${data.taskStats.pending}`}
             >
-              <View style={[styles.dot, { backgroundColor: colors.statusWarning }]} />
+              <View style={[styles.dot, styles.dotWarning]} />
               <Text style={styles.statusName}>Pending review</Text>
               <Text style={styles.statusVal}>{data.taskStats.pending}</Text>
             </View>
@@ -193,7 +204,7 @@ export default function StatisticsScreen({ onBack }: StatisticsScreenProps) {
               accessibilityRole="text"
               accessibilityLabel={`Rejected: ${data.taskStats.rejected}`}
             >
-              <View style={[styles.dot, { backgroundColor: colors.statusError }]} />
+              <View style={[styles.dot, styles.dotError]} />
               <Text style={styles.statusName}>Rejected</Text>
               <Text style={styles.statusVal}>{data.taskStats.rejected}</Text>
             </View>
