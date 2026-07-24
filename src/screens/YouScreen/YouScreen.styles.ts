@@ -12,6 +12,16 @@ import {
  * Compass light and dark schemes without duplicating layout values.
  */
 export function createStyles(colors: CompassPalette) {
+  // Halcyon+ shadow-first elevation (design § 3, `--shadow-1`) tinted with the
+  // `shadowColor` token — a white card is only ~1.12:1 on the lavender canvas,
+  // so the shadow, not a border, carries the separation.
+  const shadow1 = {
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 3,
+  } as const;
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -45,7 +55,10 @@ export function createStyles(colors: CompassPalette) {
       borderRadius: 38,
     },
     avatarInitials: {
-      color: '#FFFFFF',
+      // The avatar gradient is brandViolet→brandVioletDark (= actionPrimary/
+      // actionPressed), which flips to a light periwinkle in dark mode — so the
+      // ink is onPrimary, matching TodayScreen's avatar, not a hardcoded white.
+      color: colors.onPrimary,
       fontSize: 30,
       fontWeight: '800',
       letterSpacing: -0.45,
@@ -98,10 +111,12 @@ export function createStyles(colors: CompassPalette) {
       paddingVertical: CompassSpacing.s4,
       paddingHorizontal: CompassSpacing.s3,
       alignItems: 'center',
+      ...shadow1,
     },
-    metricIcon: {
-      fontSize: 20,
+    metricIconWrap: {
       marginBottom: 4,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     metricNum: {
       color: colors.textPrimary,
@@ -124,12 +139,11 @@ export function createStyles(colors: CompassPalette) {
       backgroundColor: colors.bgSurface,
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
+      ...shadow1,
     },
-    streakIcon: {
-      fontSize: 28,
-    },
+    // Ember streak identity (design § 2.3): flame icon + streakText numeral.
     streakValue: {
-      color: colors.textPrimary,
+      color: colors.streakText,
       fontWeight: '700',
     },
     streakSub: {
@@ -143,6 +157,7 @@ export function createStyles(colors: CompassPalette) {
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
       alignItems: 'center',
+      ...shadow1,
     },
     guestAvatar: {
       width: 56,
@@ -151,9 +166,6 @@ export function createStyles(colors: CompassPalette) {
       backgroundColor: colors.bgSubtle,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    guestGlyph: {
-      fontSize: 26,
     },
     guestTitle: {
       color: colors.textPrimary,
@@ -174,7 +186,7 @@ export function createStyles(colors: CompassPalette) {
       justifyContent: 'center',
     },
     primaryBtnText: {
-      color: '#FFFFFF',
+      color: colors.onPrimary,
       fontWeight: '600',
       fontSize: 16,
     },
@@ -193,12 +205,12 @@ export function createStyles(colors: CompassPalette) {
     dangerBtn: {
       minHeight: COMPASS_TOUCH_MIN + 4,
       borderRadius: CompassRadius.btn,
-      backgroundColor: 'rgba(201,61,75,0.10)',
+      backgroundColor: colors.statusErrorTint,
       alignItems: 'center',
       justifyContent: 'center',
     },
     dangerBtnText: {
-      color: colors.statusError,
+      color: colors.statusErrorText,
       fontWeight: '600',
       fontSize: 16,
     },
