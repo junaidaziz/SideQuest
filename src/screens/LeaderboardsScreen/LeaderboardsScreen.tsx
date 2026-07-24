@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Image, Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
@@ -26,6 +26,9 @@ export interface LeaderboardsScreenProps {
   onOpenWeekPicker?: () => void;
   /** Signed-in display name for the "You" row initial (from authStore). */
   displayName?: string | null;
+  /** Signed-in profile photo for the "You" row avatar (from authStore) —
+   * shown instead of the initial when present. */
+  avatarUrl?: string | null;
 }
 
 export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): StyleProp<ViewStyle> {
@@ -40,6 +43,8 @@ export interface LeaderRow {
   initial: string;
   xp: number;
   isMe: boolean;
+  /** Only ever set on the "me" row — sample rows have no real photo. */
+  avatarUrl?: string | null;
 }
 
 /** Illustrative sample opponents — NOT live data. See the file-level note. */
@@ -55,8 +60,19 @@ export const PREVIEW_FRIENDS: Omit<LeaderRow, 'isMe'>[] = [
  * Builds the ranked list: the sample friends plus a real "You" row seeded with
  * the user's actual total XP, sorted descending. Rank is derived from position.
  */
-export function buildRows(myXp: number, myInitial: string): LeaderRow[] {
-  const me: LeaderRow = { id: 'me', name: 'You', initial: myInitial, xp: myXp, isMe: true };
+export function buildRows(
+  myXp: number,
+  myInitial: string,
+  myAvatarUrl?: string | null,
+): LeaderRow[] {
+  const me: LeaderRow = {
+    id: 'me',
+    name: 'You',
+    initial: myInitial,
+    xp: myXp,
+    isMe: true,
+    avatarUrl: myAvatarUrl,
+  };
   const rows: LeaderRow[] = [...PREVIEW_FRIENDS.map((f) => ({ ...f, isMe: false })), me];
   return rows.sort((a, b) => b.xp - a.xp);
 }
@@ -67,7 +83,12 @@ export function meInitial(displayName?: string | null): string {
   return trimmed && trimmed.length > 0 ? trimmed[0].toUpperCase() : '★';
 }
 
-export default function LeaderboardsScreen({ onBack, onOpenWeekPicker, displayName }: LeaderboardsScreenProps) {
+export default function LeaderboardsScreen({
+  onBack,
+  onOpenWeekPicker,
+  displayName,
+  avatarUrl,
+}: LeaderboardsScreenProps) {
   const { colors } = useCompassTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [scope, setScope] = useState<LeaderboardScope>('friends');
@@ -79,8 +100,8 @@ export default function LeaderboardsScreen({ onBack, onOpenWeekPicker, displayNa
   }, [query]);
 
   const rows = useMemo(
-    () => (data ? buildRows(data.level.totalXp, meInitial(displayName)) : []),
-    [data, displayName],
+    () => (data ? buildRows(data.level.totalXp, meInitial(displayName), avatarUrl) : []),
+    [data, displayName, avatarUrl],
   );
 
   return (
@@ -179,7 +200,18 @@ export default function LeaderboardsScreen({ onBack, onOpenWeekPicker, displayNa
                     <Text style={[styles.rankText, row.isMe && styles.rankTextMe]}>{rank}</Text>
                   </View>
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{row.initial}</Text>
+                    {row.avatarUrl ? (
+                      <Image
+                        testID={`leaderboard-avatar-${row.id}`}
+                        source={{ uri: row.avatarUrl }}
+                        style={styles.avatarImage}
+                        accessibilityIgnoresInvertColors
+                        accessibilityElementsHidden
+                        importantForAccessibility="no"
+                      />
+                    ) : (
+                      <Text style={styles.avatarText}>{row.initial}</Text>
+                    )}
                   </View>
                   <Text style={[styles.rowName, row.isMe && styles.rowNameMe]}>{row.name}</Text>
                   <Text style={[styles.rowXp, row.isMe && styles.rowNameMe]}>{`${row.xp.toLocaleString()} ⭐`}</Text>
