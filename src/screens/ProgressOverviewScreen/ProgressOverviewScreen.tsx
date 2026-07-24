@@ -13,6 +13,7 @@ import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { getUnreadCount } from '../../services/notificationsApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import ProgressRing from './ProgressRing';
 import AnimatedBar from './AnimatedBar';
 import { makeStyles, type ProgressStyles } from './ProgressOverviewScreen.styles';
@@ -93,7 +94,9 @@ function AchievementMini({ ach, styles, color, onPress }: AchievementMiniProps) 
     <Pressable
       onPress={() => onPress(ach.id)}
       accessibilityRole="button"
-      accessibilityState={{ disabled: false, selected: ach.unlocked }}
+      // Earned/locked state is already announced by the label below; `selected`
+      // conventionally means "active choice in a group" and reads oddly here, so
+      // it's intentionally omitted rather than overloaded.
       accessibilityLabel={`${ach.name} achievement, ${ach.unlocked ? 'unlocked' : `locked, ${ach.progressLabel}`}`}
       style={({ pressed }) => [styles.achMini, whenPressed(pressed, { transform: [{ scale: 0.96 }] })]}
     >
@@ -154,7 +157,7 @@ export default function ProgressOverviewScreen({
           }
           style={({ pressed }) => [styles.iconBtn, whenPressed(pressed, styles.iconBtnPressed)]}
         >
-          <Text style={styles.iconGlyph}>{'\u{1F514}'}</Text>
+          <Icon name="bell" size={20} color={colors.textPrimary} testID="progress-bell-icon" />
           {unreadCount > 0 ? (
             <View style={styles.unreadBadge} accessibilityElementsHidden importantForAccessibility="no">
               <Text style={styles.unreadBadgeText}>{unreadCount > 9 ? '9+' : String(unreadCount)}</Text>
@@ -164,7 +167,7 @@ export default function ProgressOverviewScreen({
       </View>
 
       {isLoading ? (
-        <View style={{ flex: 1, paddingHorizontal: 20 }}>
+        <View style={styles.loadingArea}>
           <Skeleton styles={styles} />
         </View>
       ) : isError || !data ? (
@@ -187,14 +190,14 @@ export default function ProgressOverviewScreen({
                 <View style={styles.shield}>
                   <Text style={styles.shieldText}>{data.level.level}</Text>
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={styles.flex1}>
                   <Text style={styles.lvlLabel}>{`Level ${data.level.level}`}</Text>
                   <Text style={styles.lvlName}>{levelName(data.level.level)}</Text>
                   <Text style={styles.caption}>
                     {`${formatXp(data.level.xpToNextLevel)} XP to ${nextLevelName(data.level.level)}`}
                   </Text>
                 </View>
-                <Text style={styles.chevron}>{'›'}</Text>
+                <Icon name="chevronRight" size={20} color={colors.textTertiary} testID="progress-level-chevron" />
               </View>
             </Pressable>
 
@@ -211,7 +214,7 @@ export default function ProgressOverviewScreen({
               <AnimatedBar
                 progress={levelProgress(data.level)}
                 trackColor={colors.bgSubtle}
-                fillColor={colors.actionPrimary}
+                fillColor={colors.xp}
                 accessibilityLabel={`${data.level.xpIntoLevel} of ${data.level.xpIntoLevel + data.level.xpToNextLevel} XP toward level ${data.level.level + 1}`}
               />
             </Pressable>
@@ -259,10 +262,14 @@ export default function ProgressOverviewScreen({
                     style={({ pressed }) => [styles.tile, whenPressed(pressed, styles.tilePressed)]}
                   >
                     <View style={styles.tileTop}>
-                      <Text style={styles.tileIcon}>{tile.icon}</Text>
+                      {isStreak ? (
+                        <Icon name="flame" size={18} color={colors.streak} testID="progress-streak-tile-flame" />
+                      ) : (
+                        <Text style={styles.tileIcon}>{tile.icon}</Text>
+                      )}
                       <Text style={styles.tileCaption}>{tile.caption}</Text>
                     </View>
-                    <Text style={styles.tileBig}>{tile.value}</Text>
+                    <Text style={[styles.tileBig, isStreak && styles.tileBigStreak]}>{tile.value}</Text>
                     <Text style={styles.tileSub}>{tile.sub}</Text>
                   </Pressable>
                 );
@@ -308,12 +315,12 @@ export default function ProgressOverviewScreen({
           >
             <View style={styles.rowHead}>
               <Text style={styles.cardLabel}>Streak</Text>
-              <Text style={styles.seeAll}>{'›'}</Text>
+              <Icon name="chevronRight" size={18} color={colors.actionPrimary} testID="progress-streak-card-chevron" />
             </View>
             <View style={styles.ringRow}>
-              <Text style={{ fontSize: 34 }}>{'\u{1F525}'}</Text>
+              <Icon name="flame" size={34} color={colors.streak} testID="progress-streak-card-flame" />
               <View style={styles.ringMeta}>
-                <Text style={styles.ringValue}>{streakLabel(data.streak.currentStreak)}</Text>
+                <Text style={[styles.ringValue, styles.ringValueStreak]}>{streakLabel(data.streak.currentStreak)}</Text>
                 <Text style={styles.ringSub}>{`Best streak: ${data.streak.longestStreak} days`}</Text>
               </View>
             </View>
@@ -348,7 +355,7 @@ export default function ProgressOverviewScreen({
                     <View style={styles.breakdownIconWrap}>
                       <Text style={styles.breakdownIcon}>{row.icon}</Text>
                     </View>
-                    <View style={{ flex: 1 }}>
+                    <View style={styles.flex1}>
                       <Text style={styles.breakdownName}>{row.name}</Text>
                       <Text style={styles.breakdownSub}>{row.sub}</Text>
                     </View>
