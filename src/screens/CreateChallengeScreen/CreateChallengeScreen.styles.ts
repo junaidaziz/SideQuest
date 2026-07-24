@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import {
+  CompassFonts,
   CompassRadius,
   CompassSpacing,
   CompassType,
@@ -8,6 +9,14 @@ import {
 
 /** Theme-aware styles for the create-challenge flow (mockup 28). */
 export function makeStyles(c: CompassPalette) {
+  // Shadow-first elevation (design § 3, `--shadow-1`) tinted with `shadowColor`.
+  const shadow1 = {
+    shadowColor: c.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 3,
+  } as const;
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.bgCanvas },
     topBar: {
@@ -18,12 +27,11 @@ export function makeStyles(c: CompassPalette) {
     },
     backBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
     backBtnPressed: { opacity: 0.5 },
-    backGlyph: { fontSize: 24, color: c.textPrimary },
     headerSpacer: { width: 48 },
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'PlusJakartaSans_800ExtraBold',
+      fontFamily: CompassFonts.fallbackHeavy,
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -34,13 +42,16 @@ export function makeStyles(c: CompassPalette) {
       paddingBottom: CompassSpacing.s3,
       gap: 6,
     },
+    // Wizard stepper: reached steps carry the primary action colour; upcoming
+    // steps use the disabled tokens so "not yet available" reads distinctly
+    // without being mistaken for an error or an active step.
     stepsRow: { flexDirection: 'row', alignItems: 'center' },
     node: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
     nodeActive: { backgroundColor: c.actionPrimary },
-    nodeTodo: { backgroundColor: c.bgSubtle },
-    nodeText: { fontWeight: '700', fontSize: 13, color: c.textTertiary },
-    nodeTextActive: { color: '#FFFFFF' },
-    seg: { flex: 1, height: 3, borderRadius: CompassRadius.pill, backgroundColor: c.bgSubtle },
+    nodeTodo: { backgroundColor: c.disabledBg },
+    nodeText: { fontWeight: '700', fontSize: 13, color: c.disabledText },
+    nodeTextActive: { color: c.onPrimary },
+    seg: { flex: 1, height: 3, borderRadius: CompassRadius.pill, backgroundColor: c.disabledBg },
     segActive: { backgroundColor: c.actionPrimary },
     stepLabel: { fontSize: CompassType.caption.size, color: c.textSecondary, textAlign: 'center' },
 
@@ -52,7 +63,7 @@ export function makeStyles(c: CompassPalette) {
     stepBody: { flex: 1 },
     stepGap: { gap: CompassSpacing.s3 },
     stepHeading: {
-      fontFamily: 'PlusJakartaSans_700Bold',
+      fontFamily: CompassFonts.fallbackBold,
       fontSize: CompassType.h2.size,
       fontWeight: '700',
       color: c.textPrimary,
@@ -69,7 +80,7 @@ export function makeStyles(c: CompassPalette) {
       minHeight: 48,
     },
     selectCardSelected: { borderColor: c.actionPrimary },
-    selectTitle: { fontFamily: 'PlusJakartaSans_700Bold', fontWeight: '700', fontSize: 17, color: c.textPrimary },
+    selectTitle: { fontFamily: CompassFonts.fallbackBold, fontWeight: '700', fontSize: 17, color: c.textPrimary },
     selectSub: { fontSize: CompassType.bodyS.size, color: c.textSecondary, marginTop: 2 },
 
     fieldLabel: { fontSize: CompassType.labelM.size, fontWeight: '600', color: c.textPrimary },
@@ -97,8 +108,9 @@ export function makeStyles(c: CompassPalette) {
     },
     choiceChipSelected: { backgroundColor: c.actionPrimary },
     choiceChipText: { fontSize: 14, fontWeight: '600', color: c.textSecondary },
-    choiceChipTextSelected: { color: '#FFFFFF' },
+    choiceChipTextSelected: { color: c.onPrimary },
 
+    // Shadow-first elevation (design § 3): card separated by shadow, not outline.
     toggleRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -106,9 +118,8 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.bgSurface,
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
-      borderWidth: 1,
-      borderColor: c.borderDefault,
       minHeight: 48,
+      ...shadow1,
     },
     toggleBody: { flex: 1 },
     toggleTitle: { fontSize: CompassType.labelM.size, fontWeight: '600', color: c.textPrimary },
@@ -123,21 +134,25 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     toggleOn: { backgroundColor: c.actionPrimary, borderColor: c.actionPrimary },
+    // Switch thumb is a constant light disc in both themes — no theme-aware
+    // token works (onPrimary/bgSurface both invert to a dark value in dark mode,
+    // which would hide the thumb against the off-track), so it reads the
+    // intentionally theme-invariant `alwaysWhite` token.
     toggleThumb: {
       width: 26,
       height: 26,
       borderRadius: 13,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: c.alwaysWhite,
       marginLeft: 2,
     },
     toggleThumbOn: { marginLeft: 22 },
 
+    // Shadow-first elevation (design § 3); internal rows keep hairline dividers.
     reviewCard: {
       backgroundColor: c.bgSurface,
       borderRadius: CompassRadius.card,
       paddingHorizontal: CompassSpacing.s4,
-      borderWidth: 1,
-      borderColor: c.borderDefault,
+      ...shadow1,
     },
     reviewRow: {
       flexDirection: 'row',
@@ -145,7 +160,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s3,
       paddingVertical: CompassSpacing.s3,
       borderBottomWidth: 1,
-      borderBottomColor: c.borderDefault,
+      borderBottomColor: c.borderSubtle,
     },
     reviewRowLast: { borderBottomWidth: 0 },
     reviewK: { fontSize: CompassType.bodyM.size, color: c.textSecondary },
@@ -167,7 +182,7 @@ export function makeStyles(c: CompassPalette) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    primaryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: CompassType.labelL.size },
+    primaryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: CompassType.labelL.size },
     secondaryBtn: {
       height: 52,
       borderRadius: CompassRadius.btn,
@@ -188,7 +203,7 @@ export function makeStyles(c: CompassPalette) {
     },
     sentGlyph: { fontSize: 48 },
     sentTitle: {
-      fontFamily: 'PlusJakartaSans_700Bold',
+      fontFamily: CompassFonts.fallbackBold,
       fontSize: CompassType.h1.size,
       fontWeight: '700',
       color: c.textPrimary,
