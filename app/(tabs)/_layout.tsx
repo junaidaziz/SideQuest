@@ -1,26 +1,25 @@
 import { Tabs } from 'expo-router';
-import { StyleSheet, Text, type ColorValue } from 'react-native';
+import type { ColorValue } from 'react-native';
 import { useCompassTheme } from '../../src/hooks/useCompassTheme';
-
-const styles = StyleSheet.create({
-  icon: { fontSize: 22 },
-});
+import { Icon, type IconName } from '../../src/components/icons';
 
 /**
- * The four primary destinations of the Compass redesign: Today, Explore,
+ * The four primary destinations of the Halcyon+ redesign: Today, Explore,
  * Progress, You. Detail/drill-down screens live as stack routes OUTSIDE this
  * group (see app/quest/*, app/settings/*, etc.) so they're shared across tabs
  * rather than duplicated per-tab.
  *
- * Icons use emoji glyphs rather than a vector-icon set — this project ships no
- * `@expo/vector-icons` dependency and every Compass screen already renders its
- * own header icons as emoji Text (see TodayScreen's bell glyph), so this keeps
- * the tab bar consistent with the rest of the design system without adding a
- * new native dependency.
+ * Tab glyphs render through the shared vector {@link Icon} component (24px grid,
+ * 1.75px stroke) — the same set used across every migrated Halcyon+ screen —
+ * replacing the previous emoji `Text` glyphs. The active tab uses each glyph's
+ * solid "you are here" variant via `selected`, per the Halcyon+ iconography
+ * spec (design doc § 5.1); the inactive tab keeps the outline. Colour still
+ * flows from `useCompassTheme()` through the navigator's active/inactive tints.
  */
-function tabIcon(glyph: string) {
-  return function TabIcon({ color }: { color: ColorValue }) {
-    return <Text style={[styles.icon, { color }]}>{glyph}</Text>;
+function tabIcon(name: IconName) {
+  return function TabIcon({ color, focused, size }: { color: ColorValue; focused: boolean; size: number }) {
+    // The navigator's active/inactive tints are always plain token strings.
+    return <Icon name={name} size={size} color={String(color)} selected={focused} />;
   };
 }
 
@@ -47,19 +46,19 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="today"
-        options={{ title: 'Today', tabBarIcon: tabIcon('\u{1F9ED}') }}
+        options={{ title: 'Today', tabBarIcon: tabIcon('today') }}
       />
       <Tabs.Screen
         name="explore"
-        options={{ title: 'Explore', tabBarIcon: tabIcon('\u{1F50D}') }}
+        options={{ title: 'Explore', tabBarIcon: tabIcon('explore') }}
       />
       <Tabs.Screen
         name="progress"
-        options={{ title: 'Progress', tabBarIcon: tabIcon('\u{26A1}') }}
+        options={{ title: 'Progress', tabBarIcon: tabIcon('progress') }}
       />
       <Tabs.Screen
         name="you"
-        options={{ title: 'You', tabBarIcon: tabIcon('\u{1F464}') }}
+        options={{ title: 'You', tabBarIcon: tabIcon('you') }}
       />
     </Tabs>
   );
