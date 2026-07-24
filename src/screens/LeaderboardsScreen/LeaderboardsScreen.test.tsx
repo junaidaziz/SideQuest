@@ -83,6 +83,17 @@ describe('LeaderboardsScreen', () => {
       expect(screen.getByLabelText(/Taylor, rank .*sample/)).toBeTruthy();
     });
 
+    it("shows the profile photo on the You row instead of the initial when avatarUrl is set", async () => {
+      await renderScreen({ avatarUrl: 'https://cdn.example.test/avatar.jpg' });
+      const image = await screen.findByTestId('leaderboard-avatar-me', { includeHiddenElements: true });
+      expect(image.props.source).toEqual({ uri: 'https://cdn.example.test/avatar.jpg' });
+    });
+
+    it('falls back to the initial on the You row when no avatarUrl is set', async () => {
+      await renderScreen({ avatarUrl: null });
+      expect(screen.queryByTestId('leaderboard-avatar-me')).toBeNull();
+    });
+
     it('renders the error state and retries', async () => {
       mockGetHome.mockRejectedValue(new Error('offline'));
       await renderScreen();
