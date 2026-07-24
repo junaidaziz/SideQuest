@@ -43,31 +43,28 @@ describe('avatarApi', () => {
       expect(result).toEqual(WITH_AVATAR);
     });
 
-    it('appends a plain { uri, name, type } object carrying the source MIME type', async () => {
+    it('appends the raw File instance carrying the source MIME type', async () => {
       await uploadAvatar('file:///tmp/avatar.jpg');
 
-      // React Native's own native multipart-file mechanism — not a Blob.
-      // See localFilePart.ts for why: two separate Blob-based attempts each
-      // hit a real, unresolved React Native core bug.
+      // The raw expo-file-system File instance is appended directly — not a
+      // Blob, not a plain object. See localUploadFile.ts for why: this
+      // app's actual fetch runtime (Expo's "Winter" fetch) requires an
+      // object with a `.bytes` member, which File provides natively.
       const [field, part] = appendSpy.mock.calls[0];
       expect(field).toBe('avatar');
       expect(part).not.toBeInstanceOf(Blob);
-      expect(part).toEqual({
-        uri: 'file:///tmp/avatar.jpg',
-        name: 'avatar.jpg',
-        type: 'image/jpeg',
-      });
+      expect(typeof part.bytes).toBe('function');
+      expect(part.uri).toBe('file:///tmp/avatar.jpg');
+      expect(part.name).toBe('avatar.jpg');
+      expect(part.type).toBe('image/jpeg');
     });
 
     it('carries a png source MIME type through unchanged', async () => {
       await uploadAvatar('file:///tmp/avatar.png');
 
       const [, part] = appendSpy.mock.calls[0];
-      expect(part).toEqual({
-        uri: 'file:///tmp/avatar.png',
-        name: 'avatar.png',
-        type: 'image/png',
-      });
+      expect(part.name).toBe('avatar.png');
+      expect(part.type).toBe('image/png');
     });
 
     it('propagates an API rejection to the caller', async () => {
