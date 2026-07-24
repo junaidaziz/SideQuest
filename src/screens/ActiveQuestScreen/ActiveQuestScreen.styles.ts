@@ -55,18 +55,20 @@ export function makeStyles(c: CompassPalette) {
       marginTop: 1,
     },
     checkBoxDone: { backgroundColor: c.statusSuccess, borderColor: c.statusSuccess },
-    checkMark: { color: '#FFFFFF', fontSize: 14 },
     checkLabel: { fontSize: 15, lineHeight: 21, color: c.textPrimary, flex: 1 },
     checkLabelDone: { color: c.textSecondary, textDecorationLine: 'line-through' },
+    // Primary-tinted proof-requirement well (design mockup 15). Derived from the
+    // resolved primary token + alpha so it flips correctly between themes,
+    // rather than the old hardcoded Compass-violet rgba.
     proofReq: {
       flexDirection: 'row',
       gap: 10,
       alignItems: 'center',
-      backgroundColor: 'rgba(101,71,245,0.08)',
+      backgroundColor: `${c.actionPrimary}14`,
       borderRadius: CompassRadius.md,
       padding: CompassSpacing.s3,
     },
-    proofIcon: { width: 40, height: 40, borderRadius: CompassRadius.sm, backgroundColor: 'rgba(101,71,245,0.16)', alignItems: 'center', justifyContent: 'center' },
+    proofIcon: { width: 40, height: 40, borderRadius: CompassRadius.sm, backgroundColor: `${c.actionPrimary}29`, alignItems: 'center', justifyContent: 'center' },
     proofIconGlyph: { fontSize: 18 },
     proofBody: { flex: 1 },
     proofLabel: { fontSize: 16, fontWeight: '600', color: c.textPrimary },
@@ -80,7 +82,7 @@ export function makeStyles(c: CompassPalette) {
       borderTopColor: c.borderDefault,
     },
     primaryBtn: { height: 52, borderRadius: CompassRadius.btn, backgroundColor: c.actionPrimary, alignItems: 'center', justifyContent: 'center' },
-    primaryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    primaryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
     // States
     stateArea: { flex: 1, justifyContent: 'center', paddingHorizontal: CompassSpacing.gutterPhone, gap: CompassSpacing.s4 },
     skel: { backgroundColor: c.bgSubtle, borderRadius: CompassRadius.card },
@@ -89,6 +91,6 @@ export function makeStyles(c: CompassPalette) {
     stateTitle: { fontSize: 18, fontWeight: '700', color: c.textPrimary, textAlign: 'center' },
     stateBody: { fontSize: 14, color: c.textSecondary, textAlign: 'center' },
     retryBtn: { alignSelf: 'center', height: 48, paddingHorizontal: CompassSpacing.s6, borderRadius: CompassRadius.btn, backgroundColor: c.actionPrimary, alignItems: 'center', justifyContent: 'center' },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
   });
 }
