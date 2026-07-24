@@ -1,7 +1,36 @@
-import type { Task, TaskDetail, TaskSubmission } from '../../types/api';
+import type { Task, TaskDetail, TaskSubmission, UserTaskStatus } from '../../types/api';
 
 /** The caller's relationship to a task. */
 export type TaskRelationship = 'creator' | 'assignee' | 'observer';
+
+/**
+ * Semantic tone for a lifecycle status badge. Statuses map to the design
+ * system's *status* colours by their real meaning (success/error/warning/info),
+ * with the one genuinely social state — "awaiting a friend's reply" — carrying
+ * the Community identity instead. Terminal-neutral states stay neutral rather
+ * than borrowing an error/warning colour they don't warrant.
+ */
+export type StatusTone = 'success' | 'error' | 'warning' | 'info' | 'community' | 'neutral';
+
+/** Maps a task's lifecycle status to its semantic badge tone. */
+export function statusTone(status: UserTaskStatus): StatusTone {
+  switch (status) {
+    case 'Approved':
+      return 'success';
+    case 'Rejected':
+    case 'Declined':
+      return 'error';
+    case 'Open':
+      return 'warning';
+    case 'Invited':
+      return 'community';
+    case 'Accepted':
+    case 'Submitted':
+      return 'info';
+    default:
+      return 'neutral';
+  }
+}
 
 /** Determines whether the caller created, was assigned, or merely views a task. */
 export function relationship(task: Task, userId: string | undefined): TaskRelationship {
