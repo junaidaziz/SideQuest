@@ -23,14 +23,6 @@ describe('proofApi', () => {
     // RN's FormData polyfill doesn't reliably implement .get()/.getAll(), so
     // assert on what was appended rather than reading the form back.
     appendSpy = jest.spyOn(FormData.prototype, 'append');
-    // submitPhotoProof now builds its Blob via localFileToBlob (fetch-based)
-    // rather than expo-file-system's File.slice() — see localFileBlob.ts for
-    // why. The raw fetched blob's own type is deliberately left empty here;
-    // localFileToBlob re-slices with the file's real type, so these tests
-    // still exercise that the correct MIME type ends up on the appended blob.
-    globalThis.fetch = jest.fn().mockResolvedValue({
-      blob: () => Promise.resolve(new Blob([], { type: '' })),
-    });
   });
 
   afterEach(() => {
@@ -45,34 +37,40 @@ describe('proofApi', () => {
         '/missions/mission-1/proof',
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) }),
       );
-      // A real Blob (via localFileToBlob's fetch()-based construction) is
-      // appended — not a duck-typed { uri, name, type } object, and not
-      // expo-file-system's File.slice() (a separate, confirmed upstream bug)
-      // — see localFileBlob.ts for why.
-      const [, blob] = appendSpy.mock.calls[0];
-      expect(blob).toBeInstanceOf(Blob);
-      expect(blob.type).toBe('image/jpeg');
-      expect(appendSpy).toHaveBeenCalledWith('photo', expect.any(Blob), 'capture.jpg');
+      // A plain { uri, name, type } object is appended — React Native's own
+      // native multipart-file mechanism — not a Blob. See localFilePart.ts
+      // for why: two separate Blob-based attempts each hit a real,
+      // unresolved React Native core bug.
+      const [field, part] = appendSpy.mock.calls[0];
+      expect(field).toBe('photo');
+      expect(part).not.toBeInstanceOf(Blob);
+      expect(part).toEqual({
+        uri: 'file:///tmp/capture.jpg',
+        name: 'capture.jpg',
+        type: 'image/jpeg',
+      });
     });
 
     it('derives the filename from the source URI regardless of extension', async () => {
       await submitPhotoProof('mission-1', 'file:///tmp/capture.png');
 
-      const [, blob] = appendSpy.mock.calls[0];
-      expect(blob.type).toBe('image/png');
-      expect(appendSpy).toHaveBeenCalledWith('photo', expect.any(Blob), 'capture.png');
+      const [, part] = appendSpy.mock.calls[0];
+      expect(part).toEqual({
+        uri: 'file:///tmp/capture.png',
+        name: 'capture.png',
+        type: 'image/png',
+      });
     });
 
     it('handles a URI with no file extension', async () => {
       await submitPhotoProof('mission-1', 'file:///tmp/capture');
 
       // No extension means no detectable MIME type — this exercises the
-      // regression the reviewer flagged: the blob must still be re-sliced
-      // with whatever type the file reports, not silently default to a
-      // valid-looking type that would mask a missing-type bug.
-      const [, blob] = appendSpy.mock.calls[0];
-      expect(blob.type).toBe('');
-      expect(appendSpy).toHaveBeenCalledWith('photo', expect.any(Blob), 'capture');
+      // regression the reviewer originally flagged: the part must still
+      // carry whatever type the file reports (even empty), not silently
+      // default to a valid-looking type that would mask a missing-type bug.
+      const [, part] = appendSpy.mock.calls[0];
+      expect(part).toEqual({ uri: 'file:///tmp/capture', name: 'capture', type: '' });
     });
 
     it('threads an idempotency key through for offline-queue replays', async () => {
