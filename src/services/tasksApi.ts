@@ -1,5 +1,5 @@
 import { apiRequest } from './apiClient';
-import { localFilePart } from './localFilePart';
+import { localUploadFile } from './localUploadFile';
 import type {
   CreateTaskRequest,
   InviteResponse,
@@ -86,9 +86,9 @@ export interface SubmitEvidenceInput {
 
 /**
  * Submits evidence for a task. Multipart, following the exact `proofApi`
- * convention: a plain `{ uri, name, type }` object (React Native's own
- * native multipart-file mechanism) is appended rather than a `Blob` — see
- * `localFilePart.ts` for why.
+ * convention: the raw `File` instance is appended directly (this app's
+ * actual `fetch` runtime, Expo's "Winter" fetch, requires it) — see
+ * `localUploadFile.ts`.
  */
 export function submitTaskEvidence(
   taskId: string,
@@ -97,10 +97,7 @@ export function submitTaskEvidence(
 ): Promise<TaskDetail> {
   const form = new FormData();
   if (input.photoUri) {
-    // TypeScript's ambient FormData type is the DOM spec (string | Blob) and
-    // doesn't know about React Native's actual runtime FormData, which also
-    // accepts a plain { uri, name, type } object — see localFilePart.ts.
-    form.append('photo', localFilePart(input.photoUri) as unknown as Blob);
+    form.append('photo', localUploadFile(input.photoUri));
   }
   if (input.notes !== undefined) {
     form.append('notes', input.notes);
