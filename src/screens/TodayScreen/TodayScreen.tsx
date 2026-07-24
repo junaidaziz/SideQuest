@@ -12,6 +12,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import { getHome } from '../../services/homeApi';
 import { getUnreadCount } from '../../services/notificationsApi';
 import { makeStyles } from './TodayScreen.styles';
@@ -117,7 +118,7 @@ export default function TodayScreen({
             }
             style={({ pressed }) => [styles.iconBtn, whenPressed(pressed, styles.iconBtnPressed)]}
           >
-            <Text style={styles.iconGlyph}>{'\u{1F514}'}</Text>
+            <Icon name="bell" size={20} color={colors.textPrimary} testID="today-bell-icon" />
             {unreadCount > 0 ? (
               <View style={styles.unreadBadge} accessibilityElementsHidden importantForAccessibility="no">
                 <Text style={styles.unreadBadgeText}>{unreadCount > 9 ? '9+' : String(unreadCount)}</Text>
@@ -169,14 +170,17 @@ export default function TodayScreen({
             showsVerticalScrollIndicator={false}
           >
             <LinearGradient
-              colors={[colors.brandCoral, '#FF8A5C']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              colors={[colors.heroGradStart, colors.heroGradEnd]}
+              start={{ x: 0.15, y: 0 }}
+              end={{ x: 0.85, y: 1 }}
               style={styles.hero}
               accessible
               accessibilityLabel="Daily spark"
             >
-              <Text style={styles.heroEyebrow}>Daily spark</Text>
+              <View style={styles.heroEyebrowRow}>
+                <Icon name="spark" size={14} color={colors.onHero} testID="today-spark-icon" />
+                <Text style={styles.heroEyebrow}>Daily spark</Text>
+              </View>
               <Text style={styles.heroTitle}>
                 {data.dailyMission ? data.dailyMission.title : 'One small step.\nBig ripple.'}
               </Text>
@@ -222,9 +226,7 @@ export default function TodayScreen({
                 accessibilityRole="text"
                 accessibilityLabel={`${data.streak.currentStreak} day streak. Complete a quest today to keep it going`}
               >
-                <Text style={styles.streakFlame} accessibilityElementsHidden importantForAccessibility="no">
-                  {'\u{1F525}'}
-                </Text>
+                <Icon name="flame" size={22} color={colors.streak} testID="today-streak-flame" />
                 <Text style={styles.streakNum}>{data.streak.currentStreak}</Text>
                 <Text style={styles.caption}>day streak</Text>
               </View>
@@ -266,9 +268,7 @@ export default function TodayScreen({
               style={styles.exploreLink}
             >
               <Text style={styles.exploreLinkText}>Not feeling this? Explore more quests</Text>
-              <Text style={styles.chevron} accessibilityElementsHidden importantForAccessibility="no">
-                {'›'}
-              </Text>
+              <Icon name="chevronRight" size={18} color={colors.actionPrimary} testID="today-explore-chevron" />
             </Pressable>
           </ScrollView>
         </Animated.View>
