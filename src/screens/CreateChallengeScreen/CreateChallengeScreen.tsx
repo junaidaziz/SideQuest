@@ -17,6 +17,7 @@ import type { HomeResponse, InviteResponse, Task } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { createTask, generateTaskInvite } from '../../services/tasksApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import { CompassMotion } from '../../constants/compassDesign';
 import {
   buildCreateRequest,
@@ -57,9 +58,11 @@ const STEP_LABELS = ['Choose a mission', 'Invite', 'Deadline & details', 'Review
 interface StepIndicatorProps {
   step: number;
   styles: CreateChallengeStyles;
+  /** Colour for the "completed" check glyph — the on-primary ink on the node fill. */
+  checkColor: string;
 }
 
-function StepIndicator({ step, styles }: StepIndicatorProps) {
+function StepIndicator({ step, styles, checkColor }: StepIndicatorProps) {
   return (
     <View
       style={styles.stepsRow}
@@ -70,7 +73,11 @@ function StepIndicator({ step, styles }: StepIndicatorProps) {
       {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((n) => (
         <React.Fragment key={n}>
           <View style={[styles.node, n <= step ? styles.nodeActive : styles.nodeTodo]}>
-            <Text style={[styles.nodeText, n <= step && styles.nodeTextActive]}>{n < step ? '✓' : n}</Text>
+            {n < step ? (
+              <Icon name="check" size={16} color={checkColor} testID={`step-done-${n}`} />
+            ) : (
+              <Text style={[styles.nodeText, n === step && styles.nodeTextActive]}>{n}</Text>
+            )}
           </View>
           {n < TOTAL_STEPS ? <View style={[styles.seg, n < step && styles.segActive]} /> : null}
         </React.Fragment>
@@ -170,7 +177,12 @@ export default function CreateChallengeScreen({
           accessibilityLabel={step === 1 ? 'Cancel and go back' : 'Previous step'}
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{step === 1 ? '✕' : '‹'}</Text>
+          <Icon
+            name={step === 1 ? 'close' : 'back'}
+            size={24}
+            color={colors.textPrimary}
+            testID="create-header-icon"
+          />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Send a challenge
@@ -215,7 +227,7 @@ export default function CreateChallengeScreen({
       ) : (
         <>
           <View style={styles.indicatorWrap}>
-            <StepIndicator step={step} styles={styles} />
+            <StepIndicator step={step} styles={styles} checkColor={colors.onPrimary} />
             <Text style={styles.stepLabel}>{`Step ${step} of ${TOTAL_STEPS} · ${STEP_LABELS[step - 1]}`}</Text>
           </View>
 
