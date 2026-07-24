@@ -11,6 +11,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import { submitPhotoProof, submitTextProof } from '../../services/proofApi';
 import { enqueueProofSubmission } from '../../services/queuedActions';
 import { useOfflineStatus } from '../../components/states/useOfflineStatus';
@@ -140,7 +141,7 @@ export default function ProofSubmissionScreenV2({
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
         <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to active quest" style={styles.iconBtn}>
-          <Text style={styles.iconGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.topTitle} numberOfLines={1}>
           {missionTitle}
@@ -209,7 +210,7 @@ export default function ProofSubmissionScreenV2({
                   accessibilityLabel="Add a photo, opens camera or library"
                   style={styles.addTile}
                 >
-                  <Text style={styles.addIcon}>{'＋'}</Text>
+                  <Icon name="add" size={28} color={colors.actionPrimary} />
                   <Text style={styles.addLabel}>Add photo</Text>
                 </Pressable>
               ) : null}
