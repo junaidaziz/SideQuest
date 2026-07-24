@@ -33,6 +33,8 @@ export function makeStyles(c: CompassPalette) {
       paddingBottom: CompassSpacing.s9,
       gap: CompassSpacing.s4,
     },
+    // Shadow-first elevation (Halcyon+ § 3): shadow separates the card from the
+    // canvas, with only a subtle hairline instead of a hard strong outline.
     card: {
       flexDirection: 'row',
       gap: CompassSpacing.s3,
@@ -40,17 +42,22 @@ export function makeStyles(c: CompassPalette) {
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
       borderWidth: 1,
-      borderColor: c.borderDefault,
+      borderColor: c.borderSubtle,
       alignItems: 'center',
+      shadowColor: c.shadowColor,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 14,
+      elevation: 3,
     },
     cardPressed: { opacity: 0.85 },
+    // Thumbnail well tint set per-card from the four identity tints (design § 5).
     thumb: {
       width: 56,
       height: 56,
       borderRadius: CompassRadius.md,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(101,71,245,0.14)',
     },
     thumbGlyph: { fontSize: 26 },
     cardBody: { flex: 1, minWidth: 0 },
@@ -66,7 +73,7 @@ export function makeStyles(c: CompassPalette) {
     cardTitle: { fontSize: 16, fontWeight: '700', color: c.textPrimary, letterSpacing: -0.16 },
     cardMeta: { flexDirection: 'row', alignItems: 'center', gap: CompassSpacing.s2, marginTop: 4 },
     cardMetaText: { fontSize: 13, color: c.textSecondary },
-    xpText: { fontSize: 13, fontWeight: '700', color: c.rewardXp },
+    xpText: { fontSize: 13, fontWeight: '700', color: c.xpText },
     unsaveBtn: {
       width: 44,
       height: 44,
@@ -110,7 +117,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     emptyCtaPressed: { backgroundColor: c.actionPressed },
-    emptyCtaText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    emptyCtaText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
     stateHeading: { fontSize: 18, fontWeight: '700', color: c.textPrimary, textAlign: 'center', marginBottom: CompassSpacing.s2 },
     stateBody: { fontSize: 14, color: c.textSecondary, textAlign: 'center', marginBottom: CompassSpacing.s5, maxWidth: 280 },
     retryBtn: {
@@ -123,7 +130,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
   });
 }
 
