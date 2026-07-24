@@ -229,6 +229,20 @@ describe('TodayScreen', () => {
     });
   });
 
+  describe('Halcyon+ iconography', () => {
+    it('renders the bell, spark, flame and chevron vector icons', async () => {
+      await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText('Get inspired')).toBeTruthy());
+      // Decorative icons are hidden from assistive tech, so query with
+      // includeHiddenElements. Their presence proves the emoji glyphs were
+      // swapped for the shared Icon component.
+      expect(screen.getByTestId('today-bell-icon', { includeHiddenElements: true })).toBeTruthy();
+      expect(screen.getByTestId('today-spark-icon', { includeHiddenElements: true })).toBeTruthy();
+      expect(screen.getByTestId('today-streak-flame', { includeHiddenElements: true })).toBeTruthy();
+      expect(screen.getByTestId('today-explore-chevron', { includeHiddenElements: true })).toBeTruthy();
+    });
+  });
+
   describe('pure helpers', () => {
     it('computeGoalProgress clamps and guards zero targets', () => {
       expect(computeGoalProgress({ completed: 3, target: 5 })).toBe(60);
