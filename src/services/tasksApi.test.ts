@@ -123,7 +123,7 @@ describe('tasksApi', () => {
   });
 
   describe('submitTaskEvidence', () => {
-    it('appends a plain { uri, name, type } object for a photo plus notes', async () => {
+    it('appends the raw File instance for a photo plus notes', async () => {
       mockApiRequest.mockResolvedValue(DETAIL);
       await submitTaskEvidence('task-1', { photoUri: 'file:///tmp/proof.jpg', notes: 'Done!' });
 
@@ -131,17 +131,17 @@ describe('tasksApi', () => {
         '/tasks/task-1/submissions',
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) }),
       );
-      // React Native's own native multipart-file mechanism — not a Blob. See
-      // localFilePart.ts for why: two separate Blob-based attempts each hit
-      // a real, unresolved React Native core bug.
+      // The raw expo-file-system File instance is appended directly — not a
+      // Blob, not a plain object. See localUploadFile.ts for why: this
+      // app's actual fetch runtime (Expo's "Winter" fetch) requires an
+      // object with a `.bytes` member, which File provides natively.
       const [field, part] = appendSpy.mock.calls[0];
       expect(field).toBe('photo');
       expect(part).not.toBeInstanceOf(Blob);
-      expect(part).toEqual({
-        uri: 'file:///tmp/proof.jpg',
-        name: 'proof.jpg',
-        type: 'image/jpeg',
-      });
+      expect(typeof part.bytes).toBe('function');
+      expect(part.uri).toBe('file:///tmp/proof.jpg');
+      expect(part.name).toBe('proof.jpg');
+      expect(part.type).toBe('image/jpeg');
       expect(appendSpy).toHaveBeenCalledWith('notes', 'Done!');
     });
 
