@@ -5,12 +5,14 @@ import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import AnimatedBar from '../ProgressOverviewScreen/AnimatedBar';
 import {
   achievementStatus,
   deriveAchievements,
   filterAchievements,
   tintColor,
+  tintSurface,
   unlockedCount,
   type AchievementDef,
   type AchievementFilter,
@@ -36,12 +38,15 @@ export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): Styl
 interface CardProps {
   ach: AchievementDef;
   styles: AchievementsStyles;
+  /** Progress-bar fill / accent hue (full identity colour). */
   color: string;
+  /** Opaque badge-fill for an unlocked achievement (identity `*Tint`). */
+  surface: string;
   trackColor: string;
   onPress: (id: string) => void;
 }
 
-function AchievementCard({ ach, styles, color, trackColor, onPress }: CardProps) {
+function AchievementCard({ ach, styles, color, surface, trackColor, onPress }: CardProps) {
   const status = achievementStatus(ach);
   const stateLabel = status === 'earned' ? 'earned' : status === 'inProgress' ? `in progress, ${ach.progressLabel}` : 'locked';
   return (
@@ -52,7 +57,7 @@ function AchievementCard({ ach, styles, color, trackColor, onPress }: CardProps)
       accessibilityLabel={`${ach.name}. ${ach.description} Status: ${stateLabel}`}
       style={({ pressed }) => [styles.achCard, whenPressed(pressed, styles.achCardPressed)]}
     >
-      <View style={[styles.hexBadge, { backgroundColor: `${color}26` }, !ach.unlocked && styles.hexLocked]}>
+      <View style={[styles.hexBadge, { backgroundColor: ach.unlocked ? surface : trackColor }, !ach.unlocked && styles.hexLocked]}>
         <Text style={styles.hexGlyph}>{ach.icon}</Text>
       </View>
       <Text style={[styles.achName, !ach.unlocked && styles.achNameLocked]}>{ach.name}</Text>
@@ -101,7 +106,7 @@ export default function AchievementsScreen({ onBack, onOpenAchievement }: Achiev
           accessibilityLabel="Back to progress"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Achievements
@@ -110,7 +115,7 @@ export default function AchievementsScreen({ onBack, onOpenAchievement }: Achiev
       </View>
 
       {isLoading ? (
-        <View style={{ paddingHorizontal: 20, paddingTop: 8, gap: 20 }} accessibilityRole="progressbar" accessibilityLabel="Loading achievements">
+        <View style={styles.skelWrap} accessibilityRole="progressbar" accessibilityLabel="Loading achievements">
           <View style={[styles.skel, styles.skelHero]} />
           <View style={[styles.skel, styles.skelCard]} />
         </View>
@@ -131,9 +136,9 @@ export default function AchievementsScreen({ onBack, onOpenAchievement }: Achiev
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.hero} accessible accessibilityRole="text" accessibilityLabel={`${earned} of ${all.length} achievements earned`}>
             <View style={styles.medal}>
-              <Text style={styles.medalGlyph}>{'\u{2B50}'}</Text>
+              <Icon name="trophy" size={30} color={colors.onPrimary} />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <Text style={styles.heroCount}>
                 {earned}
                 <Text style={styles.heroCountTotal}>{` / ${all.length}`}</Text>
@@ -142,7 +147,7 @@ export default function AchievementsScreen({ onBack, onOpenAchievement }: Achiev
               <AnimatedBar
                 progress={all.length ? earned / all.length : 0}
                 trackColor={colors.bgSubtle}
-                fillColor={colors.rewardXp}
+                fillColor={colors.achievement}
                 height={8}
                 accessibilityLabel={`${earned} of ${all.length} earned`}
               />
@@ -183,6 +188,7 @@ export default function AchievementsScreen({ onBack, onOpenAchievement }: Achiev
                   ach={ach}
                   styles={styles}
                   color={tintColor(ach.tint, colors)}
+                  surface={tintSurface(ach.tint, colors)}
                   trackColor={colors.bgSubtle}
                   onPress={handleOpen}
                 />
