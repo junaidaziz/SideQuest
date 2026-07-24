@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react-nativ
 
 import VerificationDetailScreen, {
   buildTimeline,
+  whenPressed,
   type HistoryEntry,
   type VerificationDetail,
 } from './VerificationDetailScreen';
@@ -162,6 +163,14 @@ describe('VerificationDetailScreen', () => {
     it('marks all nodes complete when approved', () => {
       const steps = buildTimeline('approved');
       expect(steps.map((s) => s.state)).toEqual(['done', 'done', 'done']);
+    });
+  });
+
+  describe('whenPressed', () => {
+    it('returns the given style only while pressed', () => {
+      const s = { opacity: 0.5 };
+      expect(whenPressed(true, s)).toBe(s);
+      expect(whenPressed(false, s)).toBeNull();
     });
   });
 });
