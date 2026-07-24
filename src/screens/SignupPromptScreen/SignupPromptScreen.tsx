@@ -17,6 +17,7 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import { makeStyles } from './SignupPromptScreen.styles';
 
 /**
@@ -277,7 +278,7 @@ export default function SignupPromptScreen({
             importantForAccessibility="no"
             accessibilityElementsHidden
           >
-            <Text style={styles.icon}>{'\u{1F512}'}</Text>
+            <Icon name="lock" size={28} color={colors.xp} />
           </View>
 
           <Text accessibilityRole="header" style={styles.title}>
@@ -293,13 +294,7 @@ export default function SignupPromptScreen({
             accessibilityRole="text"
             accessibilityLabel={`${xpAtRisk} XP at risk if you continue as guest`}
           >
-            <Text
-              style={styles.xpPillIcon}
-              importantForAccessibility="no"
-              accessibilityElementsHidden
-            >
-              {'⚡'}
-            </Text>
+            <Icon name="spark" size={13} color={colors.xpText} />
             <Text style={styles.xpPillText}>
               {`${xpAtRisk} XP at risk if you continue as guest`}
             </Text>
@@ -313,7 +308,7 @@ export default function SignupPromptScreen({
                   importantForAccessibility="no"
                   accessibilityElementsHidden
                 >
-                  <Text style={styles.benefitCheck}>{'✓'}</Text>
+                  <Icon name="check" size={13} color={colors.actionPrimary} />
                 </View>
                 <Text style={styles.benefitText}>{benefit}</Text>
               </View>
