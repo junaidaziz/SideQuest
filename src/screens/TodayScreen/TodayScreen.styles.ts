@@ -12,6 +12,17 @@ import {
  * but every migrated Compass screen is theme-aware from day one.
  */
 export function makeStyles(c: CompassPalette) {
+  // Halcyon+ shadow-first elevation (design § 3, `--shadow-1`): the ink is the
+  // `shadowColor` token (deep-indigo in light, black in dark), never hardcoded.
+  // A white card is only ~1.12:1 on the lavender canvas, so the shadow — not a
+  // border — is what carries the card separation.
+  const shadow1 = {
+    shadowColor: c.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 3,
+  } as const;
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.bgCanvas },
     header: {
@@ -39,7 +50,6 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.bgSubtle,
     },
     iconBtnPressed: { backgroundColor: c.borderDefault },
-    iconGlyph: { fontSize: 20 },
     unreadBadge: {
       position: 'absolute',
       top: -2,
@@ -48,14 +58,18 @@ export function makeStyles(c: CompassPalette) {
       height: 18,
       paddingHorizontal: 4,
       borderRadius: 9,
-      backgroundColor: c.socialCoral,
+      // Curated status tint/text pair — the app's standard badge language
+      // (matches VerificationDetailScreen). The prior solid `socialCoral` fill
+      // with white text was not AA in either theme (white-on-socialCoral is
+      // 4.14:1 light / 2.07:1 dark); this pair is 5.90:1 light / 7.23:1 dark.
+      backgroundColor: c.statusErrorTint,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
       borderColor: c.bgCanvas,
     },
     unreadBadgeText: {
-      color: '#FFFFFF',
+      color: c.statusErrorText,
       fontSize: 10,
       fontWeight: '700',
       lineHeight: 12,
@@ -68,7 +82,7 @@ export function makeStyles(c: CompassPalette) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    avatarText: { color: '#FFFFFF', fontWeight: '800', fontSize: 16 },
+    avatarText: { color: c.onPrimary, fontWeight: '800', fontSize: 16 },
     scroll: { flex: 1 },
     content: {
       paddingHorizontal: CompassSpacing.gutterPhone,
@@ -76,23 +90,27 @@ export function makeStyles(c: CompassPalette) {
       paddingBottom: CompassSpacing.s9,
       gap: CompassSpacing.s6,
     },
+    // Aurora hero (design § 2.2): dawn-horizon gradient + dark `onHero` ink at
+    // every layer — never white — so it reads premium on the light gradient and
+    // survives the theme switch, matching QuestDetailScreen's hero.
     hero: {
       borderRadius: CompassRadius.hero,
       padding: CompassSpacing.s6,
       overflow: 'hidden',
     },
+    heroEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     heroEyebrow: {
       fontSize: 13,
       fontWeight: '700',
       letterSpacing: 0.5,
-      color: 'rgba(255,255,255,0.9)',
+      color: c.onHero,
       textTransform: 'uppercase',
     },
     heroTitle: {
       fontSize: 26,
       lineHeight: 32,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: c.onHero,
       marginTop: 6,
       marginBottom: 4,
       letterSpacing: -0.39,
@@ -100,7 +118,7 @@ export function makeStyles(c: CompassPalette) {
     heroSub: {
       fontSize: 15,
       lineHeight: 22,
-      color: 'rgba(255,255,255,0.94)',
+      color: c.onHero,
       marginBottom: CompassSpacing.s4,
       maxWidth: 250,
     },
@@ -109,16 +127,18 @@ export function makeStyles(c: CompassPalette) {
       height: 48,
       paddingHorizontal: CompassSpacing.s5,
       borderRadius: CompassRadius.btn,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: c.bgSurface,
       alignItems: 'center',
       justifyContent: 'center',
+      ...shadow1,
     },
-    heroCtaText: { color: c.brandCoral, fontWeight: '700', fontSize: 15 },
+    heroCtaText: { color: c.actionPrimary, fontWeight: '700', fontSize: 15 },
     secondaryRow: { flexDirection: 'row', gap: CompassSpacing.s3 },
     card: {
       backgroundColor: c.bgSurface,
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
+      ...shadow1,
     },
     goalCard: { flex: 1.3 },
     // Stacked (label / bar / count), not the mockup's single-line row — at
@@ -142,8 +162,8 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
       gap: 2,
     },
-    streakFlame: { fontSize: 22 },
-    streakNum: { fontSize: 20, fontWeight: '800', color: c.textPrimary, letterSpacing: -0.3 },
+    // Streak surfaces carry the Ember identity (design § 2.3): flame + streakText.
+    streakNum: { fontSize: 20, fontWeight: '800', color: c.streakText, letterSpacing: -0.3 },
     sectionLabel: {
       fontSize: 14,
       fontWeight: '600',
@@ -162,13 +182,15 @@ export function makeStyles(c: CompassPalette) {
     storyIcon: { fontSize: 20 },
     storyBody: { flex: 1 },
     storyTitle: { fontSize: 16, fontWeight: '600', color: c.textPrimary },
+    // "XP pending" review chip → XP identity tint (design § 2.3), replacing the
+    // former hardcoded warning rgba.
     badgePending: {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: CompassRadius.pill,
-      backgroundColor: 'rgba(168,100,0,0.12)',
+      backgroundColor: c.xpTint,
     },
-    badgePendingText: { fontSize: 12, fontWeight: '700', color: c.statusWarning },
+    badgePendingText: { fontSize: 12, fontWeight: '700', color: c.xpText },
     exploreLink: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -176,7 +198,6 @@ export function makeStyles(c: CompassPalette) {
       paddingVertical: CompassSpacing.s3,
     },
     exploreLinkText: { fontSize: 16, fontWeight: '600', color: c.textPrimary, flex: 1 },
-    chevron: { color: c.actionPrimary, fontSize: 18 },
     // States
     stateArea: { flex: 1, justifyContent: 'center', paddingHorizontal: CompassSpacing.gutterPhone },
     skeletonWrap: { gap: CompassSpacing.s4 },
@@ -202,6 +223,6 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
   });
 }
