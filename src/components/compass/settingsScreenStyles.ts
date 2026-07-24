@@ -37,11 +37,11 @@ export function createSettingsScreenStyles(colors: CompassPalette) {
     destructiveBtn: {
       minHeight: COMPASS_TOUCH_MIN + 4,
       borderRadius: CompassRadius.btn,
-      backgroundColor: 'rgba(201,61,75,0.10)',
+      backgroundColor: colors.statusErrorTint,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    destructiveBtnText: { color: colors.statusError, fontWeight: '600', fontSize: 16 },
+    destructiveBtnText: { color: colors.statusErrorText, fontWeight: '600', fontSize: 16 },
     appMeta: {
       textAlign: 'center',
       color: colors.textTertiary,
