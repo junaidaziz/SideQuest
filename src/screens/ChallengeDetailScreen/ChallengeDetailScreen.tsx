@@ -6,11 +6,14 @@ import * as Haptics from 'expo-haptics';
 import type { InviteResponse, ReviewDecision, TaskDetail } from '../../types/api';
 import { generateTaskInvite, getTask, reviewTaskSubmission } from '../../services/tasksApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import { pickEmoji, statusLabel } from '../ChallengeFeedScreen/challengeUtils';
 import {
   buildTimeline,
   latestPendingSubmission,
   relationship,
+  type StatusTone,
+  statusTone,
   verificationSummary,
 } from './detailUtils';
 import { makeStyles } from './ChallengeDetailScreen.styles';
@@ -38,6 +41,36 @@ export interface ChallengeDetailScreenProps {
 
 export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): StyleProp<ViewStyle> {
   return pressed ? style : null;
+}
+
+/**
+ * Resolves a {@link StatusTone} to a `{ bg, fg }` pair from the active palette.
+ *
+ * Every tone uses a *curated* opaque tint + text-safe token pair — never a
+ * runtime `${status}1F` alpha blend. That blend was an AA failure for the 12px
+ * badge label over the lavender canvas (success 3.90 / error 3.92 / info 4.35
+ * : 1); the curated `status*Tint`/`status*Text` pairs all clear 4.5:1 with
+ * margin (light 5.9–6.9:1, dark 7.1–7.7:1), the same fix pattern as the
+ * gamification identity tint/text tokens.
+ */
+export function toneColors(tone: StatusTone, c: ReturnType<typeof useCompassTheme>['colors']): {
+  bg: string;
+  fg: string;
+} {
+  switch (tone) {
+    case 'success':
+      return { bg: c.statusSuccessTint, fg: c.statusSuccessText };
+    case 'error':
+      return { bg: c.statusErrorTint, fg: c.statusErrorText };
+    case 'warning':
+      return { bg: c.statusWarningTint, fg: c.statusWarningText };
+    case 'info':
+      return { bg: c.statusInfoTint, fg: c.statusInfoText };
+    case 'community':
+      return { bg: c.communityTint, fg: c.communityText };
+    default:
+      return { bg: c.bgSubtle, fg: c.textSecondary };
+  }
 }
 
 export default function ChallengeDetailScreen({
@@ -121,7 +154,7 @@ export default function ChallengeDetailScreen({
           accessibilityLabel="Back to challenges"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} testID="detail-back-icon" />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Challenge
@@ -161,9 +194,16 @@ export default function ChallengeDetailScreen({
               <View style={styles.heroBody}>
                 <Text style={styles.heroTitle}>{data.title}</Text>
                 {data.description ? <Text style={styles.heroDesc}>{data.description}</Text> : null}
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusBadgeText}>{statusLabel(data.status)}</Text>
-                </View>
+                {(() => {
+                  const badge = toneColors(statusTone(data.status), colors);
+                  return (
+                    <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
+                      <Text style={[styles.statusBadgeText, { color: badge.fg }]}>
+                        {statusLabel(data.status)}
+                      </Text>
+                    </View>
+                  );
+                })()}
               </View>
             </View>
 
@@ -173,9 +213,8 @@ export default function ChallengeDetailScreen({
                 <Text style={styles.partName}>
                   {role === 'creator' ? 'Created by you' : 'From a friend'}
                 </Text>
-                <Text style={styles.partArrow} accessibilityElementsHidden importantForAccessibility="no">
-                  {'→'}
-                </Text>
+                <Icon name="chevronRight" size={16} color={colors.textTertiary} />
+
                 <Text style={styles.partName}>
                   {role === 'assignee'
                     ? 'You'
@@ -216,9 +255,7 @@ export default function ChallengeDetailScreen({
             </View>
 
             <View style={styles.privacyCard}>
-              <Text style={styles.privacyGlyph} accessibilityElementsHidden importantForAccessibility="no">
-                {'🔒'}
-              </Text>
+              <Icon name="lock" size={20} color={colors.communityText} />
               <Text style={styles.privacyText}>
                 Only the people in this challenge can see its progress and
                 evidence.
