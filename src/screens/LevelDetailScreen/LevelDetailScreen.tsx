@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import AnimatedBar from '../ProgressOverviewScreen/AnimatedBar';
 import { formatXp, levelName, levelProgress, nextLevelName } from '../ProgressOverviewScreen/progress';
 import { buildLevelMap, levelBlurb, type LevelNode } from '../ProgressOverviewScreen/levels';
@@ -72,7 +73,7 @@ export default function LevelDetailScreen({ onBack, onFindQuest }: LevelDetailSc
           accessibilityLabel="Back to progress"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Level
@@ -81,7 +82,7 @@ export default function LevelDetailScreen({ onBack, onFindQuest }: LevelDetailSc
       </View>
 
       {isLoading ? (
-        <View style={{ paddingHorizontal: 20, paddingTop: 8, gap: 20 }} accessibilityRole="progressbar" accessibilityLabel="Loading level">
+        <View style={styles.skelWrap} accessibilityRole="progressbar" accessibilityLabel="Loading level">
           <View style={[styles.skel, styles.skelHero]} />
           <View style={[styles.skel, styles.skelCard]} />
         </View>
@@ -114,8 +115,8 @@ export default function LevelDetailScreen({ onBack, onFindQuest }: LevelDetailSc
             <View style={styles.heroBarWrap}>
               <AnimatedBar
                 progress={levelProgress(data.level)}
-                trackColor="rgba(255,255,255,0.28)"
-                fillColor={colors.brandGold}
+                trackColor={`${colors.onPrimary}47`}
+                fillColor={colors.xp}
                 accessibilityLabel={`${Math.round(levelProgress(data.level) * 100)} percent to level ${data.level.level + 1}`}
               />
             </View>
@@ -150,15 +151,17 @@ export default function LevelDetailScreen({ onBack, onFindQuest }: LevelDetailSc
                   <View style={[styles.node, ns.box]}>
                     <Text style={[styles.nodeText, ns.text]}>{node.level}</Text>
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View style={styles.flex1}>
                     <Text style={[styles.mapName, node.status === 'locked' && styles.mapNameLocked]}>
                       {node.name}
                     </Text>
                     <Text style={styles.mapMeta}>{nodeMeta(node)}</Text>
                   </View>
-                  <Text style={styles.mapMeta}>
-                    {node.status === 'done' ? '✓' : node.status === 'locked' ? '🔒' : ''}
-                  </Text>
+                  {node.status === 'done' ? (
+                    <Icon name="check" size={18} color={colors.actionPrimary} testID={`level-node-check-${node.level}`} />
+                  ) : node.status === 'locked' ? (
+                    <Icon name="lock" size={16} color={colors.textTertiary} testID={`level-node-lock-${node.level}`} />
+                  ) : null}
                 </Pressable>
               );
             })}
@@ -185,7 +188,7 @@ export default function LevelDetailScreen({ onBack, onFindQuest }: LevelDetailSc
             <View style={styles.tooltipSheet} accessibilityViewIsModal>
               <View style={styles.tooltipHandle} importantForAccessibility="no" />
               <View style={styles.tooltipLockBadge} importantForAccessibility="no">
-                <Text style={styles.tooltipLockGlyph}>{'🔒'}</Text>
+                <Icon name="lock" size={26} color={colors.textTertiary} />
               </View>
               <Text accessibilityRole="header" style={styles.tooltipTitle}>
                 {`Level ${lockedNode.level} · ${lockedNode.name}`}
