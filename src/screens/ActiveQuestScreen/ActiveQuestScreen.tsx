@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import type { Mission } from '../../types/api';
 import { makeStyles } from './ActiveQuestScreen.styles';
 
@@ -88,7 +89,7 @@ export default function ActiveQuestScreen({
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
         <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to Today" style={styles.iconBtn}>
-          <Text style={styles.iconGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.topTitle} numberOfLines={1}>
           {mission ? mission.title : 'Active quest'}
@@ -154,11 +155,7 @@ export default function ActiveQuestScreen({
                 {steps.map((step) => (
                   <View key={step.id} style={styles.checkItem} accessible accessibilityLabel={`${step.label}${step.done ? ', done' : ''}`}>
                     <View style={[styles.checkBox, step.done && styles.checkBoxDone]}>
-                      {step.done ? (
-                        <Text style={styles.checkMark} accessibilityElementsHidden importantForAccessibility="no">
-                          {'✓'}
-                        </Text>
-                      ) : null}
+                      {step.done ? <Icon name="check" size={16} color={colors.onPrimary} /> : null}
                     </View>
                     <Text style={[styles.checkLabel, step.done && styles.checkLabelDone]}>{step.label}</Text>
                   </View>
