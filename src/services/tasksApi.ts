@@ -1,5 +1,5 @@
-import { File } from 'expo-file-system';
 import { apiRequest } from './apiClient';
+import { localFileToBlob } from './localFileBlob';
 import type {
   CreateTaskRequest,
   InviteResponse,
@@ -86,24 +86,22 @@ export interface SubmitEvidenceInput {
 
 /**
  * Submits evidence for a task. Multipart, following the exact `proofApi`
- * convention: a real `Blob` (via `File.slice()` with the file's own MIME type
- * passed as `contentType`) is appended rather than a duck-typed
- * `{ uri, name, type }` object — the latter fails FormData's strict
- * `instanceof Blob` check under React Native's New Architecture, and a raw
- * `File` only structurally (not at runtime) implements `Blob`. Slicing with no
- * `contentType` would yield an empty MIME type the backend's image filter
- * rejects, so `file.type` is threaded through explicitly.
+ * convention: a real `Blob` (via `localFileToBlob`, backed by `fetch()`) is
+ * appended rather than a duck-typed `{ uri, name, type }` object — the latter
+ * fails FormData's strict `instanceof Blob` check under React Native's New
+ * Architecture. `expo-file-system`'s `File.slice()` was tried first but hits
+ * a separate, confirmed upstream bug (expo/expo#40144) — see
+ * `localFileBlob.ts`.
  */
-export function submitTaskEvidence(
+export async function submitTaskEvidence(
   taskId: string,
   input: SubmitEvidenceInput,
   idempotencyKey?: string,
 ): Promise<TaskDetail> {
   const form = new FormData();
   if (input.photoUri) {
-    const file = new File(input.photoUri);
-    const blob = file.slice(undefined, undefined, file.type);
-    form.append('photo', blob, file.name);
+    const { blob, name } = await localFileToBlob(input.photoUri);
+    form.append('photo', blob, name);
   }
   if (input.notes !== undefined) {
     form.append('notes', input.notes);
