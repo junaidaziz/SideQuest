@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
-import { CompassMotion } from '../../constants/compassDesign';
+import { CompassMotion, type CompassPalette } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import { generateMissions, listSavedMissions } from '../../services/missionsApi';
 import { enqueueSaveToggle } from '../../services/queuedActions';
 import type { GenerateMissionsRequest, Mission, MissionCategory } from '../../types/api';
@@ -46,6 +47,16 @@ export function buildFilterChips(filters: GenerateMissionsRequest): string[] {
   return [filters.crew, filters.time, filters.setting, filters.budget];
 }
 
+/**
+ * Thumbnail well tint for a card at a given index — rotates through the four
+ * gamification identity tints (design § 5) so the results list visibly teaches
+ * the identity palette rather than repeating one accent.
+ */
+function thumbTint(colors: CompassPalette, index: number): string {
+  const tints = [colors.communityTint, colors.xpTint, colors.achievementTint, colors.streakTint];
+  return tints[index % tints.length];
+}
+
 function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): StyleProp<ViewStyle> {
   return pressed ? style : null;
 }
@@ -62,16 +73,17 @@ interface ResultCardProps {
   index: number;
   total: number;
   styles: Styles;
+  colors: CompassPalette;
   saved: boolean;
   onToggleSave: (mission: Mission) => void;
   onViewDetails?: (mission: Mission) => void;
 }
 
-function ResultCard({ mission, index, total, styles, saved, onToggleSave, onViewDetails }: ResultCardProps) {
+function ResultCard({ mission, index, total, styles, colors, saved, onToggleSave, onViewDetails }: ResultCardProps) {
   return (
     <View style={styles.card} accessibilityLabel={`Quest ${index + 1} of ${total}, ${mission.title}`}>
       <View style={styles.rcTop}>
-        <View style={styles.thumb}>
+        <View style={[styles.thumb, { backgroundColor: thumbTint(colors, index) }]}>
           <Text style={styles.thumbGlyph} accessibilityElementsHidden importantForAccessibility="no">
             {CATEGORY_GLYPH[mission.category]}
           </Text>
@@ -88,7 +100,7 @@ function ResultCard({ mission, index, total, styles, saved, onToggleSave, onView
       </View>
 
       <View style={styles.fitReason}>
-        <Text accessibilityElementsHidden importantForAccessibility="no">{'\u{2728}'}</Text>
+        <Icon name="spark" size={16} color={colors.communityText} />
         <Text style={styles.fitReasonText}>
           <Text style={styles.fitReasonBold}>Why this fits: </Text>
           {buildFitReason(mission)}
@@ -123,7 +135,7 @@ function ResultCard({ mission, index, total, styles, saved, onToggleSave, onView
           accessibilityLabel={saved ? `Saved ${mission.title}` : `Save ${mission.title}`}
           style={[styles.saveBtn, saved && styles.saveBtnActive]}
         >
-          <Text style={[styles.saveGlyph, saved && styles.saveGlyphActive]}>{'\u{1F516}'}</Text>
+          <Icon name="bookmark" size={20} color={saved ? colors.onPrimary : colors.actionPrimary} />
         </Pressable>
       </View>
     </View>
@@ -210,7 +222,7 @@ export default function QuestResultsScreen({
           accessibilityLabel="Back to explore"
           style={styles.backBtn}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Pressable
           onPress={handleReroll}
@@ -267,9 +279,7 @@ export default function QuestResultsScreen({
       ) : missions.length === 0 ? (
         <View style={styles.stateArea}>
           <View style={styles.emptyState} accessible accessibilityRole="text" accessibilityLabel="No quests found. Try widening your moment and reroll.">
-            <Text style={styles.emptyIcon} accessibilityElementsHidden importantForAccessibility="no">
-              {'\u{1F50D}'}
-            </Text>
+            <Icon name="search" size={40} color={colors.textTertiary} />
             <Text style={styles.stateTitle}>No quests found</Text>
             <Text style={styles.stateBody}>Try widening your moment, then reroll for a fresh set.</Text>
           </View>
@@ -284,6 +294,7 @@ export default function QuestResultsScreen({
                 index={index}
                 total={missions.length}
                 styles={styles}
+                colors={colors}
                 saved={isSaved(mission.id)}
                 onToggleSave={handleToggleSave}
                 onViewDetails={onViewDetails}
