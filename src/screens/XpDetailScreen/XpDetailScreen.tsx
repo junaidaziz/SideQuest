@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import AnimatedBar from '../ProgressOverviewScreen/AnimatedBar';
 import {
   formatXp,
@@ -27,7 +28,7 @@ export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): Styl
 
 function StateSkeleton({ styles }: { styles: XpDetailStyles }) {
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop: 8, gap: 20 }} accessibilityRole="progressbar" accessibilityLabel="Loading experience">
+    <View style={styles.skelWrap} accessibilityRole="progressbar" accessibilityLabel="Loading experience">
       <View style={[styles.skel, styles.skelHero]} />
       <View style={[styles.skel, styles.skelCard]} />
     </View>
@@ -53,7 +54,7 @@ export default function XpDetailScreen({ onBack }: XpDetailScreenProps) {
           accessibilityLabel="Back to progress"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Experience
@@ -89,8 +90,8 @@ export default function XpDetailScreen({ onBack }: XpDetailScreenProps) {
             </Text>
             <AnimatedBar
               progress={levelProgress(data.level)}
-              trackColor="rgba(255,255,255,0.28)"
-              fillColor={colors.brandGold}
+              trackColor={`${colors.onPrimary}47`}
+              fillColor={colors.xp}
               accessibilityLabel={`${data.level.xpIntoLevel} of ${data.level.xpIntoLevel + data.level.xpToNextLevel} XP to level ${data.level.level + 1}`}
             />
             <View style={styles.heroLevels}>
@@ -103,7 +104,7 @@ export default function XpDetailScreen({ onBack }: XpDetailScreenProps) {
 
           <View style={[styles.card, styles.infoRow]} accessible accessibilityRole="text" accessibilityLabel="How XP works. You earn XP when a quest proof is approved. Submitting shows XP as pending; it settles once verified.">
             <Text style={styles.infoIcon}>{'\u{1F4A1}'}</Text>
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <Text style={styles.infoTitle}>How XP works</Text>
               <Text style={styles.infoBody}>
                 You earn XP when a quest proof is approved. Submitting shows XP as pending; it
