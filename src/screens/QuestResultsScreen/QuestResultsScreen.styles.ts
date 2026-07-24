@@ -24,21 +24,30 @@ export function makeStyles(c: CompassPalette) {
     link: { color: c.actionPrimary, fontWeight: '600', fontSize: 14 },
     scroll: { flex: 1 },
     list: { paddingHorizontal: CompassSpacing.gutterPhone, paddingBottom: CompassSpacing.s9, gap: CompassSpacing.s4 },
+    // Shadow-first elevation (Halcyon+ § 3): content cards are separated from
+    // the lavender canvas by shadow, with only a subtle hairline — not a
+    // load-bearing strong border (which would read as a hard outline here).
     card: {
       backgroundColor: c.bgSurface,
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
       borderWidth: 1,
-      borderColor: c.borderDefault,
+      borderColor: c.borderSubtle,
+      shadowColor: c.shadowColor,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 14,
+      elevation: 3,
     },
     rcTop: { flexDirection: 'row', gap: CompassSpacing.s3 },
+    // Thumbnail well tint is set per-card from the four gamification identities
+    // (design § 5, "rotate through the four identity tints to teach the system").
     thumb: {
       width: 72,
       height: 72,
       borderRadius: CompassRadius.md,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(101,71,245,0.14)',
     },
     thumbGlyph: { fontSize: 32 },
     rcBody: { flex: 1, minWidth: 0 },
@@ -53,23 +62,24 @@ export function makeStyles(c: CompassPalette) {
     catChipText: { fontSize: 13, fontWeight: '600', color: c.textSecondary },
     rcTitle: { fontSize: 18, fontWeight: '700', color: c.textPrimary, letterSpacing: -0.27 },
     rcBrief: { fontSize: 14, color: c.textSecondary, lineHeight: 20, marginTop: 4 },
+    // Community-identity "why this fits" well (design § 5 Quest Card).
     fitReason: {
       flexDirection: 'row',
       gap: CompassSpacing.s2,
       alignItems: 'flex-start',
-      backgroundColor: 'rgba(24,169,153,0.1)',
+      backgroundColor: c.communityTint,
       borderRadius: CompassRadius.md,
       paddingVertical: 10,
       paddingHorizontal: CompassSpacing.s3,
       marginTop: CompassSpacing.s3,
     },
-    fitReasonText: { fontSize: 13, lineHeight: 18, color: c.textPrimary, flex: 1 },
-    fitReasonBold: { fontWeight: '700', color: c.textPrimary },
+    fitReasonText: { fontSize: 13, lineHeight: 18, color: c.textSecondary, flex: 1 },
+    fitReasonBold: { fontWeight: '700', color: c.communityText },
     rcMeta: { flexDirection: 'row', alignItems: 'center', gap: CompassSpacing.s2, marginTop: CompassSpacing.s3, flexWrap: 'wrap' },
     chip: { paddingHorizontal: CompassSpacing.s3, paddingVertical: 6, borderRadius: CompassRadius.pill, backgroundColor: c.bgSubtle },
     chipText: { fontSize: 13, fontWeight: '600', color: c.textSecondary },
-    xpBadge: { marginLeft: 'auto', paddingHorizontal: 10, paddingVertical: 4, borderRadius: CompassRadius.pill, backgroundColor: 'rgba(199,133,0,0.12)' },
-    xpBadgeText: { fontSize: 12, fontWeight: '700', color: c.rewardXp },
+    xpBadge: { marginLeft: 'auto', paddingHorizontal: 10, paddingVertical: 4, borderRadius: CompassRadius.pill, backgroundColor: c.xpTint },
+    xpBadgeText: { fontSize: 12, fontWeight: '700', color: c.xpText },
     rcActions: { flexDirection: 'row', gap: CompassSpacing.s2, marginTop: CompassSpacing.s4, alignItems: 'center' },
     primaryBtn: {
       flex: 1,
@@ -80,20 +90,18 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     primaryBtnPressed: { backgroundColor: c.actionPressed },
-    primaryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    primaryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
     saveBtn: {
       width: 48,
       height: 48,
       borderRadius: CompassRadius.md,
       borderWidth: 1.5,
-      borderColor: c.borderDefault,
+      borderColor: c.borderStrong,
       backgroundColor: c.bgSurface,
       alignItems: 'center',
       justifyContent: 'center',
     },
     saveBtnActive: { backgroundColor: c.actionPrimary, borderColor: c.actionPrimary },
-    saveGlyph: { fontSize: 18, color: c.actionPrimary },
-    saveGlyphActive: { color: '#FFFFFF' },
     rerollBtn: {
       height: 52,
       borderRadius: CompassRadius.btn,
@@ -110,7 +118,6 @@ export function makeStyles(c: CompassPalette) {
     skel: { backgroundColor: c.bgSubtle, borderRadius: CompassRadius.card },
     skelCard: { height: 180 },
     emptyState: { alignItems: 'center', gap: CompassSpacing.s2, paddingVertical: CompassSpacing.s8 },
-    emptyIcon: { fontSize: 40 },
     stateTitle: { fontSize: 18, fontWeight: '700', color: c.textPrimary, textAlign: 'center', marginBottom: CompassSpacing.s2 },
     stateBody: { fontSize: 14, color: c.textSecondary, textAlign: 'center', marginBottom: CompassSpacing.s5, maxWidth: 280 },
     retryBtn: {
@@ -123,6 +130,6 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
   });
 }
