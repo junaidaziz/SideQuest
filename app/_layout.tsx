@@ -9,6 +9,7 @@ import { StripeProvider } from '@stripe/stripe-react-native';
 import { useFonts } from 'expo-font';
 import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { Syne_700Bold, Syne_800ExtraBold } from '@expo-google-fonts/syne';
 import {
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
@@ -110,8 +111,15 @@ function RootLayout() {
   const hydrateTheme = useThemeStore((state) => state.hydrate);
   const navigationRef = useNavigationContainerRef();
   const [fontsLoaded, fontError] = useFonts({
+    // Syne — Halcyon+ display face (CompassFonts.display / .displayBold).
+    Syne_800ExtraBold,
+    Syne_700Bold,
+    // Plus Jakarta Sans — retained until every screen migrates off the
+    // hardcoded 'PlusJakartaSans_*' families still present in several
+    // *.styles.ts files; removing it now would blank those headings.
     PlusJakartaSans_800ExtraBold,
     PlusJakartaSans_700Bold,
+    // Inter — body/label/UI + tabular metrics (CompassFonts.numeric = 800).
     Inter_800ExtraBold,
     Inter_600SemiBold,
     Inter_500Medium,
