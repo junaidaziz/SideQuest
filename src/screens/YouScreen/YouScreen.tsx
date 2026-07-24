@@ -16,6 +16,7 @@ import { useAuthStore } from '../../store/authStore';
 import { getHome } from '../../services/homeApi';
 import type { LevelInfo } from '../../types/api';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import { CompassHeader, textStyle, pressedStyle } from '../../components/compass';
 import { LoadingState, ErrorState } from '../../components/states';
 import { levelName, nextLevelName, formatXp } from '../ProgressOverviewScreen/progress';
@@ -122,7 +123,7 @@ export default function YouScreen({
       hitSlop={8}
       style={({ pressed }) => (pressedStyle(pressed, 0.6))}
     >
-      <Text style={{ fontSize: 22 }}>{'⚙️'}</Text>
+      <Icon name="settings" size={22} color={colors.textPrimary} testID="you-settings-icon" />
     </Pressable>
   );
 
@@ -141,7 +142,7 @@ export default function YouScreen({
             accessibilityLabel="You're browsing as a guest. Your progress is saved on this device. Create an account to keep it safe."
           >
             <View style={styles.guestAvatar} importantForAccessibility="no">
-              <Text style={styles.guestGlyph}>{'\u{1F464}'}</Text>
+              <Icon name="you" size={26} color={colors.textTertiary} />
             </View>
             <View style={styles.identityCopy}>
               <Text style={[textStyle('labelL'), styles.guestTitle]}>
@@ -227,18 +228,31 @@ export default function YouScreen({
                 accessible
                 accessibilityLabel={`${data.taskStats.approved} quests completed, best streak ${data.streak.longestStreak} days, ${data.savedPacks.length} saved packs`}
               >
-                <MetricCard icon="🚩" value={data.taskStats.approved} label="Quests completed" styles={styles} />
-                <MetricCard icon="🔥" value={data.streak.longestStreak} label="Best streak" styles={styles} />
-                <MetricCard icon="🔖" value={data.savedPacks.length} label="Saved packs" styles={styles} />
+                <MetricCard
+                  icon={<Icon name="check" size={20} color={colors.statusSuccess} />}
+                  value={data.taskStats.approved}
+                  label="Quests completed"
+                  styles={styles}
+                />
+                <MetricCard
+                  icon={<Icon name="flame" size={20} color={colors.streak} />}
+                  value={data.streak.longestStreak}
+                  label="Best streak"
+                  styles={styles}
+                />
+                <MetricCard
+                  icon={<Icon name="bookmark" size={20} color={colors.actionPrimary} />}
+                  value={data.savedPacks.length}
+                  label="Saved packs"
+                  styles={styles}
+                />
               </View>
               <View
                 style={[styles.streakCard, { marginTop: 16 }]}
                 accessible
                 accessibilityLabel={`Current streak ${data.streak.currentStreak} days. Complete a quest today to keep it going.`}
               >
-                <Text style={styles.streakIcon} importantForAccessibility="no">
-                  {'\u{1F525}'}
-                </Text>
+                <Icon name="flame" size={28} color={colors.streak} testID="you-streak-flame" />
                 <View style={styles.identityCopy}>
                   <Text style={[textStyle('labelL'), styles.streakValue]}>
                     {`${data.streak.currentStreak}-day streak`}
@@ -299,7 +313,7 @@ export default function YouScreen({
               <Text style={styles.secondaryBtnText}>Payment methods</Text>
             </Pressable>
             <View style={styles.privacyNote}>
-              <Text importantForAccessibility="no">{'\u{1F512}'}</Text>
+              <Icon name="lock" size={16} color={colors.textSecondary} />
               <Text style={[textStyle('bodyS'), styles.privacyText]}>
                 Your profile is private. Only you can see your quest history.
               </Text>
@@ -377,14 +391,14 @@ function MetricCard({
   label,
   styles,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   value: number;
   label: string;
   styles: ReturnType<typeof createStyles>;
 }) {
   return (
     <View style={styles.metricCard} importantForAccessibility="no-hide-descendants">
-      <Text style={styles.metricIcon}>{icon}</Text>
+      <View style={styles.metricIconWrap}>{icon}</View>
       <Text style={styles.metricNum}>{value}</Text>
       <Text style={[textStyle('caption'), styles.metricCap]}>{label}</Text>
     </View>
