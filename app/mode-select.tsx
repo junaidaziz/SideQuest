@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { type QuestMode } from '../src/screens/ModeSelectScreen';
+import type { QuestMode } from '../src/types/questMode';
 import type { Crew, GenerateMissionsRequest, Setting } from '../src/types/api';
 
 /** Crew value for each mode that maps to a crew/headcount concept. */
@@ -44,8 +44,9 @@ export function toFiltersFromMode(mode: QuestMode): GenerateMissionsRequest {
  * replaces the standalone ModeSelectScreen in the Compass redesign. Kept as a
  * redirect (not deleted) so any external/deep link still pointing at
  * /mode-select lands on Explore instead of 404ing. `toFiltersFromMode` above
- * is retained for its unit test and any future reuse; the old ModeSelectScreen
- * source is preserved under src/screens/ModeSelectScreen for rollback.
+ * is retained for its unit test and any future reuse; the `QuestMode` type it
+ * depends on now lives in `src/types/questMode.ts` (relocated when the old
+ * ModeSelectScreen source was removed as dead code).
  */
 export default function ModeSelectRoute() {
   return <Redirect href="/explore" />;
