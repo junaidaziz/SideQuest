@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import {
+  CompassFonts,
   CompassRadius,
   CompassSpacing,
   CompassType,
@@ -8,6 +9,14 @@ import {
 
 /** Theme-aware styles for the statistics screen (mockup 24). */
 export function makeStyles(c: CompassPalette) {
+  // Shadow-first elevation (design § 3, `--shadow-1`) — see XpDetailScreen note.
+  const shadow1 = {
+    shadowColor: c.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 3,
+  } as const;
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.bgCanvas },
     topBar: {
@@ -18,11 +27,10 @@ export function makeStyles(c: CompassPalette) {
     },
     backBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
     backBtnPressed: { opacity: 0.5 },
-    backGlyph: { fontSize: 26, color: c.textPrimary },
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'PlusJakartaSans_800ExtraBold',
+      fontFamily: CompassFonts.fallbackHeavy,
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -45,11 +53,12 @@ export function makeStyles(c: CompassPalette) {
       paddingVertical: CompassSpacing.s4,
       paddingHorizontal: CompassSpacing.s3,
       borderWidth: 1,
-      borderColor: c.borderDefault,
+      borderColor: c.borderSubtle,
       alignItems: 'center',
+      ...shadow1,
     },
     metricNum: {
-      fontFamily: 'Inter_800ExtraBold',
+      fontFamily: CompassFonts.numeric,
       fontSize: 24,
       fontWeight: '800',
       color: c.textPrimary,
@@ -61,8 +70,9 @@ export function makeStyles(c: CompassPalette) {
       borderRadius: CompassRadius.card,
       padding: CompassSpacing.s4,
       borderWidth: 1,
-      borderColor: c.borderDefault,
+      borderColor: c.borderSubtle,
       gap: CompassSpacing.s3,
+      ...shadow1,
     },
     cardLabel: { fontSize: CompassType.labelL.size, fontWeight: '600', color: c.textPrimary },
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
@@ -70,7 +80,7 @@ export function makeStyles(c: CompassPalette) {
     rowMuted: { fontSize: CompassType.caption.size, color: c.textSecondary },
 
     rateNum: {
-      fontFamily: 'Inter_800ExtraBold',
+      fontFamily: CompassFonts.numeric,
       fontSize: 32,
       fontWeight: '800',
       color: c.textPrimary,
@@ -78,6 +88,9 @@ export function makeStyles(c: CompassPalette) {
 
     statusRow: { flexDirection: 'row', alignItems: 'center', gap: CompassSpacing.s3 },
     dot: { width: 12, height: 12, borderRadius: 4 },
+    dotSuccess: { backgroundColor: c.statusSuccess },
+    dotWarning: { backgroundColor: c.statusWarning },
+    dotError: { backgroundColor: c.statusError },
     statusName: { flex: 1, fontSize: CompassType.bodyM.size, fontWeight: '600', color: c.textPrimary },
     statusVal: { fontSize: CompassType.bodyM.size, fontWeight: '700', color: c.textPrimary },
 
@@ -97,7 +110,7 @@ export function makeStyles(c: CompassPalette) {
       gap: CompassSpacing.s4,
     },
     stateHeading: {
-      fontFamily: 'PlusJakartaSans_700Bold',
+      fontFamily: CompassFonts.fallbackBold,
       fontSize: CompassType.h3.size,
       fontWeight: '700',
       color: c.textPrimary,
@@ -114,7 +127,7 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: CompassType.labelL.size },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: CompassType.labelL.size },
     skel: { backgroundColor: c.bgSubtle, borderRadius: CompassRadius.card },
     skelHero: { height: 120 },
     skelCard: { height: 160 },
