@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery } from '@tanstack/react-query';
 import Animated, {
   FadeInDown,
@@ -10,28 +9,35 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
-import { CompassMotion } from '../../constants/compassDesign';
+import { CompassMotion, type CompassPalette } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import { getHome } from '../../services/homeApi';
 import type { SavedPack } from '../../types/api';
-import { makeStyles } from './ExploreScreen.styles';
+import { exploreStatics, makeStyles } from './ExploreScreen.styles';
 
 type Styles = ReturnType<typeof makeStyles>;
 
+/** One of the four Halcyon+ gamification identities (design § 2.3). Category
+ * surfaces rotate through these tints to teach the palette, rather than each
+ * carrying its own hardcoded hex gradient. */
+export type ModeIdentity = 'community' | 'streak' | 'achievement' | 'xp';
+
 /** Explore "mode" tiles. These map onto the same generic crew/setting filters
  * the shipped ModeSelectScreen already uses — there is no backend "mode" model
- * (see mobileApp/CLAUDE.md product-scope conflicts), so `id` is a client label. */
+ * (see mobileApp/CLAUDE.md product-scope conflicts), so `id` is a client label.
+ * `identity` selects an identity tint resolved from the live theme at render. */
 export interface ExploreMode {
   id: string;
   name: string;
   icon: string;
-  colors: [string, string];
+  identity: ModeIdentity;
 }
 
 export const EXPLORE_MODES: ExploreMode[] = [
-  { id: 'get-out', name: 'Get out', icon: '\u{1F9ED}', colors: ['#18A999', '#0E8377'] },
-  { id: 'make', name: 'Make something', icon: '\u{2702}\u{FE0F}', colors: ['#FF6B5E', '#FF8A5C'] },
-  { id: 'connect', name: 'Connect', icon: '\u{1F44B}', colors: ['#6547F5', '#4A2ED6'] },
-  { id: 'reset', name: 'Reset', icon: '\u{1F33F}', colors: ['#246BCE', '#1A4E9B'] },
+  { id: 'get-out', name: 'Get out', icon: '\u{1F9ED}', identity: 'community' },
+  { id: 'make', name: 'Make something', icon: '\u{2702}\u{FE0F}', identity: 'streak' },
+  { id: 'connect', name: 'Connect', icon: '\u{1F44B}', identity: 'achievement' },
+  { id: 'reset', name: 'Reset', icon: '\u{1F33F}', identity: 'xp' },
 ];
 
 /** Curated shelf item. Placeholder content — no discovery/curation endpoint
@@ -42,7 +48,7 @@ export interface ShelfItem {
   time: string;
   xp: string;
   glyph: string;
-  art: string;
+  identity: ModeIdentity;
 }
 
 export interface ExploreShelf {
@@ -56,19 +62,24 @@ export const EXPLORE_SHELVES: ExploreShelf[] = [
     id: 'quick-wins',
     title: 'Quick wins',
     items: [
-      { id: 'qw-1', title: 'Send a postcard, no reason', time: '10 min', xp: '15 XP', glyph: '\u{1F4EE}', art: 'rgba(24,169,153,0.14)' },
-      { id: 'qw-2', title: "Try a drink you can't pronounce", time: '15 min', xp: '15 XP', glyph: '\u{2615}', art: 'rgba(245,184,46,0.16)' },
+      { id: 'qw-1', title: 'Send a postcard, no reason', time: '10 min', xp: '15 XP', glyph: '\u{1F4EE}', identity: 'community' },
+      { id: 'qw-2', title: "Try a drink you can't pronounce", time: '15 min', xp: '15 XP', glyph: '\u{2615}', identity: 'xp' },
     ],
   },
   {
     id: 'outside',
     title: 'Outside',
     items: [
-      { id: 'o-1', title: 'Street Type Safari', time: '30 min', xp: '20 XP', glyph: '\u{1F524}', art: 'rgba(101,71,245,0.14)' },
-      { id: 'o-2', title: 'Green Corner Hunt', time: '40 min', xp: '20 XP', glyph: '\u{1F333}', art: 'rgba(255,107,94,0.14)' },
+      { id: 'o-1', title: 'Street Type Safari', time: '30 min', xp: '20 XP', glyph: '\u{1F524}', identity: 'achievement' },
+      { id: 'o-2', title: 'Green Corner Hunt', time: '40 min', xp: '20 XP', glyph: '\u{1F333}', identity: 'streak' },
     ],
   },
 ];
+
+/** Resolve an identity's soft tint + AA-safe text colour from the live theme. */
+function identityTint(colors: CompassPalette, identity: ModeIdentity): { tint: string; text: string } {
+  return { tint: colors[`${identity}Tint`], text: colors[`${identity}Text`] };
+}
 
 interface ExploreScreenProps {
   onSearch?: () => void;
@@ -129,7 +140,7 @@ function PressableScale({
         onPressOut={onPressOut}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
-        style={{ flex: 1 }}
+        style={exploreStatics.pressableInner}
       >
         {children}
       </Pressable>
@@ -137,31 +148,52 @@ function PressableScale({
   );
 }
 
-function ModeTile({ mode, styles, onPress }: { mode: ExploreMode; styles: Styles; onPress?: (id: string) => void }) {
+function ModeTile({
+  mode,
+  styles,
+  colors,
+  onPress,
+}: {
+  mode: ExploreMode;
+  styles: Styles;
+  colors: CompassPalette;
+  onPress?: (id: string) => void;
+}) {
+  const { tint, text } = identityTint(colors, mode.identity);
   return (
     <PressableScale
       accessibilityLabel={`${mode.name} quests`}
       onPress={() => onPress?.(mode.id)}
       style={styles.modeTile}
     >
-      <LinearGradient colors={mode.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.modeTileFill}>
+      <View style={[styles.modeTileFill, { backgroundColor: tint }]}>
         <Text style={styles.modeIcon} accessibilityElementsHidden importantForAccessibility="no">
           {mode.icon}
         </Text>
-        <Text style={styles.modeName}>{mode.name}</Text>
-      </LinearGradient>
+        <Text style={[styles.modeName, { color: text }]}>{mode.name}</Text>
+      </View>
     </PressableScale>
   );
 }
 
-function MiniCard({ item, styles, onPress }: { item: ShelfItem; styles: Styles; onPress?: (id: string) => void }) {
+function MiniCard({
+  item,
+  styles,
+  colors,
+  onPress,
+}: {
+  item: ShelfItem;
+  styles: Styles;
+  colors: CompassPalette;
+  onPress?: (id: string) => void;
+}) {
   return (
     <PressableScale
       accessibilityLabel={`${item.title}, ${item.time}, ${item.xp}`}
       onPress={() => onPress?.(item.id)}
       style={styles.miniCard}
     >
-      <View style={[styles.miniArt, { backgroundColor: item.art }]}>
+      <View style={[styles.miniArt, { backgroundColor: identityTint(colors, item.identity).tint }]}>
         <Text style={styles.miniArtGlyph} accessibilityElementsHidden importantForAccessibility="no">
           {item.glyph}
         </Text>
@@ -243,7 +275,7 @@ export default function ExploreScreen({
               accessibilityLabel="Search quests, places and people"
               style={styles.search}
             >
-              <Text accessibilityElementsHidden importantForAccessibility="no">{'\u{1F50D}'}</Text>
+              <Icon name="search" size={18} color={colors.textTertiary} />
               <Text style={styles.searchText}>Search quests, places, people…</Text>
             </Pressable>
 
@@ -267,7 +299,7 @@ export default function ExploreScreen({
               </View>
               <View style={styles.modeGrid}>
                 {EXPLORE_MODES.map((mode) => (
-                  <ModeTile key={mode.id} mode={mode} styles={styles} onPress={onSelectMode} />
+                  <ModeTile key={mode.id} mode={mode} styles={styles} colors={colors} onPress={onSelectMode} />
                 ))}
               </View>
             </View>
@@ -290,7 +322,7 @@ export default function ExploreScreen({
                   contentContainerStyle={styles.hScroll}
                 >
                   {shelf.items.map((item) => (
-                    <MiniCard key={item.id} item={item} styles={styles} onPress={onOpenQuest} />
+                    <MiniCard key={item.id} item={item} styles={styles} colors={colors} onPress={onOpenQuest} />
                   ))}
                 </ScrollView>
               </View>
@@ -303,17 +335,13 @@ export default function ExploreScreen({
               style={styles.savedLink}
             >
               <View style={styles.savedIcon}>
-                <Text style={styles.savedIconGlyph} accessibilityElementsHidden importantForAccessibility="no">
-                  {'\u{1F516}'}
-                </Text>
+                <Icon name="bookmark" size={20} color={colors.actionPrimary} />
               </View>
               <View style={styles.savedBody}>
                 <Text style={styles.savedTitle}>Saved for later</Text>
                 <Text style={styles.caption}>{savedCountLabel(savedCount)}</Text>
               </View>
-              <Text style={styles.chevron} accessibilityElementsHidden importantForAccessibility="no">
-                {'›'}
-              </Text>
+              <Icon name="chevronRight" size={18} color={colors.actionPrimary} />
             </Pressable>
           </ScrollView>
         </Animated.View>
