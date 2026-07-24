@@ -73,7 +73,7 @@ export function EmptyState({
             pressed ? { backgroundColor: colors.actionPressed } : null,
           ]}
         >
-          <Text style={[textStyle('labelL'), styles.buttonText]}>{actionLabel}</Text>
+          <Text style={[textStyle('labelL'), { color: colors.onPrimary }]}>{actionLabel}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -85,7 +85,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    textAlign: 'center',
     paddingHorizontal: CompassSpacing.gutterPhone,
     paddingVertical: CompassSpacing.s9,
     gap: CompassSpacing.s4,
@@ -115,8 +114,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 200,
-  },
-  buttonText: {
-    color: '#FFFFFF',
   },
 });
