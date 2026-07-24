@@ -12,6 +12,7 @@ import {
   statusLabel,
 } from './challengeUtils';
 import { listTasks } from '../../services/tasksApi';
+import { CompassColorsLight } from '../../constants/compassDesign';
 import type { PaginatedTasks, Task } from '../../types/api';
 
 jest.mock('react-native-reanimated', () => {
@@ -214,6 +215,28 @@ describe('ChallengeFeedScreen', () => {
       const { onBack } = await renderScreen();
       fireEvent.press(screen.getByLabelText('Back to progress'));
       expect(onBack).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Halcyon+ tokens', () => {
+    it('renders the shared back and add icons in the header', async () => {
+      await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText(/Peak Seeker\./)).toBeTruthy());
+      // Icons are decorative (hidden from assistive tech) — query hidden.
+      expect(screen.getByTestId('feed-back-icon', { includeHiddenElements: true })).toBeTruthy();
+      expect(screen.getByTestId('feed-add-icon', { includeHiddenElements: true })).toBeTruthy();
+    });
+
+    it('colours the tab count badge with the Community identity, not on-primary white', async () => {
+      await renderScreen();
+      await waitFor(() => expect(screen.getByLabelText(/Peak Seeker\./)).toBeTruthy());
+      // Every non-zero tab shows a count badge; its label reads communityText.
+      const badge = screen.getAllByText('1')[0];
+      const flat = Array.isArray(badge.props.style)
+        ? Object.assign({}, ...badge.props.style.flat())
+        : badge.props.style;
+      expect(flat.color).toBe(CompassColorsLight.communityText);
+      expect(flat.color).not.toBe(CompassColorsLight.onPrimary);
     });
   });
 
