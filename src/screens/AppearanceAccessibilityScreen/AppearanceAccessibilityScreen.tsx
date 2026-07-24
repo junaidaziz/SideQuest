@@ -2,7 +2,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
-import { CompassRadius, CompassSpacing } from '../../constants/compassDesign';
+import {
+  CompassColorsDark,
+  CompassColorsLight,
+  CompassRadius,
+  CompassSpacing,
+} from '../../constants/compassDesign';
 import {
   CompassHeader,
   CompassToggle,
@@ -12,6 +17,7 @@ import {
   textStyle,
   pressedStyle,
 } from '../../components/compass';
+import { Icon } from '../../components/icons';
 
 export type ThemeChoice = 'system' | 'light' | 'dark';
 
@@ -126,13 +132,21 @@ export default function AppearanceAccessibilityScreen({
                     { borderColor: selected ? colors.actionPrimary : colors.borderDefault },
                   ]}
                 >
-                  <View
-                    style={[
-                      local.swatch,
-                      { backgroundColor: swatchColor(opt.value) },
-                    ]}
-                    importantForAccessibility="no"
-                  />
+                  <View style={local.swatch} importantForAccessibility="no">
+                    {opt.value === 'system' ? (
+                      <>
+                        <View style={[local.swatchHalf, local.swatchHalfLight]} />
+                        <View style={[local.swatchHalf, local.swatchHalfDark]} />
+                      </>
+                    ) : (
+                      <View
+                        style={[
+                          local.swatchFill,
+                          opt.value === 'light' ? local.swatchHalfLight : local.swatchHalfDark,
+                        ]}
+                      />
+                    )}
+                  </View>
                   <Text style={[textStyle('labelM'), { color: colors.textPrimary }]}>
                     {opt.label}
                   </Text>
@@ -146,13 +160,13 @@ export default function AppearanceAccessibilityScreen({
                     ]}
                     importantForAccessibility="no"
                   >
-                    {selected ? <Text style={local.radioTick}>✓</Text> : null}
+                    {selected ? <Icon name="check" size={11} color={colors.onPrimary} /> : null}
                   </View>
                 </Pressable>
               );
             })}
           </View>
-          <Text style={[textStyle('caption'), styles.caption, { marginTop: CompassSpacing.s3 }]}>
+          <Text style={[textStyle('caption'), styles.caption, local.themeCaption]}>
             Choose System to match your device automatically.
           </Text>
         </View>
@@ -236,12 +250,6 @@ export default function AppearanceAccessibilityScreen({
   );
 }
 
-function swatchColor(theme: ThemeChoice): string {
-  if (theme === 'light') return '#F6F4FC';
-  if (theme === 'dark') return '#0F0D18';
-  return '#8B78FF';
-}
-
 function createLocalStyles(colors: ReturnType<typeof useCompassTheme>['colors']) {
   return StyleSheet.create({
     groupLabel: {
@@ -268,7 +276,17 @@ function createLocalStyles(colors: ReturnType<typeof useCompassTheme>['colors'])
       borderRadius: CompassRadius.md,
       borderWidth: 1,
       borderColor: colors.borderDefault,
+      overflow: 'hidden',
+      flexDirection: 'row',
     },
+    swatchFill: { width: '100%', height: '100%' },
+    swatchHalf: { flex: 1, height: '100%' },
+    // Theme-invariant preview fills — a light-theme swatch must always show the
+    // light canvas and a dark-theme swatch the dark canvas, regardless of the
+    // active theme, so these reference the fixed palette values, not `colors.*`.
+    swatchHalfLight: { backgroundColor: CompassColorsLight.bgCanvas },
+    swatchHalfDark: { backgroundColor: CompassColorsDark.bgCanvas },
+    themeCaption: { marginTop: CompassSpacing.s3 },
     radio: {
       width: 18,
       height: 18,
@@ -277,7 +295,6 @@ function createLocalStyles(colors: ReturnType<typeof useCompassTheme>['colors'])
       alignItems: 'center',
       justifyContent: 'center',
     },
-    radioTick: { color: '#FFFFFF', fontSize: 11 },
     sizePreview: {
       backgroundColor: colors.bgSubtle,
       borderRadius: CompassRadius.md,
