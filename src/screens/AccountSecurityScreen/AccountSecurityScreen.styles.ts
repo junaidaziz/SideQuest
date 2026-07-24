@@ -25,7 +25,7 @@ export function createStyles(colors: CompassPalette) {
     // Danger card
     dangerCard: {
       borderWidth: 1.5,
-      borderColor: 'rgba(255,124,136,0.4)',
+      borderColor: colors.statusError,
       borderRadius: CompassRadius.card,
       backgroundColor: colors.bgSurface,
       padding: CompassSpacing.s4,
@@ -50,8 +50,7 @@ export function createStyles(colors: CompassPalette) {
       justifyContent: 'center',
       marginTop: 1,
     },
-    checkboxChecked: { backgroundColor: colors.statusError, borderColor: colors.statusError },
-    checkTick: { color: '#FFFFFF', fontSize: 13 },
+    checkboxChecked: { backgroundColor: colors.statusErrorTint, borderColor: colors.statusError },
     checkLabel: { flex: 1, color: colors.textPrimary },
     input: {
       minHeight: 52,
@@ -69,13 +68,13 @@ export function createStyles(colors: CompassPalette) {
     deleteBtn: {
       minHeight: COMPASS_TOUCH_MIN + 4,
       borderRadius: CompassRadius.btn,
-      backgroundColor: 'rgba(201,61,75,0.10)',
+      backgroundColor: colors.statusErrorTint,
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: CompassSpacing.s3,
     },
     deleteBtnDisabled: { opacity: 0.45 },
-    deleteBtnText: { color: colors.statusError, fontWeight: '700', fontSize: 16 },
+    deleteBtnText: { color: colors.statusErrorText, fontWeight: '700', fontSize: 16 },
     // Modal
     overlay: { flex: 1, justifyContent: 'flex-end' },
     backdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(23,21,39,0.55)' },
@@ -97,7 +96,7 @@ export function createStyles(colors: CompassPalette) {
       justifyContent: 'center',
     },
     primaryBtnDisabled: { opacity: 0.5 },
-    primaryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    primaryBtnText: { color: colors.onPrimary, fontWeight: '600', fontSize: 16 },
     cancelBtn: {
       minHeight: COMPASS_TOUCH_MIN,
       alignItems: 'center',
