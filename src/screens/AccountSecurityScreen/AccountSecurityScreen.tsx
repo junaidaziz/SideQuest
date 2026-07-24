@@ -11,6 +11,7 @@ import {
   textStyle,
   pressedStyle,
 } from '../../components/compass';
+import { Icon } from '../../components/icons';
 import { createStyles } from './AccountSecurityScreen.styles';
 
 /** Minimum length enforced client-side; mirror the backend rule once it exists. */
@@ -207,7 +208,7 @@ export default function AccountSecurityScreen({
               style={styles.checkRow}
             >
               <View style={[styles.checkbox, confirmChecked ? styles.checkboxChecked : null]}>
-                {confirmChecked ? <Text style={styles.checkTick}>✓</Text> : null}
+                {confirmChecked ? <Icon name="check" size={13} color={colors.statusErrorText} /> : null}
               </View>
               <Text style={[textStyle('bodyS'), styles.checkLabel]}>
                 I understand my account and progress will be permanently deleted.
