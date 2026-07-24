@@ -26,6 +26,13 @@ describe('avatarApi', () => {
     // RN's FormData polyfill doesn't reliably implement .get()/.getAll(), so
     // assert on what was appended rather than reading the form back.
     appendSpy = jest.spyOn(FormData.prototype, 'append');
+    // uploadAvatar now builds its Blob via localFileToBlob (fetch-based)
+    // rather than expo-file-system's File.slice() — see localFileBlob.ts.
+    // The raw fetched blob's own type is deliberately left empty here;
+    // localFileToBlob re-slices with the file's real type.
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      blob: () => Promise.resolve(new Blob([], { type: '' })),
+    });
   });
 
   afterEach(() => {
@@ -43,12 +50,12 @@ describe('avatarApi', () => {
       expect(result).toEqual(WITH_AVATAR);
     });
 
-    it('appends a real Blob (via File.slice) carrying the source MIME type', async () => {
+    it('appends a real Blob (via localFileToBlob) carrying the source MIME type', async () => {
       await uploadAvatar('file:///tmp/avatar.jpg');
 
-      // A genuine Blob — not a duck-typed { uri, name, type } object and not the
-      // File instance itself (which only structurally implements Blob) — see
-      // avatarApi.ts / proofApi.ts for why both alternatives fail at runtime.
+      // A genuine Blob — not a duck-typed { uri, name, type } object and not
+      // via expo-file-system's File.slice() (a separate, confirmed upstream
+      // bug) — see localFileBlob.ts for why.
       const [field, blob, filename] = appendSpy.mock.calls[0];
       expect(field).toBe('avatar');
       expect(blob).toBeInstanceOf(Blob);
