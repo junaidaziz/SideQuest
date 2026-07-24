@@ -9,6 +9,7 @@ import { useAuthStore } from '../../src/store/authStore';
  */
 export default function TodayTab() {
   const displayName = useAuthStore((s) => s.user?.displayName ?? null);
+  const avatarUrl = useAuthStore((s) => s.user?.avatarUrl ?? null);
 
   const handleGetInspired = useCallback(() => {
     router.push('/explore');
@@ -37,6 +38,7 @@ export default function TodayTab() {
   return (
     <TodayScreen
       displayName={displayName}
+      avatarUrl={avatarUrl}
       onGetInspired={handleGetInspired}
       onOpenExplore={handleOpenExplore}
       onOpenProfile={handleOpenProfile}
