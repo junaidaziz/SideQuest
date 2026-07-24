@@ -3,6 +3,8 @@ import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import type { CompassPalette } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import { listSavedMissions } from '../../services/missionsApi';
 import { enqueueSaveToggle } from '../../services/queuedActions';
 import type { MissionCategory, PaginatedSavedMissions, SavedMission } from '../../types/api';
@@ -36,6 +38,12 @@ function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): StyleProp<V
   return pressed ? style : null;
 }
 
+/** Thumbnail well tint, rotated through the four identity tints (design § 5). */
+function thumbTint(colors: CompassPalette, index: number): string {
+  const tints = [colors.communityTint, colors.xpTint, colors.achievementTint, colors.streakTint];
+  return tints[index % tints.length];
+}
+
 function Skeleton({ styles }: { styles: SavedQuestsStyles }) {
   return (
     <View style={styles.skeletonWrap} accessibilityRole="progressbar" accessibilityLabel="Loading saved quests">
@@ -48,12 +56,14 @@ function Skeleton({ styles }: { styles: SavedQuestsStyles }) {
 
 interface SavedQuestCardProps {
   mission: SavedMission;
+  index: number;
   styles: SavedQuestsStyles;
+  colors: CompassPalette;
   onPress: (mission: SavedMission) => void;
   onUnsave: (mission: SavedMission) => void;
 }
 
-function SavedQuestCard({ mission, styles, onPress, onUnsave }: SavedQuestCardProps) {
+function SavedQuestCard({ mission, index, styles, colors, onPress, onUnsave }: SavedQuestCardProps) {
   return (
     <Pressable
       onPress={() => onPress(mission)}
@@ -61,8 +71,10 @@ function SavedQuestCard({ mission, styles, onPress, onUnsave }: SavedQuestCardPr
       accessibilityLabel={`View quest: ${mission.title}, ${mission.time}, ${mission.xp}`}
       style={({ pressed }) => [styles.card, whenPressed(pressed, styles.cardPressed)]}
     >
-      <View style={styles.thumb} importantForAccessibility="no">
-        <Text style={styles.thumbGlyph}>{CATEGORY_GLYPH[mission.category]}</Text>
+      <View style={[styles.thumb, { backgroundColor: thumbTint(colors, index) }]} importantForAccessibility="no">
+        <Text style={styles.thumbGlyph} accessibilityElementsHidden importantForAccessibility="no">
+          {CATEGORY_GLYPH[mission.category]}
+        </Text>
       </View>
       <View style={styles.cardBody}>
         <View style={styles.catChip}>
@@ -84,7 +96,7 @@ function SavedQuestCard({ mission, styles, onPress, onUnsave }: SavedQuestCardPr
         accessibilityLabel={`Remove ${mission.title} from saved quests`}
         style={({ pressed }) => [styles.unsaveBtn, whenPressed(pressed, styles.unsaveBtnPressed)]}
       >
-        <Text style={styles.unsaveGlyph}>{'\u{1F516}'}</Text>
+        <Icon name="bookmark" size={20} color={colors.actionPrimary} />
       </Pressable>
     </Pressable>
   );
@@ -144,7 +156,7 @@ export default function SavedQuestsScreen({ onBack, onExplore, onViewDetails }: 
           accessibilityLabel="Back"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Saved quests
@@ -178,7 +190,7 @@ export default function SavedQuestsScreen({ onBack, onExplore, onViewDetails }: 
       ) : items.length === 0 ? (
         <View style={[styles.stateArea, styles.empty]}>
           <View style={styles.emptyBadge} importantForAccessibility="no">
-            <Text style={styles.emptyGlyph}>{'\u{1F516}'}</Text>
+            <Icon name="bookmark" size={30} color={colors.textTertiary} />
           </View>
           <Text accessibilityRole="header" style={styles.emptyTitle}>
             Nothing saved yet
@@ -199,11 +211,13 @@ export default function SavedQuestsScreen({ onBack, onExplore, onViewDetails }: 
         </View>
       ) : (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-          {items.map((mission) => (
+          {items.map((mission, index) => (
             <SavedQuestCard
               key={mission.id}
               mission={mission}
+              index={index}
               styles={styles}
+              colors={colors}
               onPress={(m) => onViewDetails?.(m)}
               onUnsave={handleUnsave}
             />
