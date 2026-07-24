@@ -1,8 +1,17 @@
 import React, { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import {
+  FlatList,
+  type ListRenderItem,
+  Pressable,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import {
   getUnreadCount,
   listNotifications,
@@ -37,6 +46,48 @@ function Skeleton({ styles }: { styles: NotificationsStyles }) {
     </View>
   );
 }
+
+interface NotificationRowProps {
+  item: AppNotification;
+  styles: NotificationsStyles;
+  onPress: (item: AppNotification) => void;
+}
+
+/** A single inbox row. Extracted so the FlatList `renderItem` stays a thin,
+ * memoizable factory rather than a large inline closure. */
+function NotificationRow({ item, styles, onPress }: NotificationRowProps) {
+  const unread = !item.readAt;
+  return (
+    <Pressable
+      onPress={() => onPress(item)}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.title}. ${item.body}${unread ? '. Unread' : ''}`}
+      style={({ pressed }) => [
+        styles.row,
+        unread && styles.rowUnread,
+        whenPressed(pressed, styles.rowPressed),
+      ]}
+    >
+      <View style={styles.iconWrap} importantForAccessibility="no">
+        <Text style={styles.icon}>{iconForType(item.type)}</Text>
+      </View>
+      <View style={styles.rowBody}>
+        <View style={styles.rowTop}>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          {unread ? <View style={styles.unreadDot} importantForAccessibility="no" /> : null}
+        </View>
+        <Text style={styles.rowText} numberOfLines={2}>
+          {item.body}
+        </Text>
+        <Text style={styles.rowTime}>{formatRelativeTime(item.createdAt)}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+const keyExtractor = (item: AppNotification): string => item.id;
 
 export default function NotificationsScreen({ onBack, onExplore, onOpenNotification }: NotificationsScreenProps) {
   const { colors } = useCompassTheme();
@@ -81,6 +132,11 @@ export default function NotificationsScreen({ onBack, onExplore, onOpenNotificat
     markAllReadMutation.mutate();
   }, [markAllReadMutation]);
 
+  const renderItem = useCallback<ListRenderItem<AppNotification>>(
+    ({ item }) => <NotificationRow item={item} styles={styles} onPress={handlePressNotification} />,
+    [styles, handlePressNotification],
+  );
+
   const { data, isLoading, isError } = listQuery;
   const items = data?.items ?? [];
   const hasUnread = (unreadQuery.data?.unreadCount ?? 0) > 0;
@@ -94,7 +150,7 @@ export default function NotificationsScreen({ onBack, onExplore, onOpenNotificat
           accessibilityLabel="Back"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Notifications
@@ -134,7 +190,7 @@ export default function NotificationsScreen({ onBack, onExplore, onOpenNotificat
       ) : items.length === 0 ? (
         <View style={styles.empty}>
           <View style={styles.emptyBadge} importantForAccessibility="no">
-            <Text style={styles.emptyGlyph}>{'\u{1F514}✨'}</Text>
+            <Icon name="bell" size={44} color={colors.actionPrimary} />
           </View>
           <Text accessibilityRole="header" style={styles.emptyTitle}>
             You&apos;re all caught up!
@@ -152,40 +208,13 @@ export default function NotificationsScreen({ onBack, onExplore, onOpenNotificat
           ) : null}
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {items.map((item) => {
-            const unread = !item.readAt;
-            return (
-              <Pressable
-                key={item.id}
-                onPress={() => handlePressNotification(item)}
-                accessibilityRole="button"
-                accessibilityLabel={`${item.title}. ${item.body}${unread ? '. Unread' : ''}`}
-                style={({ pressed }) => [
-                  styles.row,
-                  unread && styles.rowUnread,
-                  whenPressed(pressed, styles.rowPressed),
-                ]}
-              >
-                <View style={styles.iconWrap} importantForAccessibility="no">
-                  <Text style={styles.icon}>{iconForType(item.type)}</Text>
-                </View>
-                <View style={styles.rowBody}>
-                  <View style={styles.rowTop}>
-                    <Text style={styles.rowTitle} numberOfLines={1}>
-                      {item.title}
-                    </Text>
-                    {unread ? <View style={styles.unreadDot} importantForAccessibility="no" /> : null}
-                  </View>
-                  <Text style={styles.rowText} numberOfLines={2}>
-                    {item.body}
-                  </Text>
-                  <Text style={styles.rowTime}>{formatRelativeTime(item.createdAt)}</Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <FlatList
+          data={items}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        />
       )}
     </SafeAreaView>
   );
