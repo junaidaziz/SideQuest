@@ -58,15 +58,12 @@ export function makeStyles(c: CompassPalette) {
       width: 56,
       height: 56,
       borderRadius: CompassRadius.card,
-      backgroundColor: `${c.brandGold}1F`,
+      backgroundColor: c.xpTint,
       borderWidth: 1.5,
-      borderColor: c.brandGold,
+      borderColor: c.xp,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: CompassSpacing.s4,
-    },
-    icon: {
-      fontSize: 28,
     },
     title: {
       fontFamily: CompassFonts.display,
@@ -91,16 +88,13 @@ export function makeStyles(c: CompassPalette) {
       paddingVertical: CompassSpacing.s1,
       paddingHorizontal: CompassSpacing.s2,
       borderRadius: CompassRadius.sm,
-      backgroundColor: c.brandGold,
+      backgroundColor: c.xpTint,
       marginBottom: CompassSpacing.s5,
-    },
-    xpPillIcon: {
-      fontSize: CompassType.caption.size,
     },
     xpPillText: {
       fontFamily: CompassFonts.bodySemiBold,
       fontSize: CompassType.caption.size,
-      color: c.textPrimary,
+      color: c.xpText,
     },
     benefits: {
       gap: CompassSpacing.s3,
@@ -115,14 +109,9 @@ export function makeStyles(c: CompassPalette) {
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: `${c.actionPrimary}1F`,
+      backgroundColor: c.bgSubtle,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    benefitCheck: {
-      color: c.actionPrimary,
-      fontSize: 13,
-      fontWeight: '700',
     },
     benefitText: {
       flex: 1,
@@ -170,7 +159,7 @@ export function makeStyles(c: CompassPalette) {
     primaryBtnLabel: {
       fontFamily: CompassFonts.bodySemiBold,
       fontSize: CompassType.labelL.size,
-      color: '#FFFFFF',
+      color: c.onPrimary,
       letterSpacing: 0.2,
     },
     divider: {
