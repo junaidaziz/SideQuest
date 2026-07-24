@@ -1,6 +1,12 @@
 import { StyleSheet } from 'react-native';
 import { CompassRadius, CompassSpacing, type CompassPalette } from '../../constants/compassDesign';
 
+/** Theme-independent statics (no palette needed) — kept out of the per-theme
+ * `makeStyles` so they aren't rebuilt on every theme change. */
+export const exploreStatics = StyleSheet.create({
+  pressableInner: { flex: 1 },
+});
+
 export function makeStyles(c: CompassPalette) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.bgCanvas },
@@ -67,7 +73,9 @@ export function makeStyles(c: CompassPalette) {
       gap: 6,
     },
     modeIcon: { fontSize: 22 },
-    modeName: { fontFamily: undefined, fontWeight: '700', fontSize: 16, color: '#FFFFFF', letterSpacing: -0.24 },
+    // Colour is applied inline from the tile's identity-text token (design § 5),
+    // so the label stays AA on its identity tint in both themes.
+    modeName: { fontFamily: undefined, fontWeight: '700', fontSize: 16, letterSpacing: -0.24 },
     hScroll: { gap: CompassSpacing.s3, paddingBottom: 4 },
     miniCard: {
       width: 200,
@@ -91,9 +99,9 @@ export function makeStyles(c: CompassPalette) {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: CompassRadius.pill,
-      backgroundColor: 'rgba(199,133,0,0.12)',
+      backgroundColor: c.xpTint,
     },
-    xpBadgeText: { fontSize: 12, fontWeight: '700', color: c.rewardXp },
+    xpBadgeText: { fontSize: 12, fontWeight: '700', color: c.xpText },
     savedLink: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -106,15 +114,13 @@ export function makeStyles(c: CompassPalette) {
       width: 44,
       height: 44,
       borderRadius: CompassRadius.md,
-      backgroundColor: 'rgba(101,71,245,0.12)',
+      backgroundColor: `${c.actionPrimary}1F`,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    savedIconGlyph: { fontSize: 20 },
     savedBody: { flex: 1 },
     savedTitle: { fontSize: 16, fontWeight: '600', color: c.textPrimary },
     caption: { fontSize: 12, color: c.textSecondary, marginTop: 2 },
-    chevron: { color: c.actionPrimary, fontSize: 18 },
     // States
     stateArea: { flex: 1, justifyContent: 'center', paddingHorizontal: CompassSpacing.gutterPhone },
     skeletonWrap: { gap: CompassSpacing.s4 },
@@ -140,6 +146,6 @@ export function makeStyles(c: CompassPalette) {
       justifyContent: 'center',
     },
     retryBtnPressed: { backgroundColor: c.actionPressed },
-    retryBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    retryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
   });
 }
