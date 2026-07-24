@@ -55,7 +55,7 @@ export function SettingsSection({
       <View
         style={[
           styles.card,
-          { backgroundColor: colors.bgSurface },
+          { backgroundColor: colors.bgSurface, shadowColor: colors.shadowColor },
         ]}
       >
         {rows.map((child, i) => {
@@ -93,7 +93,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: CompassRadius.card,
     overflow: 'hidden',
-    shadowColor: '#171527',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
