@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import {
+  CompassFonts,
   CompassRadius,
   CompassSpacing,
   CompassType,
@@ -18,7 +19,6 @@ export function makeStyles(c: CompassPalette) {
     },
     backBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
     backBtnPressed: { opacity: 0.5 },
-    backGlyph: { fontSize: 26, color: c.textPrimary },
     iconBtn: {
       width: 48,
       height: 48,
@@ -31,7 +31,7 @@ export function makeStyles(c: CompassPalette) {
     title: {
       flex: 1,
       textAlign: 'center',
-      fontFamily: 'PlusJakartaSans_800ExtraBold',
+      fontFamily: CompassFonts.fallbackHeavy,
       fontSize: CompassType.h2.size,
       fontWeight: '800',
       color: c.textPrimary,
@@ -48,9 +48,9 @@ export function makeStyles(c: CompassPalette) {
       flexDirection: 'row',
       gap: CompassSpacing.s3,
       alignItems: 'flex-start',
-      backgroundColor: `${c.brandViolet}1F`,
+      backgroundColor: c.communityTint,
       borderWidth: 1,
-      borderColor: `${c.brandViolet}59`,
+      borderColor: c.community,
       borderRadius: CompassRadius.md,
       padding: CompassSpacing.s3,
     },
@@ -80,15 +80,15 @@ export function makeStyles(c: CompassPalette) {
     hint: { fontSize: CompassType.caption.size, color: c.textSecondary, textAlign: 'center' },
 
     curateHero: { borderRadius: CompassRadius.hero, padding: CompassSpacing.s6 },
-    curateEyebrow: { fontSize: CompassType.caption.size, fontWeight: '700', color: '#FFFFFF', opacity: 0.9 },
+    curateEyebrow: { fontSize: CompassType.caption.size, fontWeight: '700', color: c.onHero, opacity: 0.85 },
     curateTitle: {
-      fontFamily: 'PlusJakartaSans_800ExtraBold',
+      fontFamily: CompassFonts.fallbackHeavy,
       fontSize: 24,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: c.onHero,
       marginVertical: 4,
     },
-    curateSub: { fontSize: CompassType.bodyS.size, color: '#FFFFFF', opacity: 0.95 },
+    curateSub: { fontSize: CompassType.bodyS.size, color: c.onHero, opacity: 0.9 },
 
     sectionLabel: { fontSize: CompassType.labelM.size, fontWeight: '600', color: c.textSecondary },
     discCard: {
