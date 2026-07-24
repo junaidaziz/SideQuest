@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon, type IconName } from '../../components/icons';
 import StreakFlame from './StreakFlame';
 import { buildDayStrip, chunkIntoWeeks, streakHeadline } from './streak';
 import { makeStyles, type StreakDetailStyles } from './StreakDetailScreen.styles';
@@ -15,8 +16,10 @@ export interface StreakDetailScreenProps {
   onFindQuest?: () => void;
 }
 
-const RULES = [
-  { icon: '✅', text: 'One approved quest per local day keeps your streak alive.' },
+/** A streak rule row. `iconName` renders a Halcyon+ glyph where one exists;
+ * the shield/moon concepts have no glyph in the set, so they keep an emoji. */
+const RULES: { iconName?: IconName; icon?: string; text: string }[] = [
+  { iconName: 'check', text: 'One approved quest per local day keeps your streak alive.' },
   { icon: '🛡️', text: 'A monthly grace token covers a single missed day once you have a habit.' },
   { icon: '🌙', text: 'Your streak can rest. Your progress always stays — nothing is ever lost.' },
 ];
@@ -56,7 +59,7 @@ export default function StreakDetailScreen({ onBack, onFindQuest }: StreakDetail
           accessibilityLabel="Back to progress"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Streak
@@ -106,7 +109,7 @@ export default function StreakDetailScreen({ onBack, onFindQuest }: StreakDetail
             <View style={styles.graceShield}>
               <Text style={styles.graceShieldText}>{'\u{1F6E1}'}</Text>
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <Text style={styles.graceTitle}>Grace token ready</Text>
               <Text style={styles.graceBody}>
                 Miss one day this month and your streak holds automatically.
@@ -129,9 +132,7 @@ export default function StreakDetailScreen({ onBack, onFindQuest }: StreakDetail
                       key={d.index}
                       style={[styles.dayCell, d.done && styles.dayCellDone, d.isToday && styles.dayCellToday]}
                     >
-                      <Text style={[styles.dayGlyph, d.done && styles.dayGlyphDone]}>
-                        {d.done ? '✓' : ''}
-                      </Text>
+                      {d.done ? <Icon name="check" size={12} color={colors.onPrimary} /> : null}
                     </View>
                   ))}
                 </View>
@@ -143,7 +144,11 @@ export default function StreakDetailScreen({ onBack, onFindQuest }: StreakDetail
             <Text style={styles.cardLabel}>How your streak works</Text>
             {RULES.map((r) => (
               <View key={r.text} style={styles.ruleRow} accessible accessibilityRole="text" accessibilityLabel={r.text}>
-                <Text style={styles.ruleIcon}>{r.icon}</Text>
+                {r.iconName ? (
+                  <Icon name={r.iconName} size={16} color={colors.streak} />
+                ) : (
+                  <Text style={styles.ruleIcon}>{r.icon}</Text>
+                )}
                 <Text style={styles.ruleBody}>{r.text}</Text>
               </View>
             ))}
