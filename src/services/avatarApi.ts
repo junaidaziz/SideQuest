@@ -1,5 +1,5 @@
-import { File } from 'expo-file-system';
 import { apiRequest } from './apiClient';
+import { localFileToBlob } from './localFileBlob';
 import type { UserProfile } from '../types/api';
 
 /**
@@ -8,24 +8,20 @@ import type { UserProfile } from '../types/api';
  *
  * `photoUri` is a local file URI from expo-image-picker (e.g. `file:///...`).
  *
- * The multipart body is built with the exact same `File.slice()` pattern as
- * `proofApi.submitPhotoProof` — appending a real `Blob` rather than the legacy
- * `{ uri, name, type }` object, which fails React Native's New Architecture
- * strict `instanceof Blob` check ("Unsupported FormDataPart implementation").
- * `expo-file-system`'s `File` only *structurally* implements `Blob`, so
- * appending the `File` directly fails the same check; `File.slice()` is the one
- * call that yields a genuine `Blob`. Its third argument (`contentType`) must be
- * passed `file.type` explicitly — omitting it produces a Blob with an empty
- * MIME type that the backend's `ALLOWED_IMAGE_MIME_TYPES` filter rejects.
+ * The multipart body is built with the exact same `localFileToBlob` helper as
+ * `proofApi.submitPhotoProof` — see `localFileBlob.ts` for why a `fetch()`-based
+ * Blob is used instead of `expo-file-system`'s `File.slice()` (a duck-typed
+ * `{ uri, name, type }` object fails FormData's New Architecture `instanceof
+ * Blob` check; `File.slice()` itself hits a separate, confirmed upstream bug,
+ * expo/expo#40144).
  *
  * The multipart field name is `avatar` (not `photo`) — it must match the
  * backend's `FileInterceptor('avatar', …)`.
  */
-export function uploadAvatar(photoUri: string): Promise<UserProfile> {
+export async function uploadAvatar(photoUri: string): Promise<UserProfile> {
   const form = new FormData();
-  const file = new File(photoUri);
-  const blob = file.slice(undefined, undefined, file.type);
-  form.append('avatar', blob, file.name);
+  const { blob, name } = await localFileToBlob(photoUri);
+  form.append('avatar', blob, name);
 
   return apiRequest<UserProfile>('/users/me/avatar', {
     method: 'POST',
