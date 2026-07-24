@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
+import { Icon } from '../../components/icons';
 import { makeStyles, type OnboardingStyles } from './OnboardingScreen.styles';
 
 /** A single selectable answer within a step. */
@@ -231,7 +232,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
                           importantForAccessibility="no"
                           accessibilityElementsHidden
                         >
-                          {selected ? <Text style={styles.checkMark}>{'✓'}</Text> : null}
+                          {selected ? <Icon name="check" size={14} color={colors.onPrimary} /> : null}
                         </View>
                       </Pressable>
                     );
@@ -262,16 +263,11 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
                   >
                     {step.cta}
                   </Text>
-                  <Text
-                    style={[
-                      styles.nextButtonArrow,
-                      !hasSelection && styles.nextButtonLabelDisabled,
-                    ]}
-                    importantForAccessibility="no"
-                    accessibilityElementsHidden
-                  >
-                    {'→'}
-                  </Text>
+                  <Icon
+                    name="chevronRight"
+                    size={18}
+                    color={hasSelection ? colors.onPrimary : colors.disabledText}
+                  />
                 </Pressable>
               </View>
             </View>
