@@ -81,8 +81,10 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.actionPrimary,
       alignItems: 'center',
       justifyContent: 'center',
+      overflow: 'hidden',
     },
     avatarText: { color: c.onPrimary, fontWeight: '800', fontSize: 16 },
+    avatarImage: { width: 48, height: 48 },
     scroll: { flex: 1 },
     content: {
       paddingHorizontal: CompassSpacing.gutterPhone,
