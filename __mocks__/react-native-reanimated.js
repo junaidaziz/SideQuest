@@ -34,6 +34,11 @@ const useAnimatedRef = () => ({ current: null });
 const runOnJS = (fn) => fn;
 const runOnUI = (fn) => fn;
 
+// Reduced-motion accessibility hook. Defaults to `false` (motion allowed);
+// a test can flip it via `(useReducedMotion as jest.Mock).mockReturnValue(true)`
+// to exercise the dissolve/instant celebration path.
+const useReducedMotion = jest.fn(() => false);
+
 const Easing = {
   bezier: () => (t) => t,
   linear: (t) => t,
@@ -92,6 +97,7 @@ module.exports = {
   cancelAnimation,
   runOnJS,
   runOnUI,
+  useReducedMotion,
   Easing,
   // Common layout-animation presets used across Compass screens.
   FadeIn: makeLayoutAnimation(),
