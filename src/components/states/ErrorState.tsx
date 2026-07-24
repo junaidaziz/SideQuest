@@ -88,7 +88,7 @@ export function ErrorState({
               pressed ? { backgroundColor: colors.actionPressed } : null,
             ]}
           >
-            <Text style={[textStyle('labelL'), styles.primaryText]}>{retryLabel}</Text>
+            <Text style={[textStyle('labelL'), { color: colors.onPrimary }]}>{retryLabel}</Text>
           </Pressable>
         ) : null}
         {onSecondary && secondaryLabel ? (
@@ -174,7 +174,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryText: { color: '#FFFFFF' },
   tertiaryBtn: {
     minHeight: COMPASS_TOUCH_MIN,
     alignItems: 'center',
