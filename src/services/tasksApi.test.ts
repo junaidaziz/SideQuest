@@ -43,6 +43,11 @@ describe('tasksApi', () => {
     // RN's FormData polyfill doesn't reliably implement .get(), so assert on
     // what was appended rather than reading the form back.
     appendSpy = jest.spyOn(FormData.prototype, 'append');
+    // submitTaskEvidence now builds its Blob via localFileToBlob (fetch-based)
+    // rather than expo-file-system's File.slice() — see localFileBlob.ts.
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      blob: () => Promise.resolve(new Blob([], { type: '' })),
+    });
   });
 
   afterEach(() => {
