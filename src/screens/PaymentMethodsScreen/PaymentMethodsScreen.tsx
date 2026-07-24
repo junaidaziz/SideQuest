@@ -1,5 +1,13 @@
-import React, { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useStripe, PaymentSheetError } from '@stripe/stripe-react-native';
@@ -11,8 +19,9 @@ import {
 } from '../../services/paymentApi';
 import { useAuthStore } from '../../store/authStore';
 import type { PaymentMethod } from '../../types/api';
-import { whenPressed } from '../HomeScreen';
-import { styles } from './PaymentMethodsScreen.styles';
+import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
+import { makeStyles, type PaymentMethodsStyles } from './PaymentMethodsScreen.styles';
 
 /** TanStack Query cache key for the saved-cards list. */
 export const PAYMENT_METHODS_QUERY_KEY = ['paymentMethods'] as const;
@@ -20,6 +29,16 @@ export const PAYMENT_METHODS_QUERY_KEY = ['paymentMethods'] as const;
 interface PaymentMethodsScreenProps {
   /** Header back button — routed via router.back() by app/payment-methods.tsx. */
   onBack?: () => void;
+}
+
+/**
+ * Returns `style` while a Pressable is pressed, else null. Local to this screen
+ * (matching every migrated sibling's own copy) — this replaces the former
+ * cross-import of `whenPressed` from the dead `HomeScreen` module, which was the
+ * last dependency keeping `HomeScreen` alive.
+ */
+export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): StyleProp<ViewStyle> {
+  return pressed ? style : null;
 }
 
 /** Title-cases a Stripe brand slug (`visa` → `Visa`, `american_express` → `American Express`). */
@@ -50,7 +69,7 @@ export function cardAccessibilityLabel(pm: PaymentMethod): string {
 }
 
 /** Skeleton placeholder rows shown while the saved-cards list is loading. */
-function CardsSkeleton() {
+function CardsSkeleton({ styles }: { styles: PaymentMethodsStyles }) {
   return (
     <View
       style={styles.skeletonWrap}
@@ -70,7 +89,7 @@ function CardsSkeleton() {
  * checkpoint — app/payment-methods.tsx redirects a guest before this screen
  * ever mounts; this fallback covers the case where it somehow doesn't.
  */
-function GuestPrompt({ onBack }: { onBack?: () => void }) {
+function GuestPrompt({ onBack, styles }: { onBack?: () => void; styles: PaymentMethodsStyles }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.guestCenter}>
@@ -85,7 +104,7 @@ function GuestPrompt({ onBack }: { onBack?: () => void }) {
             onPress={onBack}
             accessibilityRole="button"
             accessibilityLabel="Go back"
-            style={({ pressed }) => [styles.retryBtn, pressed && styles.retryBtnPressed]}
+            style={({ pressed }) => [styles.retryBtn, whenPressed(pressed, styles.retryBtnPressed)]}
           >
             <Text style={styles.retryBtnText}>Go back</Text>
           </Pressable>
@@ -95,9 +114,9 @@ function GuestPrompt({ onBack }: { onBack?: () => void }) {
   );
 }
 
-export default function PaymentMethodsScreen({
-  onBack,
-}: PaymentMethodsScreenProps) {
+export default function PaymentMethodsScreen({ onBack }: PaymentMethodsScreenProps) {
+  const { colors } = useCompassTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isGuest = useAuthStore((s) => s.user?.isGuest ?? true);
   const queryClient = useQueryClient();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -222,7 +241,7 @@ export default function PaymentMethodsScreen({
   // hook above so this never violates the Rules of Hooks by branching before
   // a hook call.
   if (isGuest) {
-    return <GuestPrompt onBack={onBack} />;
+    return <GuestPrompt onBack={onBack} styles={styles} />;
   }
 
   return (
@@ -232,12 +251,9 @@ export default function PaymentMethodsScreen({
           onPress={handleBack}
           accessibilityRole="button"
           accessibilityLabel="Back"
-          style={({ pressed }) => [
-            styles.iconBtn,
-            whenPressed(pressed, styles.iconBtnPressed),
-          ]}
+          style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.iconGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.headerTitle}>
           Payment Methods
@@ -255,7 +271,7 @@ export default function PaymentMethodsScreen({
         </Text>
 
         {isLoading ? (
-          <CardsSkeleton />
+          <CardsSkeleton styles={styles} />
         ) : isError ? (
           <View
             accessible
