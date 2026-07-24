@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Image, Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery } from '@tanstack/react-query';
@@ -41,6 +41,10 @@ interface TodayScreenProps {
   weeklyGoal?: WeeklyGoal;
   /** Signed-in display name for the avatar chip (from authStore at the call site). */
   displayName?: string | null;
+  /** Signed-in profile photo for the avatar chip (from authStore at the call
+   * site) — shown instead of the initial when present, so the same photo
+   * set in Edit Profile is reflected here too. */
+  avatarUrl?: string | null;
 }
 
 const DEFAULT_GOAL: WeeklyGoal = { completed: 3, target: 5 };
@@ -84,6 +88,7 @@ export default function TodayScreen({
   onOpenPendingProof,
   weeklyGoal = DEFAULT_GOAL,
   displayName,
+  avatarUrl,
 }: TodayScreenProps) {
   const { colors } = useCompassTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -131,7 +136,18 @@ export default function TodayScreen({
             accessibilityLabel="Open your profile"
             style={styles.avatar}
           >
-            <Text style={styles.avatarText}>{avatarInitial(displayName)}</Text>
+            {avatarUrl ? (
+              <Image
+                testID="today-avatar-image"
+                source={{ uri: avatarUrl }}
+                style={styles.avatarImage}
+                accessibilityIgnoresInvertColors
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              />
+            ) : (
+              <Text style={styles.avatarText}>{avatarInitial(displayName)}</Text>
+            )}
           </Pressable>
         </View>
       </View>
