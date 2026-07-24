@@ -46,7 +46,10 @@ export function createStyles(colors: CompassPalette) {
     },
     camGlyph: { fontSize: 15 },
     avatarInitials: {
-      color: '#FFFFFF',
+      // Avatar gradient is brandViolet→brandVioletDark (= actionPrimary), so the
+      // knockout ink is onPrimary (white in light, dark ink in dark), matching
+      // YouScreen's avatar rather than a hardcoded white that fails in dark mode.
+      color: colors.onPrimary,
       fontSize: 38,
       fontWeight: '800',
       letterSpacing: -0.57,
@@ -122,6 +125,7 @@ export function createStyles(colors: CompassPalette) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    visBody: { flex: 1 },
     visTitle: { color: colors.textPrimary, fontWeight: '600' },
     visSub: { color: colors.textSecondary, marginTop: 2 },
     sectionLabel: { color: colors.textSecondary, marginBottom: CompassSpacing.s3 },
@@ -139,6 +143,6 @@ export function createStyles(colors: CompassPalette) {
       justifyContent: 'center',
     },
     saveBtnDisabled: { opacity: 0.5 },
-    saveBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 16 },
+    saveBtnText: { color: colors.onPrimary, fontWeight: '600', fontSize: 16 },
   });
 }
