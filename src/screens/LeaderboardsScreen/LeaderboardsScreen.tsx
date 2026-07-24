@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { HomeResponse } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import { makeStyles } from './LeaderboardsScreen.styles';
 
 /**
@@ -91,7 +92,7 @@ export default function LeaderboardsScreen({ onBack, onOpenWeekPicker, displayNa
           accessibilityLabel="Back to progress"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Leaderboards
