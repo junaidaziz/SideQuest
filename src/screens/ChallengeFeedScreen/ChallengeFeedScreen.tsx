@@ -6,6 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { PaginatedTasks, Task } from '../../types/api';
 import { listTasks } from '../../services/tasksApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
+import { Icon } from '../../components/icons';
 import { CompassMotion } from '../../constants/compassDesign';
 import {
   bucketTasks,
@@ -129,7 +130,7 @@ export default function ChallengeFeedScreen({
           accessibilityLabel="Back to progress"
           style={({ pressed }) => [styles.backBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.backGlyph}>{'‹'}</Text>
+          <Icon name="back" size={24} color={colors.textPrimary} testID="feed-back-icon" />
         </Pressable>
         <Text accessibilityRole="header" style={styles.title}>
           Challenges
@@ -140,7 +141,7 @@ export default function ChallengeFeedScreen({
           accessibilityLabel="Send a challenge"
           style={({ pressed }) => [styles.iconBtn, whenPressed(pressed, styles.backBtnPressed)]}
         >
-          <Text style={styles.iconGlyph}>{'＋'}</Text>
+          <Icon name="add" size={24} color={colors.community} testID="feed-add-icon" />
         </Pressable>
       </View>
 
