@@ -11,6 +11,7 @@ import {
   nextLevelName,
   streakLabel,
   tintColor,
+  tintSurface,
   toPercentLabel,
   unlockedCount,
   type AchievementDef,
@@ -152,10 +153,21 @@ describe('progress helpers', () => {
     it('resolves every tint plus the default branch', () => {
       expect(tintColor('teal', CompassColorsLight)).toBe(CompassColorsLight.brandTeal);
       expect(tintColor('violet', CompassColorsLight)).toBe(CompassColorsLight.actionPrimary);
-      expect(tintColor('gold', CompassColorsLight)).toBe(CompassColorsLight.rewardXp);
-      expect(tintColor('coral', CompassColorsLight)).toBe(CompassColorsLight.socialCoral);
+      expect(tintColor('gold', CompassColorsLight)).toBe(CompassColorsLight.xp);
+      expect(tintColor('coral', CompassColorsLight)).toBe(CompassColorsLight.streak);
       // Unknown tint falls through to the default arm.
       expect(tintColor('unknown' as never, CompassColorsLight)).toBe(CompassColorsLight.actionPrimary);
+    });
+  });
+
+  describe('tintSurface', () => {
+    it('maps every tint to its identity tint plus the default branch', () => {
+      expect(tintSurface('teal', CompassColorsLight)).toBe(CompassColorsLight.communityTint);
+      expect(tintSurface('violet', CompassColorsLight)).toBe(CompassColorsLight.achievementTint);
+      expect(tintSurface('gold', CompassColorsLight)).toBe(CompassColorsLight.xpTint);
+      expect(tintSurface('coral', CompassColorsLight)).toBe(CompassColorsLight.streakTint);
+      // Unknown tint falls through to the default arm.
+      expect(tintSurface('unknown' as never, CompassColorsLight)).toBe(CompassColorsLight.achievementTint);
     });
   });
 
