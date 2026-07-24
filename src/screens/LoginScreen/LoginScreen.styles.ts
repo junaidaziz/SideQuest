@@ -41,12 +41,6 @@ export function makeStyles(c: CompassPalette) {
       backgroundColor: c.bgSubtle,
       borderColor: c.actionPrimary,
     },
-    iconGlyph: {
-      fontSize: 20,
-      fontWeight: '700',
-      color: c.textPrimary,
-      lineHeight: 22,
-    },
     headerSpacer: {
       width: 40,
       height: 40,
@@ -66,15 +60,12 @@ export function makeStyles(c: CompassPalette) {
       width: 56,
       height: 56,
       borderRadius: CompassRadius.card,
-      backgroundColor: `${c.actionPrimary}1F`,
+      backgroundColor: c.bgSubtle,
       borderWidth: 1.5,
       borderColor: c.actionPrimary,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: CompassSpacing.s4,
-    },
-    lockupGlyph: {
-      fontSize: 26,
     },
     leadTitle: {
       fontFamily: CompassFonts.display,
@@ -93,7 +84,7 @@ export function makeStyles(c: CompassPalette) {
     },
     formError: {
       padding: CompassSpacing.s3,
-      backgroundColor: `${c.statusError}14`,
+      backgroundColor: c.statusErrorTint,
       borderWidth: 1.5,
       borderColor: c.statusError,
       borderRadius: CompassRadius.sm,
@@ -103,7 +94,7 @@ export function makeStyles(c: CompassPalette) {
       fontFamily: CompassFonts.bodyMedium,
       fontSize: CompassType.caption.size,
       lineHeight: CompassType.caption.lineHeight,
-      color: c.statusError,
+      color: c.statusErrorText,
     },
     field: {
       marginBottom: CompassSpacing.s4,
@@ -212,7 +203,7 @@ export function makeStyles(c: CompassPalette) {
     primaryBtnText: {
       fontFamily: CompassFonts.bodySemiBold,
       fontSize: CompassType.labelL.size,
-      color: '#FFFFFF',
+      color: c.onPrimary,
       letterSpacing: 0.2,
     },
     divider: {
