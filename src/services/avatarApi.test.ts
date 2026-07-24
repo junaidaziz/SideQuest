@@ -26,13 +26,6 @@ describe('avatarApi', () => {
     // RN's FormData polyfill doesn't reliably implement .get()/.getAll(), so
     // assert on what was appended rather than reading the form back.
     appendSpy = jest.spyOn(FormData.prototype, 'append');
-    // uploadAvatar now builds its Blob via localFileToBlob (fetch-based)
-    // rather than expo-file-system's File.slice() — see localFileBlob.ts.
-    // The raw fetched blob's own type is deliberately left empty here;
-    // localFileToBlob re-slices with the file's real type.
-    globalThis.fetch = jest.fn().mockResolvedValue({
-      blob: () => Promise.resolve(new Blob([], { type: '' })),
-    });
   });
 
   afterEach(() => {
@@ -50,29 +43,31 @@ describe('avatarApi', () => {
       expect(result).toEqual(WITH_AVATAR);
     });
 
-    it('appends a real Blob (via localFileToBlob) carrying the source MIME type', async () => {
+    it('appends a plain { uri, name, type } object carrying the source MIME type', async () => {
       await uploadAvatar('file:///tmp/avatar.jpg');
 
-      // A genuine Blob — not a duck-typed { uri, name, type } object and not
-      // via expo-file-system's File.slice() (a separate, confirmed upstream
-      // bug) — see localFileBlob.ts for why.
-      const [field, blob, filename] = appendSpy.mock.calls[0];
+      // React Native's own native multipart-file mechanism — not a Blob.
+      // See localFilePart.ts for why: two separate Blob-based attempts each
+      // hit a real, unresolved React Native core bug.
+      const [field, part] = appendSpy.mock.calls[0];
       expect(field).toBe('avatar');
-      expect(blob).toBeInstanceOf(Blob);
-      expect(blob.type).toBe('image/jpeg');
-      expect(filename).toBe('avatar.jpg');
+      expect(part).not.toBeInstanceOf(Blob);
+      expect(part).toEqual({
+        uri: 'file:///tmp/avatar.jpg',
+        name: 'avatar.jpg',
+        type: 'image/jpeg',
+      });
     });
 
     it('carries a png source MIME type through unchanged', async () => {
       await uploadAvatar('file:///tmp/avatar.png');
 
-      const [, blob] = appendSpy.mock.calls[0];
-      expect(blob.type).toBe('image/png');
-      expect(appendSpy).toHaveBeenCalledWith(
-        'avatar',
-        expect.any(Blob),
-        'avatar.png',
-      );
+      const [, part] = appendSpy.mock.calls[0];
+      expect(part).toEqual({
+        uri: 'file:///tmp/avatar.png',
+        name: 'avatar.png',
+        type: 'image/png',
+      });
     });
 
     it('propagates an API rejection to the caller', async () => {
