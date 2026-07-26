@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Image, Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery } from '@tanstack/react-query';
@@ -13,9 +13,11 @@ import * as Haptics from 'expo-haptics';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassMotion } from '../../constants/compassDesign';
 import { Icon } from '../../components/icons';
+import { ResponsiveImage } from '../../components/media';
 import { getHome } from '../../services/homeApi';
 import { getUnreadCount } from '../../services/notificationsApi';
 import { makeStyles } from './TodayScreen.styles';
+import type { MediaVariant } from '../../types/api';
 
 export type { HomeResponse } from '../../types/api';
 
@@ -45,9 +47,14 @@ interface TodayScreenProps {
    * site) — shown instead of the initial when present, so the same photo
    * set in Edit Profile is reflected here too. */
   avatarUrl?: string | null;
+  /** Responsive sizes of the same photo, when uploaded via the media pipeline — see `ResponsiveImage`. */
+  avatarVariants?: readonly MediaVariant[] | null;
 }
 
 const DEFAULT_GOAL: WeeklyGoal = { completed: 3, target: 5 };
+
+/** Logical (point) size of the header avatar chip — matches `avatarImage` in TodayScreen.styles.ts. */
+const AVATAR_SIZE = 48;
 
 /** 0–100 progress toward the weekly goal, guarding a zero/oversized target. */
 export function computeGoalProgress(goal: WeeklyGoal): number {
@@ -89,6 +96,7 @@ export default function TodayScreen({
   weeklyGoal = DEFAULT_GOAL,
   displayName,
   avatarUrl,
+  avatarVariants,
 }: TodayScreenProps) {
   const { colors } = useCompassTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -136,12 +144,13 @@ export default function TodayScreen({
             accessibilityLabel="Open your profile"
             style={styles.avatar}
           >
-            {avatarUrl ? (
-              <Image
+            {avatarUrl || (avatarVariants && avatarVariants.length > 0) ? (
+              <ResponsiveImage
                 testID="today-avatar-image"
-                source={{ uri: avatarUrl }}
+                variants={avatarVariants}
+                fallbackUrl={avatarUrl}
+                width={AVATAR_SIZE}
                 style={styles.avatarImage}
-                accessibilityIgnoresInvertColors
                 accessibilityElementsHidden
                 importantForAccessibility="no"
               />
