@@ -165,8 +165,20 @@ describe('TodayScreen', () => {
     it('shows the profile photo instead of the initial when avatarUrl is set', async () => {
       await renderScreen({ displayName: 'Ada', avatarUrl: 'https://cdn.example.test/avatar.jpg' });
       const image = await screen.findByTestId('today-avatar-image', { includeHiddenElements: true });
-      expect(image.props.source).toEqual({ uri: 'https://cdn.example.test/avatar.jpg' });
+      expect(image.props.source).toEqual([{ uri: 'https://cdn.example.test/avatar.jpg' }]);
       expect(screen.queryByText('A')).toBeNull();
+    });
+
+    it('prefers a responsive variant over avatarUrl when both are present', async () => {
+      await renderScreen({
+        displayName: 'Ada',
+        avatarUrl: 'https://cdn.example.test/legacy.jpg',
+        avatarVariants: [
+          { name: 'sm', url: 'https://cdn.example.test/sm.webp', width: 150, height: 150, format: 'webp' },
+        ],
+      });
+      const image = await screen.findByTestId('today-avatar-image', { includeHiddenElements: true });
+      expect(image.props.source).toEqual([{ uri: 'https://cdn.example.test/sm.webp' }]);
     });
 
     it('falls back to the initial when no avatarUrl is set', async () => {
