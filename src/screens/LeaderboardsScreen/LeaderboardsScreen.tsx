@@ -1,12 +1,16 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import type { HomeResponse } from '../../types/api';
+import type { HomeResponse, MediaVariant } from '../../types/api';
 import { getHome } from '../../services/homeApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { Icon } from '../../components/icons';
+import { ResponsiveImage } from '../../components/media';
 import { makeStyles } from './LeaderboardsScreen.styles';
+
+/** Logical (point) size of the "You" row avatar — matches `avatarImage` in LeaderboardsScreen.styles.ts. */
+const AVATAR_SIZE = 40;
 
 /**
  * DATA HONESTY: this is a UI-ONLY preview screen. SideQuest has NO
@@ -29,6 +33,8 @@ export interface LeaderboardsScreenProps {
   /** Signed-in profile photo for the "You" row avatar (from authStore) —
    * shown instead of the initial when present. */
   avatarUrl?: string | null;
+  /** Responsive sizes of the same photo, when uploaded via the media pipeline — see `ResponsiveImage`. */
+  avatarVariants?: readonly MediaVariant[] | null;
 }
 
 export function whenPressed(pressed: boolean, style: StyleProp<ViewStyle>): StyleProp<ViewStyle> {
@@ -45,6 +51,8 @@ export interface LeaderRow {
   isMe: boolean;
   /** Only ever set on the "me" row — sample rows have no real photo. */
   avatarUrl?: string | null;
+  /** Only ever set on the "me" row — see `ResponsiveImage`. */
+  avatarVariants?: readonly MediaVariant[] | null;
 }
 
 /** Illustrative sample opponents — NOT live data. See the file-level note. */
@@ -64,6 +72,7 @@ export function buildRows(
   myXp: number,
   myInitial: string,
   myAvatarUrl?: string | null,
+  myAvatarVariants?: readonly MediaVariant[] | null,
 ): LeaderRow[] {
   const me: LeaderRow = {
     id: 'me',
@@ -72,6 +81,7 @@ export function buildRows(
     xp: myXp,
     isMe: true,
     avatarUrl: myAvatarUrl,
+    avatarVariants: myAvatarVariants,
   };
   const rows: LeaderRow[] = [...PREVIEW_FRIENDS.map((f) => ({ ...f, isMe: false })), me];
   return rows.sort((a, b) => b.xp - a.xp);
@@ -88,6 +98,7 @@ export default function LeaderboardsScreen({
   onOpenWeekPicker,
   displayName,
   avatarUrl,
+  avatarVariants,
 }: LeaderboardsScreenProps) {
   const { colors } = useCompassTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -100,8 +111,11 @@ export default function LeaderboardsScreen({
   }, [query]);
 
   const rows = useMemo(
-    () => (data ? buildRows(data.level.totalXp, meInitial(displayName), avatarUrl) : []),
-    [data, displayName, avatarUrl],
+    () =>
+      data
+        ? buildRows(data.level.totalXp, meInitial(displayName), avatarUrl, avatarVariants)
+        : [],
+    [data, displayName, avatarUrl, avatarVariants],
   );
 
   return (
@@ -200,12 +214,13 @@ export default function LeaderboardsScreen({
                     <Text style={[styles.rankText, row.isMe && styles.rankTextMe]}>{rank}</Text>
                   </View>
                   <View style={styles.avatar}>
-                    {row.avatarUrl ? (
-                      <Image
+                    {row.avatarUrl || (row.avatarVariants && row.avatarVariants.length > 0) ? (
+                      <ResponsiveImage
                         testID={`leaderboard-avatar-${row.id}`}
-                        source={{ uri: row.avatarUrl }}
+                        variants={row.avatarVariants}
+                        fallbackUrl={row.avatarUrl}
+                        width={AVATAR_SIZE}
                         style={styles.avatarImage}
-                        accessibilityIgnoresInvertColors
                         accessibilityElementsHidden
                         importantForAccessibility="no"
                       />
