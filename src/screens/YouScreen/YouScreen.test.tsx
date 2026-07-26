@@ -27,6 +27,7 @@ const SIGNED_IN: UserProfile = {
   displayName: 'Alex Rivera',
   isGuest: false,
   avatarUrl: null,
+  avatarVariants: [],
 };
 
 const GUEST: UserProfile = {
@@ -35,6 +36,7 @@ const GUEST: UserProfile = {
   displayName: null,
   isGuest: true,
   avatarUrl: null,
+  avatarVariants: [],
 };
 
 const HOME: HomeResponse = {
@@ -110,6 +112,25 @@ describe('YouScreen', () => {
           'Current streak 3 days. Complete a quest today to keep it going.',
         ),
       ).toBeTruthy();
+    });
+
+    it('shows a responsive variant of the profile photo instead of the initial when set', async () => {
+      mockUser = {
+        ...SIGNED_IN,
+        avatarVariants: [
+          { name: 'md', url: 'https://cdn.example.test/md.webp', width: 240, height: 240, format: 'webp' },
+        ],
+      };
+      await renderScreen();
+      const image = await screen.findByLabelText('Your profile photo');
+      expect(image.props.source).toEqual([{ uri: 'https://cdn.example.test/md.webp' }]);
+    });
+
+    it('falls back to avatarUrl when no responsive variants are set', async () => {
+      mockUser = { ...SIGNED_IN, avatarUrl: 'https://cdn.example.test/legacy.jpg' };
+      await renderScreen();
+      const image = await screen.findByLabelText('Your profile photo');
+      expect(image.props.source).toEqual([{ uri: 'https://cdn.example.test/legacy.jpg' }]);
     });
 
     it('renders the guest banner and CTAs for a guest session', async () => {
