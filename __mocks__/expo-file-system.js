@@ -22,6 +22,10 @@
  * or a real `Blob` but does have a `.bytes` member — see
  * `localUploadFile.ts` for why appending the raw `File` instance (not
  * `.slice()`'d into a Blob) is what actually works with this app's fetch.
+ *
+ * `size` is a fixed placeholder (real `File.size` reads the actual on-disk
+ * byte count natively) — used by `mediaApi.ts`'s direct-to-S3 upload flow to
+ * populate `CreateMediaUploadRequest.fileSize`.
  */
 class File {
   constructor(uri) {
@@ -33,6 +37,7 @@ class File {
     const ext = this.extension.replace(/^\./, '').toLowerCase();
     this.type =
       ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext ? 'image/jpeg' : '';
+    this.size = 12345;
   }
 
   slice(start, end, contentType) {
