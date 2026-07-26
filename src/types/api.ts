@@ -4,18 +4,42 @@
  * file in sync by hand whenever the backend auth contract changes.
  */
 
+/**
+ * One generated, delivery-ready size of a media asset (an avatar, today —
+ * see `src/services/mediaApi.ts`). Mirrors the backend's `MediaVariantDto`.
+ */
+export interface MediaVariant {
+  name: string;
+  url: string;
+  width: number;
+  height: number;
+  format: string;
+}
+
 export interface UserProfile {
   id: string;
   email: string | null;
   displayName: string | null;
   isGuest: boolean;
   /**
-   * Short-lived presigned S3 GET URL for the profile avatar, or null when none
-   * is set. Resolved server-side (the client never sees the raw S3 key). It
-   * expires (~15 min), so treat it as display-only — do not persist it across
-   * app restarts as if it were permanent.
+   * Delivery URL for the profile avatar, or null when none is set. When the
+   * avatar was uploaded through the media pipeline (see `avatarVariants`)
+   * this is the largest ready variant's URL — a stable CDN URL in
+   * production, a short-lived presigned URL otherwise. For an avatar still
+   * on the legacy direct-upload path, this is always a short-lived presigned
+   * S3 GET URL. Either way: display-only, do not persist it across app
+   * restarts as if it were permanent.
    */
   avatarUrl: string | null;
+  /**
+   * Every ready-to-render size of the current avatar, for responsive display
+   * (see `src/components/media/ResponsiveImage.tsx`). Empty when the avatar
+   * is unset, still processing, or was uploaded through the legacy
+   * direct-upload path — screens must fall back to `avatarUrl` (a single
+   * fixed size) whenever this is empty, never treat an empty array as "no
+   * avatar".
+   */
+  avatarVariants: MediaVariant[];
 }
 
 export interface AuthTokens {
