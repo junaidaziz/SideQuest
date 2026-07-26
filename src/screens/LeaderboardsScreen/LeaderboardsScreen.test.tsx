@@ -1,5 +1,5 @@
 import React from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import LeaderboardsScreen, {
@@ -86,11 +86,17 @@ describe('LeaderboardsScreen', () => {
     it("shows the profile photo on the You row instead of the initial when avatarUrl is set", async () => {
       await renderScreen({ avatarUrl: 'https://cdn.example.test/avatar.jpg' });
       const image = await screen.findByTestId('leaderboard-avatar-me', { includeHiddenElements: true });
-      expect(image.props.source).toEqual({ uri: 'https://cdn.example.test/avatar.jpg' });
+      expect(image.props.source).toEqual([{ uri: 'https://cdn.example.test/avatar.jpg' }]);
     });
 
     it('falls back to the initial on the You row when no avatarUrl is set', async () => {
       await renderScreen({ avatarUrl: null });
+      // Wait for the real row data to actually render (not just for the
+      // absence of an image, which would also be vacuously true while the
+      // query is still loading and no rows exist at all yet).
+      await waitFor(() => expect(screen.getByLabelText(/You, rank 1/)).toBeTruthy());
+      const youRow = screen.getByLabelText(/You, rank 1/);
+      expect(within(youRow).getByText('A')).toBeTruthy();
       expect(screen.queryByTestId('leaderboard-avatar-me')).toBeNull();
     });
 
