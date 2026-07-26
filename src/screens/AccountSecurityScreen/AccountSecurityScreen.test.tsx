@@ -18,6 +18,7 @@ const USER: UserProfile = {
   displayName: 'Alex',
   isGuest: false,
   avatarUrl: null,
+  avatarVariants: [],
 };
 
 async function renderScreen(
