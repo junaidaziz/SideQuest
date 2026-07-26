@@ -63,6 +63,7 @@ const guestUser = {
   displayName: null,
   isGuest: true,
   avatarUrl: null,
+  avatarVariants: [],
 };
 const realUser = {
   id: 'u1',
@@ -70,6 +71,7 @@ const realUser = {
   displayName: 'A',
   isGuest: false,
   avatarUrl: null,
+  avatarVariants: [],
 };
 
 describe('authStore', () => {
