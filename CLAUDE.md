@@ -8,6 +8,22 @@ Expo (React Native) mobile app — cross-platform iOS and Android — for SideQu
 
 This document is written from the actual codebase as of 2026-07-16. If you find a discrepancy between this file and the code, the code wins — update this file. (The previous version of this file, dated 2026-07-13, omitted the Challenges feature entirely, the Notifications feature entirely, and inaccurately described the payment-methods scope — all three were already fully built at that time. Don't assume a "doesn't exist" note here is still accurate without checking.)
 
+## Claude configuration map
+
+This file is the deep reference. Everything else Claude Code (or a new contributor) needs lives under `.claude/`:
+
+- `.claude/agents/ui-ux-designer.md`, `.claude/agents/eval-driven-development.md` — design a screen mockup, then independently review it.
+- `.claude/agents/rn-implementer.md`, `.claude/agents/rn-eval.md` — implement a reviewed mockup, then independently review the code.
+- `.claude/docs/ONBOARDING.md` — start here if you're new to this repo.
+- `.claude/docs/ARCHITECTURE.md` — where things live, the Compass design-token migration, state management, offline infrastructure.
+- `.claude/docs/CODING_STANDARDS.md` — the rules both agents and human review enforce, including the one correct multipart-upload pattern.
+- `.claude/docs/DEVELOPMENT_GUIDE.md` — local setup, common commands, EAS build basics.
+- `.claude/docs/QA_PROCESS.md` — the four-layer (Swiss Cheese) review model and the definition of done.
+- `.claude/docs/RELEASE_GUIDE.md` — EAS build/submit, store-submission status.
+- `.claude/workflows/FEATURE_WORKFLOW.md` — design → design review → implement → QA → review → accessibility check → docs → merge.
+- `.claude/references/sidequest.md` — the product framing (core loop, v1 constraints) shared across `backend`, `mobileApp`, and `web`.
+- The "Agent & Skill Development Rules" section near the end of this file — the governing rules for every custom agent/skill in this workspace (anatomy, model assignments, tool permissions), not just this repo's own agents.
+
 ## Common Commands
 
 ```bash
