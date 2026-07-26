@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -17,10 +16,14 @@ import { getHome } from '../../services/homeApi';
 import type { LevelInfo } from '../../types/api';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { Icon } from '../../components/icons';
+import { ResponsiveImage } from '../../components/media';
 import { CompassHeader, textStyle, pressedStyle } from '../../components/compass';
 import { LoadingState, ErrorState } from '../../components/states';
 import { levelName, nextLevelName, formatXp } from '../ProgressOverviewScreen/progress';
 import { createStyles } from './YouScreen.styles';
+
+/** Logical (point) size of the profile header avatar — matches `avatarImage` in YouScreen.styles.ts. */
+const AVATAR_SIZE = 76;
 
 export interface YouScreenProps {
   /** Header gear → Settings. Wired by the route wrapper once nav is chosen. */
@@ -163,11 +166,12 @@ export default function YouScreen({
               accessible
               accessibilityLabel={`Signed in as ${name}`}
             >
-              {user.avatarUrl ? (
-                <Image
-                  source={{ uri: user.avatarUrl }}
+              {user.avatarUrl || user.avatarVariants.length > 0 ? (
+                <ResponsiveImage
+                  variants={user.avatarVariants}
+                  fallbackUrl={user.avatarUrl}
+                  width={AVATAR_SIZE}
                   style={styles.avatarImage}
-                  accessibilityIgnoresInvertColors
                   accessibilityLabel="Your profile photo"
                 />
               ) : (
