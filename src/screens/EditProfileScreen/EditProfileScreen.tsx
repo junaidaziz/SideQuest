@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   type AlertButton,
-  Image,
   Pressable,
   ScrollView,
   Text,
@@ -20,12 +19,17 @@ import {
   DISPLAY_NAME_MIN_LENGTH,
   updateDisplayName,
 } from '../../services/profileApi';
-import { removeAvatar, uploadAvatar } from '../../services/avatarApi';
+import { removeAvatar } from '../../services/avatarApi';
+import { uploadAvatarViaMediaPipeline } from '../../services/mediaApi';
 import { useCompassTheme } from '../../hooks/useCompassTheme';
 import { CompassHeader, textStyle, pressedStyle } from '../../components/compass';
 import { Icon } from '../../components/icons';
+import { ResponsiveImage } from '../../components/media';
 import { initialsFromName } from '../YouScreen/YouScreen';
 import { createStyles } from './EditProfileScreen.styles';
+
+/** Logical (point) size of the avatar preview — matches `avatarImage` in EditProfileScreen.styles.ts. */
+const AVATAR_SIZE = 96;
 
 export interface EditProfileScreenProps {
   onBack?: () => void;
@@ -65,7 +69,7 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
   });
 
   const avatarMutation = useMutation({
-    mutationFn: (uri: string) => uploadAvatar(uri),
+    mutationFn: (uri: string) => uploadAvatarViaMediaPipeline(uri),
     onSuccess: (updated) => {
       updateProfile(updated);
       setAvatarError(null);
@@ -93,7 +97,7 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
 
   const saving = nameMutation.isPending;
   const avatarBusy = avatarMutation.isPending || removeAvatarMutation.isPending;
-  const hasAvatar = Boolean(user?.avatarUrl);
+  const hasAvatar = Boolean(user?.avatarUrl) || Boolean(user?.avatarVariants?.length);
 
   const applyPickerResult = useCallback(
     (result: ImagePicker.ImagePickerResult) => {
@@ -195,11 +199,12 @@ export default function EditProfileScreen({ onBack, onSaved }: EditProfileScreen
               end={{ x: 1, y: 1 }}
               style={styles.avatarLg}
             >
-              {user.avatarUrl ? (
-                <Image
-                  source={{ uri: user.avatarUrl }}
+              {user.avatarUrl || user.avatarVariants.length > 0 ? (
+                <ResponsiveImage
+                  variants={user.avatarVariants}
+                  fallbackUrl={user.avatarUrl}
+                  width={AVATAR_SIZE}
                   style={styles.avatarImage}
-                  accessibilityIgnoresInvertColors
                   accessibilityLabel="Your profile photo"
                 />
               ) : (
