@@ -16,6 +16,7 @@ const UPDATED: UserProfile = {
   displayName: 'Ada Lovelace',
   isGuest: false,
   avatarUrl: null,
+  avatarVariants: [],
 };
 
 describe('profileApi', () => {
