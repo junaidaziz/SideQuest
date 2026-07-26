@@ -3,8 +3,12 @@ import { localUploadFile } from './localUploadFile';
 import type { UserProfile } from '../types/api';
 
 /**
- * Uploads (or replaces) the authenticated user's profile avatar via
- * `POST /users/me/avatar` and returns the updated profile.
+ * Legacy Multer-mediated upload via `POST /users/me/avatar`. Superseded by
+ * `mediaApi.uploadAvatarViaMediaPipeline` (the direct-to-S3 flow) — no
+ * screen calls this anymore, kept only because the backend endpoint itself
+ * is kept for backward compatibility (see `backend/CLAUDE.md`'s Media
+ * pipeline section). Don't wire a new call site to this; use
+ * `uploadAvatarViaMediaPipeline` instead.
  *
  * `photoUri` is a local file URI from expo-image-picker (e.g. `file:///...`).
  *
