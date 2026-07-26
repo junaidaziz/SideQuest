@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import EditProfileScreen, { validateDisplayName } from './EditProfileScreen';
 import { updateDisplayName } from '../../services/profileApi';
-import { removeAvatar, uploadAvatar } from '../../services/avatarApi';
+import { removeAvatar } from '../../services/avatarApi';
+import { uploadAvatarViaMediaPipeline } from '../../services/mediaApi';
 import type { UserProfile } from '../../types/api';
 
 jest.mock('../../services/profileApi', () => ({
@@ -13,6 +14,7 @@ jest.mock('../../services/profileApi', () => ({
   updateDisplayName: jest.fn(),
 }));
 jest.mock('../../services/avatarApi');
+jest.mock('../../services/mediaApi');
 jest.mock('expo-image-picker');
 
 const mockUpdateProfile = jest.fn<void, [UserProfile]>();
@@ -25,7 +27,9 @@ jest.mock('../../store/authStore', () => ({
 }));
 
 const mockUpdateName = updateDisplayName as jest.MockedFunction<typeof updateDisplayName>;
-const mockUpload = uploadAvatar as jest.MockedFunction<typeof uploadAvatar>;
+const mockUpload = uploadAvatarViaMediaPipeline as jest.MockedFunction<
+  typeof uploadAvatarViaMediaPipeline
+>;
 const mockRemove = removeAvatar as jest.MockedFunction<typeof removeAvatar>;
 const mockReqCamera = ImagePicker.requestCameraPermissionsAsync as jest.Mock;
 const mockReqLibrary = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
@@ -38,6 +42,7 @@ const USER: UserProfile = {
   displayName: 'Alex Rivera',
   isGuest: false,
   avatarUrl: 'https://cdn/x.jpg',
+  avatarVariants: [],
 };
 
 const UPDATED: UserProfile = { ...USER, displayName: 'Alex R' };
@@ -143,6 +148,18 @@ describe('EditProfileScreen', () => {
       await renderScreen();
       await fireEvent.press(screen.getByLabelText('Change photo'));
       expect(Alert.alert).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows a responsive variant of the profile photo when set', async () => {
+      mockUser = {
+        ...USER,
+        avatarVariants: [
+          { name: 'lg', url: 'https://cdn.example.test/lg.webp', width: 320, height: 320, format: 'webp' },
+        ],
+      };
+      await renderScreen();
+      const image = await screen.findByLabelText('Your profile photo');
+      expect(image.props.source).toEqual([{ uri: 'https://cdn.example.test/lg.webp' }]);
     });
 
     it('has no separate "Change photo" text pill — the camera badge on the avatar is the only trigger', async () => {
