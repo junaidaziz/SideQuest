@@ -13,6 +13,7 @@ const WITH_AVATAR: UserProfile = {
   displayName: 'Ada',
   isGuest: false,
   avatarUrl: 'https://s3.example.test/avatars/u1.jpg?sig=abc',
+  avatarVariants: [],
 };
 
 const WITHOUT_AVATAR: UserProfile = { ...WITH_AVATAR, avatarUrl: null };
