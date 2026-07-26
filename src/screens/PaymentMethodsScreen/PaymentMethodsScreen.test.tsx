@@ -29,7 +29,14 @@ let mockIsGuest = false;
 jest.mock('../../store/authStore', () => ({
   useAuthStore: (selector: (s: { user: UserProfile | null }) => unknown) =>
     selector({
-      user: { id: 'user-1', email: 'a@example.com', displayName: 'A', isGuest: mockIsGuest, avatarUrl: null },
+      user: {
+        id: 'user-1',
+        email: 'a@example.com',
+        displayName: 'A',
+        isGuest: mockIsGuest,
+        avatarUrl: null,
+        avatarVariants: [],
+      },
     }),
 }));
 
