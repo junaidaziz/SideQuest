@@ -1,8 +1,10 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import { Share } from 'react-native';
+import type { RefObject } from 'react';
+import type { View } from 'react-native';
 import CompletionScreenV2 from '../src/screens/CompletionScreenV2';
 import { useAuthStore } from '../src/store/authStore';
+import { shareCardImage } from '../src/services/shareCard';
 import type { ProofSubmissionResponse } from '../src/types/api';
 
 /**
@@ -34,16 +36,19 @@ export default function CompletionRoute() {
     router.push('/signup-prompt');
   }, []);
 
-  const handleShare = useCallback(() => {
-    // Same RN Share API used for challenge/rewards invite links elsewhere in
-    // this migration — a real action, not the silent no-op an independent
-    // review found here (a labelled, announced button that did nothing on
-    // the app's single most emotionally significant screen).
-    if (!result) return;
-    Share.share({
-      message: `I just completed "${result.missionTitle}" on SideQuest and earned ${result.xpAwarded} XP! \u{1F3C6}`,
-    }).catch(() => {});
-  }, [result]);
+  const handleShare = useCallback(
+    (cardRef: RefObject<View | null>) => {
+      // Renders the celebration card to a PNG (react-native-view-shot) and shares
+      // the image, keeping the same copy as the caption. Falls back to a text-only
+      // share if image capture or the native share module isn't available — so the
+      // button is never the silent no-op an independent review found on the app's
+      // single most emotionally significant screen.
+      if (!result) return;
+      const message = `I just completed "${result.missionTitle}" on SideQuest and earned ${result.xpAwarded} XP! \u{1F3C6}`;
+      void shareCardImage(cardRef, message);
+    },
+    [result],
+  );
 
   if (!result) {
     return <Redirect href="/today" />;

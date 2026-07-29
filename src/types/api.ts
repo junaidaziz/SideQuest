@@ -90,6 +90,20 @@ export interface NotificationPreferencesDto {
 
 export type UpdateNotificationPreferencesRequest = Partial<NotificationPreferencesDto>;
 
+/**
+ * Mirrors backend ForgotPasswordDto. The endpoint deliberately always resolves
+ * with the same generic success response whether or not an account exists for
+ * the email (no user-enumeration leak), so callers must not branch on this body
+ * to distinguish "sent" from "no such account".
+ */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+}
+
 export interface SignupRequest {
   email: string;
   password: string;

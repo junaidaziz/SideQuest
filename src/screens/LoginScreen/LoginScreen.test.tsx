@@ -63,15 +63,17 @@ async function renderScreen(
   const onSuccess = jest.fn();
   const onBack = jest.fn();
   const onGoToSignup = jest.fn();
+  const onGoToForgotPassword = jest.fn();
   await render(
     <LoginScreen
       onSuccess={onSuccess}
       onBack={onBack}
       onGoToSignup={onGoToSignup}
+      onGoToForgotPassword={onGoToForgotPassword}
       {...overrides}
     />,
   );
-  return { onSuccess, onBack, onGoToSignup };
+  return { onSuccess, onBack, onGoToSignup, onGoToForgotPassword };
 }
 
 async function fillValidForm(): Promise<void> {
@@ -127,11 +129,6 @@ describe('LoginScreen', () => {
       expect(screen.queryByRole('alert')).toBeNull();
     });
 
-    it('does not reveal the reset note until Forgot password is pressed', async () => {
-      await renderScreen();
-      expect(screen.queryByText(/Password reset isn't available/)).toBeNull();
-    });
-
     it('labels the primary button "Log in" in the idle state', async () => {
       await renderScreen();
       // "Log in" appears as both the header title and the button; the button is
@@ -153,12 +150,10 @@ describe('LoginScreen', () => {
       expect(onGoToSignup).toHaveBeenCalledTimes(1);
     });
 
-    it('reveals the reset stub note when Forgot password is pressed', async () => {
-      await renderScreen();
+    it('navigates to the forgot-password screen when Forgot password is pressed', async () => {
+      const { onGoToForgotPassword } = await renderScreen();
       await fireEvent.press(screen.getByLabelText('Forgot password?'));
-      expect(
-        screen.getByText(/Password reset isn't available in this build yet/),
-      ).toBeTruthy();
+      expect(onGoToForgotPassword).toHaveBeenCalledTimes(1);
     });
 
     it('toggles password visibility and updates the toggle label', async () => {
@@ -359,16 +354,18 @@ describe('LoginScreen', () => {
       await waitFor(() => expect(mockLogin).toHaveBeenCalledTimes(1));
     });
 
-    it('ignores back and sign-up presses while a request is pending', async () => {
+    it('ignores back, sign-up, and forgot-password presses while a request is pending', async () => {
       const pending = deferredLogin();
-      const { onBack, onGoToSignup } = await renderScreen();
+      const { onBack, onGoToSignup, onGoToForgotPassword } = await renderScreen();
       await fillValidForm();
       const inFlight = fireEvent.press(screen.getByLabelText('Log in'));
       await waitFor(() => expect(screen.getByText('Logging in…')).toBeTruthy());
       await fireEvent.press(screen.getByLabelText('Go back'));
       await fireEvent.press(screen.getByLabelText('Sign up for a new account'));
+      await fireEvent.press(screen.getByLabelText('Forgot password?'));
       expect(onBack).not.toHaveBeenCalled();
       expect(onGoToSignup).not.toHaveBeenCalled();
+      expect(onGoToForgotPassword).not.toHaveBeenCalled();
       pending.resolve();
       await inFlight;
     });

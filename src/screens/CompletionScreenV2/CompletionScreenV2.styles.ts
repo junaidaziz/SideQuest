@@ -95,6 +95,7 @@ export function makeStyles(c: CompassPalette) {
     primaryBtnPressed: { backgroundColor: c.actionPressed },
     primaryBtnText: { color: c.onPrimary, fontWeight: '600', fontSize: 16 },
     secondaryBtn: { height: 52, borderRadius: CompassRadius.btn, backgroundColor: c.bgSubtle, alignItems: 'center', justifyContent: 'center' },
+    secondaryBtnPressed: { opacity: 0.6 },
     secondaryBtnText: { color: c.actionPrimary, fontWeight: '600', fontSize: 16 },
   });
 }

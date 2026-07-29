@@ -1,9 +1,11 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Share } from 'react-native';
 import { useAuthStore } from '../../src/store/authStore';
+import { shareCardImage } from '../../src/services/shareCard';
 import CompletionRoute from '../../app/completion';
+
+jest.mock('../../src/services/shareCard', () => ({ shareCardImage: jest.fn() }));
 
 // The Compass redesign renders CompletionScreenV2 here (replacing the old
 // CompletionScreen) and falls back to the Today tab when no result is present.
@@ -103,15 +105,21 @@ describe('CompletionRoute', () => {
     expect(router.push).toHaveBeenCalledWith('/signup-prompt');
   });
 
-  it('shares a real message via the native share sheet, not a silent no-op', async () => {
+  it('shares the completion card as an image with the message caption, not a silent no-op', async () => {
     // Regression test: an independent review found the Share button on this
     // screen was rendered, labelled, and announced to a screen reader, but
-    // wired to nothing — this locks in the fix.
-    const spy = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' } as never);
+    // wired to nothing. It now captures the card to an image and shares it
+    // (falling back to text inside shareCardImage) — this locks in the fix.
     (useLocalSearchParams as jest.Mock).mockReturnValue({ result: validResult });
     const { getByLabelText } = await render(<CompletionRoute />);
     await fireEvent.press(getByLabelText('share'));
-    expect(spy).toHaveBeenCalledWith({ message: expect.stringContaining('Test Mission') });
-    expect(spy).toHaveBeenCalledWith({ message: expect.stringContaining('40 XP') });
+    expect(shareCardImage).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('Test Mission'),
+    );
+    expect(shareCardImage).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('40 XP'),
+    );
   });
 });

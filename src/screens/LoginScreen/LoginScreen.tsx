@@ -38,6 +38,8 @@ export interface LoginScreenProps {
   onBack?: () => void;
   /** Fired when the "Don't have an account? Sign up" link is pressed. */
   onGoToSignup?: () => void;
+  /** Fired when the "Forgot password?" link is pressed. */
+  onGoToForgotPassword?: () => void;
 }
 
 type SubmitStatus = 'idle' | 'submitting' | 'success';
@@ -108,6 +110,7 @@ export default function LoginScreen({
   onSuccess,
   onBack,
   onGoToSignup,
+  onGoToForgotPassword,
 }: LoginScreenProps) {
   const login = useAuthStore((s) => s.login);
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
@@ -117,7 +120,6 @@ export default function LoginScreen({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showResetNote, setShowResetNote] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>(NO_ERRORS);
   const [formError, setFormError] = useState<string | null>(null);
   const [status, setStatus] = useState<SubmitStatus>('idle');
@@ -175,9 +177,14 @@ export default function LoginScreen({
     setShowPassword((prev) => !prev);
   }, []);
 
-  const revealResetNote = useCallback(() => {
-    setShowResetNote(true);
-  }, []);
+  const handleGoToForgotPassword = useCallback(() => {
+    if (locked) {
+      return;
+    }
+    // Nav-agnostic like every other link here: app/login.tsx's
+    // onGoToForgotPassword callback pushes the /forgot-password route.
+    onGoToForgotPassword?.();
+  }, [locked, onGoToForgotPassword]);
 
   const handleSubmit = useCallback(async () => {
     if (status !== 'idle') {
@@ -383,9 +390,11 @@ export default function LoginScreen({
 
           <View style={styles.forgotRow}>
             <Pressable
-              onPress={revealResetNote}
+              onPress={handleGoToForgotPassword}
+              disabled={locked}
               accessibilityRole="button"
               accessibilityLabel="Forgot password?"
+              accessibilityState={{ disabled: locked }}
               style={({ pressed }) => [
                 styles.linkBtn,
                 whenPressed(pressed, styles.linkBtnPressed),
@@ -394,19 +403,6 @@ export default function LoginScreen({
               <Text style={styles.linkBtnText}>Forgot password?</Text>
             </Pressable>
           </View>
-
-          {showResetNote ? (
-            <View
-              style={styles.stubNote}
-              accessibilityRole="text"
-              accessibilityLiveRegion="polite"
-            >
-              <Text style={styles.stubNoteText}>
-                Password reset isn&apos;t available in this build yet. For now,
-                reach out from Settings and we&apos;ll help you back in.
-              </Text>
-            </View>
-          ) : null}
 
           <Pressable
             onPress={handleSubmit}

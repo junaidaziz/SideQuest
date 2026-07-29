@@ -3,6 +3,7 @@ import {
   bootstrapGuest,
   changePassword,
   deleteAccount,
+  forgotPassword,
   getCurrentUser,
   googleAuth,
   login,
@@ -38,6 +39,20 @@ describe('authApi', () => {
     await login(payload);
 
     expect(apiRequest).toHaveBeenCalledWith('/auth/login', {
+      method: 'POST',
+      body: payload,
+      auth: false,
+    });
+  });
+
+  it('forgotPassword posts the email to /auth/forgot-password without auth', async () => {
+    const payload = { email: 'a@b.com' };
+
+    await forgotPassword(payload);
+
+    // `auth: false` — a logged-out recovery flow. The endpoint's generic
+    // response never leaks whether the email maps to a real account.
+    expect(apiRequest).toHaveBeenCalledWith('/auth/forgot-password', {
       method: 'POST',
       body: payload,
       auth: false,

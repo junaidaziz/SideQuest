@@ -100,6 +100,10 @@ describe('CompletionScreenV2', () => {
       await fireEvent.press(screen.getByLabelText('Share this moment'));
       expect(onBackToToday).toHaveBeenCalledTimes(1);
       expect(onShare).toHaveBeenCalledTimes(1);
+      // onShare receives a ref to the capturable celebration card (for the
+      // view-shot image share the route performs).
+      const ref = (onShare as jest.Mock).mock.calls[0][0];
+      expect(ref).toHaveProperty('current');
     });
 
     it('calls onOpenNextIdea from the next-idea card', async () => {

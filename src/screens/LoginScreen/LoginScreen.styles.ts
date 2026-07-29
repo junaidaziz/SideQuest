@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import {
+  COMPASS_TOUCH_MIN,
   CompassFonts,
   CompassRadius,
   CompassSpacing,
@@ -28,8 +29,8 @@ export function makeStyles(c: CompassPalette) {
       paddingBottom: CompassSpacing.s3,
     },
     iconBtn: {
-      width: 40,
-      height: 40,
+      width: COMPASS_TOUCH_MIN,
+      height: COMPASS_TOUCH_MIN,
       borderRadius: CompassRadius.sm,
       borderWidth: 1.5,
       borderColor: c.borderDefault,
@@ -42,8 +43,8 @@ export function makeStyles(c: CompassPalette) {
       borderColor: c.actionPrimary,
     },
     headerSpacer: {
-      width: 40,
-      height: 40,
+      width: COMPASS_TOUCH_MIN,
+      height: COMPASS_TOUCH_MIN,
     },
     headerTitle: {
       fontFamily: CompassFonts.displayBold,
@@ -168,20 +169,6 @@ export function makeStyles(c: CompassPalette) {
       fontSize: CompassType.caption.size,
       color: c.actionPrimary,
       textDecorationLine: 'underline',
-    },
-    stubNote: {
-      padding: CompassSpacing.s3,
-      backgroundColor: c.bgSubtle,
-      borderWidth: 1.5,
-      borderColor: c.borderDefault,
-      borderRadius: CompassRadius.sm,
-      marginBottom: CompassSpacing.s4,
-    },
-    stubNoteText: {
-      fontFamily: CompassFonts.body,
-      fontSize: CompassType.caption.size,
-      lineHeight: CompassType.caption.lineHeight,
-      color: c.textSecondary,
     },
     primaryBtn: {
       height: 54,

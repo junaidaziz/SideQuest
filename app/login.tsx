@@ -18,7 +18,18 @@ export default function LoginRoute() {
     router.replace('/signup-prompt');
   }, []);
 
+  const handleGoToForgotPassword = useCallback(() => {
+    // push — not replace — so the user can back out of the reset request and
+    // land right back on this login screen with their email still typed.
+    router.push('/forgot-password');
+  }, []);
+
   return (
-    <LoginScreen onSuccess={handleSuccess} onBack={handleBack} onGoToSignup={handleGoToSignup} />
+    <LoginScreen
+      onSuccess={handleSuccess}
+      onBack={handleBack}
+      onGoToSignup={handleGoToSignup}
+      onGoToForgotPassword={handleGoToForgotPassword}
+    />
   );
 }

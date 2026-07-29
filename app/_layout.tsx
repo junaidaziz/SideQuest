@@ -1,6 +1,7 @@
-import { useCallback, useEffect } from 'react';
-import { View } from 'react-native';
+import { useCallback, useEffect, useRef } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Stack, router, useNavigationContainerRef } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { StatusBar } from 'expo-status-bar';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import * as Sentry from '@sentry/react-native';
@@ -23,6 +24,8 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '../src/store/authStore';
 import { useThemeStore } from '../src/store/themeStore';
+import { usePendingInviteStore } from '../src/store/pendingInviteStore';
+import { parseInviteToken } from '../src/utils/inviteLink';
 import { buildPersistOptions, queryClient } from '../src/services/queryPersistence';
 import { OfflineChrome } from '../src/components/offline';
 import { registerForPushNotifications, subscribeToNotificationTaps } from '../src/services/pushNotifications';
@@ -105,10 +108,20 @@ if (googleWebClientId) {
  */
 const stripePublishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 
+const styles = StyleSheet.create({
+  // Flex column so OfflineChrome's banner sits above and pushes the Stack down
+  // persistently while offline (M23.1).
+  root: { flex: 1 },
+});
+
 function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);
   const authStatus = useAuthStore((state) => state.status);
+  const isGuest = useAuthStore((state) => state.user?.isGuest ?? true);
   const hydrateTheme = useThemeStore((state) => state.hydrate);
+  const pendingInvite = usePendingInviteStore((state) => state.token);
+  const clearPendingInvite = usePendingInviteStore((state) => state.clear);
+  const deepLinkTokenRef = useRef<string | null>(null);
   const navigationRef = useNavigationContainerRef();
   const [fontsLoaded, fontError] = useFonts({
     // Syne — Halcyon+ display face (CompassFonts.display / .displayBold).
@@ -175,6 +188,76 @@ function RootLayout() {
     });
   }, []);
 
+  const flushDeepLink = useCallback(() => {
+    // Navigate to a captured invite once the session is 'ready' (a cold-start link
+    // can arrive before hydrate() bootstraps the guest session the accept call
+    // needs). expo-router also maps the URL to the route from the file tree; the
+    // `replace` keeps this idempotent rather than stacking a duplicate invite.
+    const token = deepLinkTokenRef.current;
+    if (token && authStatus === 'ready') {
+      deepLinkTokenRef.current = null;
+      router.replace({ pathname: '/tasks/invite/[token]', params: { token } });
+    }
+  }, [authStatus]);
+
+  useEffect(() => {
+    // Cold-start capture, ONCE (empty deps). A `sidequest://tasks/invite/<token>`
+    // launch URL is read a single time and only stashed in the ref — it does NOT
+    // flush here. Flushing is owned solely by the authStatus effect below.
+    //
+    // This separation is the fix for a double-navigation race: previously this
+    // capture lived in an effect keyed on `flushDeepLink` (which itself depends on
+    // `authStatus`), so when auth transitioned to 'ready' the effect re-ran and
+    // issued a SECOND `getInitialURL()` — resolving moments later and firing a
+    // second `router.replace` to the same invite, re-mounting InviteLandingScreen
+    // mid-flight and resetting any in-progress Accept mutation. An empty dep array
+    // guarantees exactly one launch-URL read for the app's lifetime.
+    Linking.getInitialURL()
+      .then((url) => {
+        const token = parseInviteToken(url);
+        if (token) deepLinkTokenRef.current = token;
+      })
+      .catch(() => {});
+    // Runs once at mount; ref-only, no reactive deps.
+  }, []);
+
+  useEffect(() => {
+    // Runtime `url` events (app already running). A live tap should navigate
+    // immediately rather than wait — the session is already 'ready' in this case —
+    // so this captures AND flushes. Keyed on `flushDeepLink` so the flush closes
+    // over the current authStatus.
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      const token = parseInviteToken(url);
+      if (token) {
+        deepLinkTokenRef.current = token;
+        flushDeepLink();
+      }
+    });
+    return () => sub.remove();
+  }, [flushDeepLink]);
+
+  useEffect(() => {
+    // The single flush point for a cold-start-captured link: re-attempt whenever
+    // auth resolves (flushDeepLink is keyed on authStatus), so a link captured
+    // pre-'ready' navigates exactly once, as soon as the guest session exists.
+    flushDeepLink();
+  }, [flushDeepLink]);
+
+  useEffect(() => {
+    // Resume an invite after a login/signup detour: once auth resolves to a real
+    // (non-guest) account, re-open the stashed invite the recipient chose to sign
+    // in for rather than accept as a guest.
+    if (authStatus === 'ready' && !isGuest && pendingInvite) {
+      const token = pendingInvite;
+      clearPendingInvite();
+      // `replace`, not `push`: the recipient took a login/signup detour to accept
+      // as a real account, so `/login` is on top of the stack right now. Replacing
+      // it means a back-press from the resumed invite doesn't dead-end on a stale
+      // login screen.
+      router.replace({ pathname: '/tasks/invite/[token]', params: { token } });
+    }
+  }, [authStatus, isGuest, pendingInvite, clearPendingInvite]);
+
   // The native splash (kept up by preventAutoHideAsync() above) covers the
   // screen until this fires, so hiding it here — not sooner — is what stops
   // the app from ever flashing system-font text before Syne/Inter are ready.
@@ -197,9 +280,7 @@ function RootLayout() {
   return (
     <StripeProvider publishableKey={stripePublishableKey}>
       <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
-        {/* Flex column so OfflineChrome's banner sits above and pushes the
-            Stack down persistently while offline (M23.1). */}
-        <View style={{ flex: 1 }}>
+        <View style={styles.root}>
           <OfflineChrome />
           <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
             {/* SignupPromptScreen already animates its own bottom-sheet

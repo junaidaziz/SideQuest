@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -67,7 +67,9 @@ interface CompletionScreenV2Props {
   result: ProofSubmissionResponse;
   isGuest: boolean;
   onBackToToday?: () => void;
-  onShare?: () => void;
+  /** Receives a ref to the capturable celebration card so the caller can render
+   * it to an image (react-native-view-shot) and share it, falling back to text. */
+  onShare?: (cardRef: React.RefObject<View | null>) => void;
   onCreateAccount?: () => void;
   onOpenNextIdea?: () => void;
   nextIdea?: NextIdea;
@@ -84,6 +86,9 @@ export default function CompletionScreenV2({
 }: CompletionScreenV2Props) {
   const { colors } = useCompassTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  // The celebration block is what gets rendered to an image for sharing. Held as
+  // a ref so the route can hand it to react-native-view-shot's captureRef.
+  const shareCardRef = useRef<View>(null);
 
   const pop = useSharedValue(0.6);
   const xpStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }], opacity: pop.value }));
@@ -105,13 +110,13 @@ export default function CompletionScreenV2({
   const streakLabel = formatStreak(result.currentStreak);
 
   const handleBack = useCallback(() => onBackToToday?.(), [onBackToToday]);
-  const handleShare = useCallback(() => onShare?.(), [onShare]);
+  const handleShare = useCallback(() => onShare?.(shareCardRef), [onShare]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Animated.View style={styles.scroll} entering={FadeInDown.duration(CompassMotion.durationStandard)}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.celebrate} accessibilityLiveRegion="polite">
+          <View ref={shareCardRef} collapsable={false} style={styles.celebrate} accessibilityLiveRegion="polite">
             <View style={styles.confetti} accessibilityElementsHidden importantForAccessibility="no">
               {CONFETTI.map((piece, idx) => (
                 <View
@@ -226,7 +231,7 @@ export default function CompletionScreenV2({
           onPress={handleShare}
           accessibilityRole="button"
           accessibilityLabel="Share this moment"
-          style={styles.secondaryBtn}
+          style={({ pressed }) => [styles.secondaryBtn, whenPressed(pressed, styles.secondaryBtnPressed)]}
         >
           <Text style={styles.secondaryBtnText}>Share this moment</Text>
         </Pressable>

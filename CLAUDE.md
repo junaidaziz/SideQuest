@@ -199,11 +199,11 @@ Entirely native-config-file driven — no `EXPO_PUBLIC_*` env var involved. `goo
 
 *Tabs*: `TodayScreen` · `ProgressOverviewScreen` · `YouScreen` (+ `ExploreScreen` above).
 
-*Challenges (Tasks)*: `ChallengeFeedScreen` (creator/assignee task list, 3 lifecycle tabs) · `ChallengeDetailScreen` (status timeline + role-aware actions) · `CreateChallengeScreen` (4-step creation wizard).
+*Challenges (Tasks)*: `ChallengeFeedScreen` (creator/assignee task list, 3 lifecycle tabs) · `ChallengeDetailScreen` (status timeline + role-aware actions) · `CreateChallengeScreen` (4-step creation wizard) · `InviteLandingScreen` (added 2026-07-28 — token-keyed Accept/Decline landing for a tapped invite link; deliberately separate from `ChallengeDetailScreen` because the backend's `GET /tasks/:id` 403s a not-yet-accepted invitee via `assertParticipant`, so the ID-keyed detail screen structurally cannot render for that user pre-acceptance).
 
 *Progress/gamification detail*: `LevelDetailScreen` · `XpDetailScreen` · `StreakDetailScreen` · `AchievementsScreen` · `AchievementDetailScreen` · `StatisticsScreen`.
 
-*Account & settings*: `LoginScreen` · `SignupPromptScreen` · `EditProfileScreen` · `AccountSecurityScreen` (change password / delete account, guest-guarded) · `SettingsScreen` (nav hub — several rows intentionally unwired: Privacy/Data/Help/Legal/About have no backing screens yet) · `AppearanceAccessibilityScreen` (theme picker; reduce-motion/haptics/sound/contrast toggles are UI-only, not yet wired to anything) · `NotificationPreferencesScreen` (local-state only — no `PATCH /notifications/preferences` call wired yet despite the backend endpoint existing) · `NotificationsScreen` (real inbox).
+*Account & settings*: `LoginScreen` · `ForgotPasswordScreen` (added 2026-07-28 — requests a reset email via `POST /auth/forgot-password`; one identical generic confirmation regardless of whether the account exists, matching the backend's no-enumeration contract; the emailed link opens on the web app, not in-app, so there is deliberately no in-app token-consumption screen) · `SignupPromptScreen` · `EditProfileScreen` · `AccountSecurityScreen` (change password / delete account, guest-guarded) · `SettingsScreen` (nav hub — several rows intentionally unwired: Privacy/Data/Help/Legal/About have no backing screens yet) · `AppearanceAccessibilityScreen` (theme picker; reduce-motion/haptics/sound/contrast toggles are UI-only, not yet wired to anything) · `NotificationPreferencesScreen` (local-state only — no `PATCH /notifications/preferences` call wired yet despite the backend endpoint existing) · `NotificationsScreen` (real inbox).
 
 *Payments & referrals*: `PaymentMethodsScreen` (guest-guarded; see Compass migration note above) · `RewardsScreen` (real referral stats + total XP).
 
@@ -243,11 +243,13 @@ Mirrors `backend/CLAUDE.md`'s section of the same name, from the mobile side:
 
 1. Guest mode is core to `authStore.hydrate()`, not absent.
 2. Explore's mode tiles map onto generic `crew`/`time`/`setting`/`budget` filters, not three named backend-modeled modes.
-3. **Challenges exist** — as of 2026-07-13 this doc incorrectly said no challenge-sending UI existed. It's fully built (`app/challenges/*`, `ChallengeFeedScreen`/`ChallengeDetailScreen`/`CreateChallengeScreen`), invite-link-based rather than identity-targeted. `HomeResponse.pendingChallenges` staying `[]` is a separate, simpler, still-unbuilt concept — don't conflate the two.
+3. **Challenges exist, and invite acceptance is now fully wired (2026-07-28)** — fully built (`app/challenges/*`, `ChallengeFeedScreen`/`ChallengeDetailScreen`/`CreateChallengeScreen`), invite-link-based rather than identity-targeted. A tapped `sidequest://tasks/invite/<token>` link (Android `intentFilters` in `app.json`, `expo-linking` capture in `app/_layout.tsx`) opens `InviteLandingScreen` (`app/tasks/invite/[token].tsx`), whose Accept/Decline buttons call the previously-unwired `acceptTaskInvite`/`declineTaskInvite`. The flow survives an unauthenticated recipient: `src/store/pendingInviteStore.ts` stashes the token through a login/signup detour and resumes it once auth resolves. `HomeResponse.pendingChallenges` staying `[]` is a separate, simpler, still-unbuilt concept — don't conflate the two.
 4. Payment methods are cards-on-file only (`PaymentMethodsScreen`) — no pack-purchase/unlock or charge flow exists anywhere in the app.
 5. **Account deletion exists** — `AccountSecurityScreen` calls `DELETE /auth/me`. This doc previously said no account-deletion screen existed; that was wrong even at the time.
-6. No content-reporting UI exists (matches the backend — confirmed absent).
+6. No content-reporting UI exists on mobile yet, though the backend now has a consumer `POST /reports` endpoint (2026-07-28, see `backend/CLAUDE.md`) — a mobile "Report" action is a real gap, not yet built.
+9. **Password reset now has a real flow (2026-07-28)** — `LoginScreen`'s "Forgot password?" link previously showed a static in-place note; it now navigates to `ForgotPasswordScreen`, which calls the backend's `POST /auth/forgot-password`. This doc previously implied no reset path existed.
 7. **Push notifications exist** — Firebase/Expo push, added 2026-07-16 (see above). This doc previously said none existed.
+8. **Completion card sharing is now a real image, not text-only** (2026-07-28) — `src/services/shareCard.ts` captures the completion card via `react-native-view-shot` and shares it through `expo-sharing`, falling back to the original text `Share.share()` if either native module isn't linked yet (both are declared in `package.json`; a fresh EAS build is needed before the image path is live on a device).
 
 ---
 

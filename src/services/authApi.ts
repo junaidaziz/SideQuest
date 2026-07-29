@@ -5,6 +5,8 @@ import type {
   ChangePasswordResponse,
   DeleteAccountRequest,
   DeleteAccountResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
   GoogleAuthRequest,
   LoginRequest,
   LogoutResponse,
@@ -24,6 +26,20 @@ export function signup(payload: SignupRequest): Promise<AuthResponse> {
 
 export function login(payload: LoginRequest): Promise<AuthResponse> {
   return apiRequest<AuthResponse>('/auth/login', { method: 'POST', body: payload, auth: false });
+}
+
+export function forgotPassword(
+  payload: ForgotPasswordRequest,
+): Promise<ForgotPasswordResponse> {
+  // `auth: false` — this is a logged-out recovery flow; no token is required or
+  // relevant. The backend returns the same generic success response regardless
+  // of whether the email maps to an account, so a resolved call never confirms
+  // (or denies) that the address is registered.
+  return apiRequest<ForgotPasswordResponse>('/auth/forgot-password', {
+    method: 'POST',
+    body: payload,
+    auth: false,
+  });
 }
 
 export function googleAuth(payload: GoogleAuthRequest): Promise<AuthResponse> {
